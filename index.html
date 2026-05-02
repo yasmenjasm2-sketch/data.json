@@ -3,68 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>خدمة عملاء Fawakih AI</title>
+<title>دعم Fawakih AI - احترافي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-    body { background-color: #0f172a; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+    body { background-color: #0f172a; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     
     /* Header */
-    .header { background: #1e293b; padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-    .admin-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-left: 15px; }
-    .header-info h2 { font-size: 16px; margin-bottom: 2px; font-weight: 700; color: #f8fafc; }
-    .header-info p { font-size: 12px; color: #10b981; margin: 0; }
-    .status-dot { display: inline-block; width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-left: 5px; animation: pulse 2s infinite; }
+    .header { background: #1e293b; padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #334155; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10; }
+    .admin-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-left: 15px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .header-info h2 { font-size: 16px; font-weight: 700; color: #f8fafc; }
+    .header-info p { font-size: 11px; color: #10b981; }
     
-    /* Chat Area */
-    .chat-container { flex: 1; padding: 20px; overflow-y: auto; background: #0f172a; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
-    .msg-bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; position: relative; word-wrap: break-word; }
-    .msg-user { background: #10b981; color: #fff; align-self: flex-start; border-bottom-right-radius: 4px; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2); }
-    .msg-admin { background: #1e293b; color: #e2e8f0; align-self: flex-end; border-bottom-left-radius: 4px; border: 1px solid #334155; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); }
+    /* Chat Container */
+    .chat-container { flex: 1; padding: 20px; overflow-y: auto; background: #0f172a; display: flex; flex-direction: column; gap: 12px; }
+    .msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; word-wrap: break-word; animation: fadeIn 0.3s ease; }
     
-    /* Input Area */
-    .input-area { background: #1e293b; padding: 15px; border-top: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; }
-    .setup-box { display: flex; gap: 10px; }
-    .msg-box { display: flex; gap: 10px; }
-    input { flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; transition: 0.3s; }
-    input:focus { border-color: #10b981; }
-    button { background: #10b981; color: #fff; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: 0.3s; }
-    button:hover { background: #059669; }
-    button:disabled { background: #475569; cursor: not-allowed; }
+    /* رسالة المستخدم - تظهر جهة اليمين */
+    .msg-user { background: #10b981; color: #fff; align-self: flex-start; border-bottom-right-radius: 4px; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2); }
+    
+    /* رسالة الأدمن - تظهر جهة اليسار */
+    .msg-admin { background: #1e293b; color: #e2e8f0; align-self: flex-end; border-bottom-left-radius: 4px; border: 1px solid #334155; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
 
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    /* Input Area */
+    .input-area { background: #1e293b; padding: 15px; border-top: 1px solid #334155; }
+    .box-layout { display: flex; gap: 10px; align-items: center; }
+    input { flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; font-size: 14px; transition: 0.3s; }
+    input:focus { border-color: #10b981; box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+    button { background: #10b981; color: #fff; border: none; padding: 12px 22px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 14px; white-space: nowrap; transition: 0.3s; }
+    button:active { transform: scale(0.95); }
+
+    .system-msg { text-align: center; font-size: 11px; color: #64748b; margin: 10px 0; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
 <div class="header">
     <div class="admin-avatar">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
     </div>
     <div class="header-info">
         <h2>فريق دعم Fawakih AI</h2>
-        <p><span class="status-dot"></span>متصل الآن - جاهزون لمساعدتك</p>
+        <p>● متصل الآن لمساعدتك</p>
     </div>
 </div>
 
 <div class="chat-container" id="chat">
-    </div>
+    <div class="system-msg">مرحباً بك! اكتب اسمك لبدء الدردشة مع الإدارة.</div>
+</div>
 
 <div class="input-area">
-    <div class="setup-box" id="setupBox">
-        <input type="text" id="userName" placeholder="أدخل اسمك لبدء المحادثة...">
-        <button onclick="saveName()">حفظ</button>
+    <div class="box-layout" id="setupBox">
+        <input type="text" id="userName" placeholder="أدخل اسمك الكريم...">
+        <button onclick="saveName()">ابدأ الآن</button>
     </div>
-    <div class="msg-box" id="msgBox" style="display: none;">
-        <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="handleEnter(event)">
-        <button onclick="sendMessage()">إرسال 🚀</button>
+    <div class="box-layout" id="msgBox" style="display: none;">
+        <input type="text" id="msgInput" placeholder="اكتب استفسارك هنا..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button id="sendBtn" onclick="sendMessage()">إرسال 🚀</button>
     </div>
 </div>
 
 <script type="module">
+// استيراد Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
   apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
   authDomain: "chatapi-1ca71.firebaseapp.com",
@@ -76,76 +81,90 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// إدارة هوية المستخدم
-let userId = localStorage.getItem("fawakih_user_id");
-let savedName = localStorage.getItem("fawakih_user_name");
+// إدارة هوية المستخدم الفريدة
+let userId = localStorage.getItem("fawakih_uid") || ("u_" + Date.now() + Math.floor(Math.random()*1000));
+localStorage.setItem("fawakih_uid", userId);
 
-if (!userId) {
-    userId = "user_" + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("fawakih_user_id", userId);
-}
-
-const setupBox = document.getElementById("setupBox");
-const msgBox = document.getElementById("msgBox");
+let savedName = localStorage.getItem("fawakih_uname");
 const chatDiv = document.getElementById("chat");
 
+// دالة حفظ الاسم
 window.saveName = function() {
     const name = document.getElementById("userName").value.trim();
-    if (name) {
-        savedName = name;
-        localStorage.setItem("fawakih_user_name", name);
-        checkSetup();
-    }
+    if (name.length < 2) { alert("الرجاء إدخال اسم صحيح"); return; }
+    savedName = name;
+    localStorage.setItem("fawakih_uname", name);
+    checkAuth();
 };
 
-function checkSetup() {
+// التأكد من حالة المستخدم
+function checkAuth() {
     if (savedName) {
-        setupBox.style.display = "none";
-        msgBox.style.display = "flex";
+        document.getElementById("setupBox").style.display = "none";
+        document.getElementById("msgBox").style.display = "flex";
         loadMessages();
     }
 }
 
-window.sendMessage = function() {
-    const msg = document.getElementById("msgInput").value.trim();
-    if (msg !== "") {
-        const msgData = {
+// دالة إرسال الرسالة مع معالجة الأخطاء
+window.sendMessage = async function() {
+    const input = document.getElementById("msgInput");
+    const btn = document.getElementById("sendBtn");
+    const text = input.value.trim();
+
+    if (text === "") return;
+
+    btn.disabled = true; // منع التكرار
+    
+    try {
+        // 1. إرسال الرسالة إلى سجل الرسائل
+        await push(ref(db, `support_chats/${userId}/messages`), {
             sender: "user",
-            message: msg,
+            message: text,
             timestamp: serverTimestamp()
-        };
-        
-        // حفظ الرسالة
-        push(ref(db, `support_chats/${userId}/messages`), msgData);
-        
-        // تحديث معلومات الغرفة للأدمن
-        set(ref(db, `support_chats/${userId}/info`), {
-            name: savedName,
-            lastMessage: msg,
-            time: serverTimestamp()
         });
 
-        document.getElementById("msgInput").value = "";
+        // 2. تحديث معلومات الغرفة للأدمن ليظهر في القائمة
+        await set(ref(db, `support_chats/${userId}/info`), {
+            name: savedName,
+            lastMessage: text,
+            lastUpdate: serverTimestamp()
+        });
+
+        input.value = "";
+    } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء الإرسال. تأكد من إعدادات الحماية في Firebase.");
+    } finally {
+        btn.disabled = false;
     }
 };
 
-window.handleEnter = function(e) {
-    if(e.key === 'Enter') sendMessage();
-};
-
+// دالة تحميل الرسائل وتحديث الواجهة فوراً
 function loadMessages() {
     onValue(ref(db, `support_chats/${userId}/messages`), (snapshot) => {
         chatDiv.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+            chatDiv.innerHTML = '<div class="system-msg">لا توجد رسائل سابقة. ابدأ المحادثة الآن.</div>';
+        }
+
         snapshot.forEach(child => {
             const data = child.val();
             const alignClass = data.sender === "user" ? "msg-user" : "msg-admin";
-            chatDiv.innerHTML += `<div class="msg-bubble ${alignClass}">${data.message}</div>`;
+            const bubble = document.createElement("div");
+            bubble.className = `msg-bubble ${alignClass}`;
+            bubble.innerText = data.message;
+            chatDiv.appendChild(bubble);
         });
-        chatDiv.scrollTop = chatDiv.scrollHeight; // النزول لأسفل تلقائياً
+
+        // النزول لآخر رسالة تلقائياً
+        chatDiv.scrollTo({ top: chatDiv.scrollHeight, behavior: 'smooth' });
     });
 }
 
-checkSetup();
+// تشغيل الفحص عند تحميل الصفحة
+checkAuth();
 </script>
 
 </body>
