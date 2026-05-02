@@ -9,18 +9,15 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
     body { background-color: #0f172a; color: #fff; height: 100vh; display: flex; overflow: hidden; }
     
-    /* Login Overlay */
     #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
     .login-box { background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; border: 1px solid #334155; }
     .login-box input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; }
     .login-box button { width: 100%; padding: 15px; background: #10b981; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
     .login-box button:hover { background: #059669; }
 
-    /* Sidebar (Users List) */
     .sidebar { width: 320px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; }
     .sidebar-header { padding: 20px; background: #0f172a; text-align: center; border-bottom: 1px solid #334155; color: #10b981; font-weight: bold; display: flex; flex-direction: column; gap: 10px; }
     
-    /* Admin Settings Controls */
     .admin-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
     .status-btn { padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; color: #fff; transition: 0.3s; }
     .status-online { background: #10b981; }
@@ -28,21 +25,20 @@
     .upload-pic-btn { background: #3b82f6; color: #fff; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
 
     .users-list { flex: 1; overflow-y: auto; }
-    .user-item { padding: 15px 20px; border-bottom: 1px solid #334155; cursor: pointer; transition: 0.3s; }
+    .user-item { padding: 15px 20px; border-bottom: 1px solid #334155; cursor: pointer; transition: 0.3s; position: relative; }
     .user-item:hover, .user-item.active { background: #334155; border-right: 4px solid #10b981; }
     .user-name { font-weight: bold; margin-bottom: 5px; }
     .last-msg { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Main Chat Area */
     .chat-area { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
-    .chat-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; font-weight: bold; font-size: 18px; }
+    .chat-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
     .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-    .msg-bubble { max-width: 70%; padding: 12px 16px; border-radius: 16px; font-size: 15px; }
+    
+    .msg-bubble { max-width: 70%; padding: 12px 16px; border-radius: 16px; font-size: 15px; position: relative; cursor: pointer; user-select: none; }
     .msg-user { background: #334155; color: #fff; align-self: flex-start; border-bottom-right-radius: 4px; }
     .msg-admin { background: #10b981; color: #fff; align-self: flex-end; border-bottom-left-radius: 4px; }
     .msg-image { max-width: 250px; border-radius: 10px; margin-top: 5px; }
 
-    /* Shortcuts & Input */
     .controls { background: #1e293b; border-top: 1px solid #334155; padding: 15px; }
     .shortcuts { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
     .shortcut-btn { background: #334155; color: #10b981; border: 1px solid #10b981; padding: 5px 15px; border-radius: 15px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s; }
@@ -55,7 +51,6 @@
     
     .no-chat { flex: 1; display: flex; justify-content: center; align-items: center; color: #64748b; font-size: 20px; }
 
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -91,7 +86,10 @@
 </div>
 
 <div class="chat-area" id="chatArea" style="display: none;">
-    <div class="chat-header" id="currentChatName">اختر محادثة</div>
+    <div class="chat-header">
+        <span id="currentChatName">اختر محادثة</span>
+        <span style="font-size:12px; color:#94a3b8; font-weight:normal;">(اضغط مطولاً على رسالة المستخدم لمعرفة جهازه)</span>
+    </div>
     <div class="messages-container" id="messagesBox"></div>
     
     <div class="controls">
@@ -127,20 +125,41 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// نظام تسجيل الدخول المبسط والمشفر
-const SECURE_HASH = "Z21haWwzNDU2Nw=="; // Base64 for "gmail34567"
+const SECURE_HASH = "Z21haWwzNDU2Nw=="; 
+
+// التحقق من وجود تسجيل دخول مسبق محفوظ (تذكرني)
+window.onload = function() {
+    if (localStorage.getItem("admin_auth_fawakih") === SECURE_HASH) {
+        document.getElementById("loginOverlay").style.display = "none";
+        requestNotificationPermission();
+        loadDashboard();
+    }
+};
+
 window.verifyLogin = function() {
     const pass = document.getElementById("adminPass").value;
     if (btoa(pass) === SECURE_HASH) {
+        // حفض تسجيل دخول
+        localStorage.setItem("admin_auth_fawakih", SECURE_HASH);
         document.getElementById("loginOverlay").style.display = "none";
+        requestNotificationPermission();
         loadDashboard();
     } else {
         document.getElementById("loginError").style.display = "block";
     }
 };
 
+function requestNotificationPermission() {
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+}
+
 let activeUserId = null;
+let activeUserName = "";
 let isOnline = true;
+let lastKnownTimes = {}; // لتتبع الرسائل الجديدة وتفعيل الإشعارات
+
 const usersList = document.getElementById("usersList");
 const messagesBox = document.getElementById("messagesBox");
 const chatArea = document.getElementById("chatArea");
@@ -149,9 +168,8 @@ const currentChatName = document.getElementById("currentChatName");
 const toggleStatusBtn = document.getElementById("toggleStatusBtn");
 
 function loadDashboard() {
-    // 1. جلب حالة الاتصال وحفظها
     onValue(ref(db, 'admin_settings/isOnline'), (snapshot) => {
-        isOnline = snapshot.val() !== false; // Default is true
+        isOnline = snapshot.val() !== false; 
         if(isOnline) {
             toggleStatusBtn.className = "status-btn status-online";
             toggleStatusBtn.innerText = "الحالة: متصل الآن";
@@ -161,17 +179,27 @@ function loadDashboard() {
         }
     });
 
-    // 2. جلب قائمة المستخدمين
     onValue(ref(db, 'support_chats'), (snapshot) => {
         usersList.innerHTML = "";
         const allUsers = [];
         snapshot.forEach(child => {
             if(child.key !== "admin_settings") {
-                allUsers.push({ id: child.key, data: child.val().info });
+                const userData = child.val().info;
+                allUsers.push({ id: child.key, data: userData });
+                
+                // نظام إشعارات سطح المكتب
+                if (userData && userData.lastUpdate) {
+                    if (lastKnownTimes[child.key] && userData.lastUpdate > lastKnownTimes[child.key]) {
+                        // التحقق إذا كانت آخر رسالة ليست من الأدمن
+                        if (userData.lastMessage && !userData.lastMessage.startsWith("أنت:")) {
+                            showNotification("رسالة جديدة من " + userData.name, userData.lastMessage);
+                        }
+                    }
+                    lastKnownTimes[child.key] = userData.lastUpdate;
+                }
             }
         });
         
-        // ترتيب حسب الأحدث
         allUsers.sort((a, b) => (b.data?.lastUpdate || 0) - (a.data?.lastUpdate || 0));
 
         allUsers.forEach(user => {
@@ -181,7 +209,7 @@ function loadDashboard() {
                 if(msgPreview.includes('data:image')) msgPreview = "📷 أرسل صورة";
                 
                 usersList.innerHTML += `
-                    <div class="user-item ${isActive}" onclick="openChat('${user.id}', '${user.data.name}')">
+                    <div class="user-item ${isActive}" onclick="openChat('${user.id}', '${user.data.name}', '${user.data.deviceId || 'غير معروف'}')">
                         <div class="user-name">${user.data.name}</div>
                         <div class="last-msg">${msgPreview}</div>
                     </div>
@@ -191,30 +219,33 @@ function loadDashboard() {
     });
 }
 
-// تغيير حالة الاتصال
-window.toggleAdminStatus = function() {
-    set(ref(db, 'admin_settings/isOnline'), !isOnline);
-};
+function showNotification(title, body) {
+    if (Notification.permission === "granted") {
+        const notification = new Notification(title, {
+            body: body,
+            icon: "https://cdn-icons-png.flaticon.com/512/1063/1063309.png"
+        });
+        notification.onclick = function() { window.focus(); };
+    }
+}
 
-// رفع صورة الأدمن بضغط عالي لتوفير المساحة
+window.toggleAdminStatus = function() { set(ref(db, 'admin_settings/isOnline'), !isOnline); };
+
 window.uploadAdminPic = function(event) {
     const file = event.target.files[0];
     if(!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 150; // حجم صغير جداً يناسب الأفاتار
+            const MAX_SIZE = 150; 
             let width = img.width; let height = img.height;
             if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
             else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
             canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            
-            // ضغط الصورة إلى Base64
             const compressedPic = canvas.toDataURL('image/webp', 0.8);
             set(ref(db, 'admin_settings/adminAvatar'), compressedPic).then(() => {
                 alert("تم تحديث صورة الأدمن بنجاح وسيتم عرضها للعملاء!");
@@ -225,9 +256,12 @@ window.uploadAdminPic = function(event) {
     reader.readAsDataURL(file);
 };
 
-// فتح محادثة مستخدم
-window.openChat = function(userId, userName) {
+let activeDeviceId = "غير معروف";
+
+window.openChat = function(userId, userName, deviceId) {
     activeUserId = userId;
+    activeUserName = userName;
+    activeDeviceId = deviceId;
     chatArea.style.display = "flex";
     noChatSelected.style.display = "none";
     currentChatName.innerText = `دردشة مع: ${userName}`;
@@ -239,30 +273,42 @@ window.openChat = function(userId, userName) {
         messagesBox.innerHTML = "";
         snapshot.forEach(child => {
             const msgData = child.val();
-            const alignClass = msgData.sender === "admin" ? "msg-admin" : "msg-user";
+            const isAdmin = msgData.sender === "admin";
+            const alignClass = isAdmin ? "msg-admin" : "msg-user";
             let content = msgData.message;
             
-            // إذا كانت الرسالة تحتوي على صورة مضغوطة
-            if(msgData.image) {
-                content += `<br><img src="${msgData.image}" class="msg-image">`;
-            }
+            if(msgData.image) { content += `<br><img src="${msgData.image}" class="msg-image">`; }
             
-            messagesBox.innerHTML += `<div class="msg-bubble ${alignClass}">${content}</div>`;
+            // إضافة كود الضغط المطول فقط لرسائل المستخدم
+            let pressEvents = "";
+            if(!isAdmin) {
+                pressEvents = `onmousedown="startPressTimer()" onmouseup="clearPressTimer()" onmouseleave="clearPressTimer()" ontouchstart="startPressTimer()" ontouchend="clearPressTimer()"`;
+            }
+
+            messagesBox.innerHTML += `<div class="msg-bubble ${alignClass}" ${pressEvents}>${content}</div>`;
         });
         messagesBox.scrollTop = messagesBox.scrollHeight;
     });
 };
 
-// إرسال رسالة من الأدمن
+// --- أكواد الضغط المطول (Long Press) ---
+let pressTimer;
+window.startPressTimer = function() {
+    pressTimer = window.setTimeout(function() {
+        alert(`📱 معلومات المستخدم:\n\nالاسم: ${activeUserName}\nمعرف الجهاز (ID): ${activeDeviceId}\n\n* هذا المعرف ثابت لهذا المتصفح.`);
+    }, 800); // 800 جزء من الثانية = ضغطة مطولة
+};
+window.clearPressTimer = function() {
+    clearTimeout(pressTimer);
+};
+// ----------------------------------------
+
 window.sendAdminMsg = function() {
     const msg = document.getElementById("adminMsg").value.trim();
     if(msg !== "" && activeUserId) {
-        push(ref(db, `support_chats/${activeUserId}/messages`), {
-            sender: "admin",
-            message: msg,
-            timestamp: serverTimestamp()
-        });
-        set(ref(db, `support_chats/${activeUserId}/info/lastMessage`), msg);
+        push(ref(db, `support_chats/${activeUserId}/messages`), { sender: "admin", message: msg, timestamp: serverTimestamp() });
+        // وضع "أنت:" لكي لا يظهر الإشعار للأدمن نفسه
+        set(ref(db, `support_chats/${activeUserId}/info/lastMessage`), "أنت: " + msg);
         set(ref(db, `support_chats/${activeUserId}/info/lastUpdate`), Date.now());
         document.getElementById("adminMsg").value = "";
     }
