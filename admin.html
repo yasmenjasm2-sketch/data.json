@@ -27,9 +27,13 @@
         header h1 { margin: 0; color: #f39c12; font-size: 24px; }
         
         .admin-settings { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .admin-settings input { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
-        .admin-settings input:focus { border-color: #f39c12; }
+        .admin-settings input[type="text"] { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
+        .admin-settings input[type="text"]:focus { border-color: #f39c12; }
         
+        /* زر رفع الصورة الجديد */
+        .file-upload-btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; cursor: pointer; font-size: 13px; display: inline-block; transition: 0.3s; }
+        .file-upload-btn:hover { border-color: #f39c12; background: #333; }
+
         .logout-btn { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
         .container { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
@@ -93,7 +97,7 @@
             .container { flex-direction: column; }
             header { flex-direction: column; align-items: flex-start; }
             .admin-settings { width: 100%; }
-            .admin-settings input { flex: 1; }
+            .admin-settings input[type="text"] { flex: 1; }
         }
     </style>
 </head>
@@ -112,8 +116,9 @@
     <header>
         <h1>🛠️ لوحة تحكم السوبر آدمن</h1>
         <div class="admin-settings">
-            <input type="text" id="custom-admin-name" placeholder="اسمك كأدمن (مثال: المدير حمزة)" onchange="saveAdminConfig()">
-            <input type="text" id="custom-admin-img" placeholder="رابط صورة الأدمن" onchange="saveAdminConfig()">
+            <input type="text" id="custom-admin-name" placeholder="اسمك كأدمن (مثال: المدير حمزة)" onchange="saveAdminName()">
+            <label for="custom-admin-img" class="file-upload-btn">تحديد صورتك 🖼️</label>
+            <input type="file" id="custom-admin-img" accept="image/*" style="display:none;" onchange="saveAdminImage(event)">
             <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
         </div>
     </header>
@@ -149,12 +154,14 @@
 </div>
 
 <script>
-    // إعدادات Firebase
+    // --- تشفير الإعدادات وكلمة المرور (Base64) لمنع القراءة المباشرة ---
+    const _p = atob("Z21haWwzNDU2Nw=="); // كلمة المرور المشفرة
     const firebaseConfig = {
-        apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
-        databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "chatapi-1ca71"
+        apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
+        databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
+        projectId: atob("Y2hhdGFwaS0xY2E3MQ==")
     };
+
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -168,7 +175,7 @@
     let currentChatUserName = null;
 
     // --- نظام تسجيل الدخول ---
-    const ADMIN_PASSWORD = "gmail34567";
+    const ADMIN_PASSWORD = _p;
 
     window.onload = () => {
         const savedPass = localStorage.getItem("admin_auth_pass");
@@ -199,15 +206,26 @@
         initDashboard();
     }
 
-    // حفظ واسترجاع بيانات الأدمن المخصصة
-    function saveAdminConfig() {
+    // --- حفظ واسترجاع بيانات الأدمن (الاسم والصورة من الاستديو) ---
+    function saveAdminName() {
         localStorage.setItem("super_admin_name", document.getElementById("custom-admin-name").value);
-        localStorage.setItem("super_admin_img", document.getElementById("custom-admin-img").value);
+    }
+
+    function saveAdminImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Image = e.target.result;
+                localStorage.setItem("super_admin_img", base64Image); // حفظ الصورة كنص مشفر طويل في الذاكرة
+                alert("تم حفظ صورتك بنجاح! سيتم استخدامها في رسائلك القادمة.");
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     function loadAdminConfig() {
         document.getElementById("custom-admin-name").value = localStorage.getItem("super_admin_name") || "";
-        document.getElementById("custom-admin-img").value = localStorage.getItem("super_admin_img") || "";
     }
 
     // --- تشغيل البيانات ---
@@ -405,9 +423,9 @@
         const text = input.value.trim();
         if (!text || !currentChatUserId) return;
 
-        // سحب البيانات المخصصة للأدمن
+        // سحب البيانات المخصصة للأدمن (بما في ذلك الصورة المرفوعة من الاستديو)
         const customName = document.getElementById("custom-admin-name").value.trim() || "الإدارة المركزية";
-        const customImg = document.getElementById("custom-admin-img").value.trim() || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+        const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
 
         const msgData = {
             deviceId: "admin_system", 
