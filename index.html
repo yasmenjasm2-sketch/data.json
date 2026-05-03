@@ -25,13 +25,11 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            /* استخدام 100dvh ليتناسب مع شريط المتصفح السفلي في الهواتف */
             height: 100dvh; 
             overflow: hidden;
             position: relative;
         }
 
-        /* خلفية FawakihAI المتحركة والناعمة */
         .bg-orb {
             position: absolute;
             border-radius: 50%;
@@ -50,7 +48,7 @@
 
         #app { 
             width: 100%; 
-            max-width: 600px; /* للحد من عرض الشاشة على الكمبيوتر، وتأخذ 100% على الهاتف */
+            max-width: 600px; 
             height: 100dvh; 
             display: flex; 
             flex-direction: column; 
@@ -66,7 +64,6 @@
 
         .hidden { display: none !important; }
         
-        /* شاشة تسجيل الدخول */
         #login-screen { 
             padding: 40px 25px; 
             text-align: center; 
@@ -77,301 +74,84 @@
             height: 100%; 
         }
         
-        h1 { 
-            color: #d6b4fc; 
-            font-size: 36px; 
-            margin-bottom: 5px; 
-            text-shadow: 0 0 20px rgba(187, 134, 252, 0.6); 
-        }
+        h1 { color: #d6b4fc; font-size: 36px; margin-bottom: 5px; text-shadow: 0 0 20px rgba(187, 134, 252, 0.6); }
+        p.subtitle { color: #a0a0b0; margin-bottom: 50px; font-size: 15px; }
         
-        p.subtitle { 
-            color: #a0a0b0; 
-            margin-bottom: 50px; 
-            font-size: 15px; 
-        }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+        input[type="text"] { width: 100%; padding: 18px 20px; border: 2px solid rgba(187, 134, 252, 0.2); border-radius: 16px; background: rgba(0, 0, 0, 0.5); color: white; outline: none; transition: all 0.3s ease; font-size: 16px; }
+        input[type="text"]:focus { border-color: #bb86fc; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); }
         
-        .input-group {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        input[type="text"] { 
-            width: 100%; 
-            padding: 18px 20px; 
-            border: 2px solid rgba(187, 134, 252, 0.2); 
-            border-radius: 16px; 
-            background: rgba(0, 0, 0, 0.5); 
-            color: white; 
-            outline: none; 
-            transition: all 0.3s ease; 
-            font-size: 16px; /* يمنع الزوم التلقائي في الآيفون */
-        }
-        
-        input[type="text"]:focus { 
-            border-color: #bb86fc; 
-            background: rgba(0, 0, 0, 0.7);
-            box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); 
-        }
-        
-        /* تخصيص زر رفع الصورة بشكل احترافي */
-        .custom-file-upload {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            padding: 18px; 
-            width: 100%;
-            cursor: pointer; 
-            border-radius: 16px; 
-            border: 2px dashed rgba(187, 134, 252, 0.4);
-            background: rgba(187, 134, 252, 0.03); 
-            color: #d6b4fc;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-        
-        .custom-file-upload:hover, .custom-file-upload:active { 
-            background: rgba(187, 134, 252, 0.1); 
-            border-color: #bb86fc;
-        }
-        
+        .custom-file-upload { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 18px; width: 100%; cursor: pointer; border-radius: 16px; border: 2px dashed rgba(187, 134, 252, 0.4); background: rgba(187, 134, 252, 0.03); color: #d6b4fc; transition: all 0.3s ease; font-weight: bold; }
+        .custom-file-upload:hover, .custom-file-upload:active { background: rgba(187, 134, 252, 0.1); border-color: #bb86fc; }
         input[type="file"] { display: none; }
 
-        button.btn-primary { 
-            width: 100%;
-            background: linear-gradient(90deg, #8e2de2, #4a00e0);
-            color: #fff; 
-            border: none; 
-            padding: 18px; 
-            border-radius: 16px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            font-size: 18px; 
-            box-shadow: 0 8px 20px rgba(74, 0, 224, 0.4);
-            margin-top: 10px;
-        }
-        
-        button.btn-primary:hover, button.btn-primary:active { 
-            transform: translateY(-2px); 
-            box-shadow: 0 12px 25px rgba(142, 45, 226, 0.6); 
-        }
+        button.btn-primary { width: 100%; background: linear-gradient(90deg, #8e2de2, #4a00e0); color: #fff; border: none; padding: 18px; border-radius: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 18px; box-shadow: 0 8px 20px rgba(74, 0, 224, 0.4); margin-top: 10px; }
+        button.btn-primary:hover, button.btn-primary:active { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(142, 45, 226, 0.6); }
+        button.btn-primary:disabled { background: #555; box-shadow: none; cursor: not-allowed; transform: none; }
 
-        button.btn-primary:disabled {
-            background: #555;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* شاشة الدردشة */
         #chat-screen { display: flex; flex-direction: column; height: 100%; width: 100%; }
         
-        #header { 
-            background: rgba(20, 15, 30, 0.85); 
-            padding: 18px 20px; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            backdrop-filter: blur(15px);
-            z-index: 10;
-        }
+        #header { background: rgba(20, 15, 30, 0.85); padding: 15px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(15px); z-index: 10; }
+        #header h3 { margin: 0; color: #fff; font-weight: bold; letter-spacing: 1px; font-size: 16px; text-shadow: 0 0 10px rgba(187,134,252,0.4); }
         
-        #header h3 { margin: 0; color: #fff; font-weight: bold; letter-spacing: 1px; font-size: 18px; text-shadow: 0 0 10px rgba(187,134,252,0.4); }
-        
-        /* منطقة الرسائل */
-        #messages { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            scroll-behavior: smooth;
-        }
-        
-        #messages::-webkit-scrollbar { width: 5px; }
-        #messages::-webkit-scrollbar-thumb { background: rgba(187, 134, 252, 0.4); border-radius: 10px; }
+        .header-btn { background: rgba(187, 134, 252, 0.2); border: 1px solid rgba(187, 134, 252, 0.5); color: #d6b4fc; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .header-btn:hover { background: #bb86fc; color: #000; }
 
-        .message { 
-            background: rgba(45, 40, 60, 0.9); 
-            padding: 12px 16px; 
-            border-radius: 20px 20px 20px 4px; 
-            max-width: 85%; 
-            align-self: flex-start; 
-            word-wrap: break-word;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.03);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .message.mine { 
-            background: linear-gradient(135deg, #8e2de2, #4a00e0); 
-            color: #fff; 
-            align-self: flex-end; 
-            border-radius: 20px 20px 4px 20px;
-            border: none;
-            box-shadow: 0 4px 15px rgba(142, 45, 226, 0.3);
-        }
+        .messages-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .messages-container::-webkit-scrollbar { width: 5px; }
+        .messages-container::-webkit-scrollbar-thumb { background: rgba(187, 134, 252, 0.4); border-radius: 10px; }
+
+        .message { background: rgba(45, 40, 60, 0.9); padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 85%; align-self: flex-start; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); animation: fadeIn 0.3s ease; }
+        .message.mine { background: linear-gradient(135deg, #8e2de2, #4a00e0); color: #fff; align-self: flex-end; border-radius: 20px 20px 4px 20px; border: none; box-shadow: 0 4px 15px rgba(142, 45, 226, 0.3); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .msg-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; }
-        .msg-header img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
+        .msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
+        .msg-avatar:hover { transform: scale(1.1); border-color: #bb86fc; }
         .msg-name { font-weight: bold; font-size: 13px; color: #bb86fc; }
         .mine .msg-name { color: #f0e6ff; }
         .msg-text { font-size: 15px; line-height: 1.5; }
         .msg-time { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: left; }
         .msg-image { max-width: 100%; border-radius: 12px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* منطقة الإدخال الاحترافية */
-        #input-area { 
-            background: rgba(20, 15, 30, 0.9); 
-            padding: 12px 15px; 
-            display: flex; 
-            gap: 12px; 
-            align-items: center; 
-            border-top: 1px solid rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(15px);
-            padding-bottom: max(12px, env(safe-area-inset-bottom)); /* دعم حواف الآيفون السفلية */
-        }
+        /* شارة الإدارة */
+        .admin-badge { background: linear-gradient(90deg, #ffd700, #ffaa00); color: #000; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: bold; margin-right: 5px; box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); display: inline-flex; align-items: center; gap: 3px; }
         
-        #input-container {
-            flex: 1;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        #input-container input[type="text"] { 
-            width: 100%;
-            margin: 0; 
-            padding: 14px 20px; 
-            padding-right: 45px; /* مساحة لزر المرفقات */
-            border: none; 
-            border-radius: 25px; 
-            background: rgba(255, 255, 255, 0.08); 
-            color: white; 
-            font-size: 15px; 
-            transition: 0.3s;
-        }
-        
-        #input-container input[type="text"]:focus { 
-            background: rgba(255, 255, 255, 0.12); 
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-        }
-        
-        .file-btn { 
-            position: absolute;
-            right: 8px;
-            background: transparent; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            color: #bb86fc; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            width: 35px; 
-            height: 35px; 
-            font-size: 22px; 
-            transition: 0.3s;
-        }
-        
+        #input-area { background: rgba(20, 15, 30, 0.9); padding: 12px 15px; display: flex; gap: 12px; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        #input-container { flex: 1; position: relative; display: flex; align-items: center; }
+        #input-container input[type="text"] { width: 100%; margin: 0; padding: 14px 20px; padding-right: 45px; border: none; border-radius: 25px; background: rgba(255, 255, 255, 0.08); color: white; font-size: 15px; transition: 0.3s; }
+        #input-container input[type="text"]:focus { background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .file-btn { position: absolute; right: 8px; background: transparent; border-radius: 50%; cursor: pointer; color: #bb86fc; display: flex; justify-content: center; align-items: center; width: 35px; height: 35px; font-size: 22px; transition: 0.3s; }
         .file-btn:hover { background: rgba(187, 134, 252, 0.2); }
-        
-        .send-btn {
-            background: linear-gradient(45deg, #8e2de2, #4a00e0);
-            border: none; 
-            border-radius: 50%; 
-            width: 48px; 
-            height: 48px;
-            min-width: 48px;
-            color: white; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(142, 45, 226, 0.4); 
-            transition: all 0.3s ease;
-        }
-        
-        .send-btn:hover, .send-btn:active { 
-            transform: scale(1.08); 
-            box-shadow: 0 6px 20px rgba(142, 45, 226, 0.6);
-        }
-        
-        .send-btn svg { 
-            width: 22px; 
-            height: 22px; 
-            fill: currentColor; 
-            transform: rotate(180deg); /* توجيه السهم للعربية */
-            margin-right: 3px;
-        }
+        .send-btn { background: linear-gradient(45deg, #8e2de2, #4a00e0); border: none; border-radius: 50%; width: 48px; height: 48px; min-width: 48px; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(142, 45, 226, 0.4); transition: all 0.3s ease; }
+        .send-btn:hover, .send-btn:active { transform: scale(1.08); box-shadow: 0 6px 20px rgba(142, 45, 226, 0.6); }
+        .send-btn svg { width: 22px; height: 22px; fill: currentColor; transform: rotate(180deg); margin-right: 3px; }
 
-        #attachment-preview {
-            position: absolute; 
-            bottom: 80px; 
-            right: 20px; 
-            background: rgba(20, 15, 30, 0.95);
-            padding: 8px; 
-            border-radius: 12px; 
-            display: none; 
-            border: 1px solid #bb86fc;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            z-index: 20;
-        }
-        
-        #attachment-preview img { 
-            width: 60px; 
-            height: 60px; 
-            border-radius: 8px; 
-            object-fit: cover; 
-        }
-        
-        .close-preview {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            background: #ff4757;
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        #attachment-preview { position: absolute; bottom: 80px; right: 20px; background: rgba(20, 15, 30, 0.95); padding: 8px; border-radius: 12px; display: none; border: 1px solid #bb86fc; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 20; }
+        #attachment-preview img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .close-preview { position: absolute; top: -10px; left: -10px; background: #ff4757; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; font-weight: bold; }
 
-        /* شاشة التحميل التلقائي */
-        #loading-screen {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0b0714;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: #bb86fc;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(187, 134, 252, 0.3);
-            border-top-color: #bb86fc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
+        #loading-screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #0b0714; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: #bb86fc; font-size: 18px; font-weight: bold; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(187, 134, 252, 0.3); border-top-color: #bb86fc; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* شاشة البحث عن أدمن */
+        #admin-search-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: rgba(20, 15, 30, 0.95); backdrop-filter: blur(20px); position: absolute; top: 0; left: 0; z-index: 30; }
+        .search-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; }
+        .back-btn { background: transparent; border: none; color: #bb86fc; font-size: 24px; cursor: pointer; }
+        .search-input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(187,134,252,0.3); background: rgba(0,0,0,0.4); color: white; font-size: 15px; outline: none; }
+        .admins-list { flex: 1; overflow-y: auto; padding: 20px; }
+        .admin-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .admin-card:hover { border-color: #bb86fc; background: rgba(187,134,252,0.1); }
+        .admin-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .admin-card-info { flex: 1; }
+        .admin-card-name { font-weight: bold; color: #fff; font-size: 16px; margin-bottom: 5px; }
+        .admin-card-id { color: #a0a0b0; font-size: 13px; }
+
+        /* تنبيه مخصص */
+        .custom-alert { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(20, 15, 30, 0.95); border: 1px solid #bb86fc; color: #fff; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; text-align: center; font-weight: bold; display: none; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
     </style>
 </head>
 <body>
@@ -390,25 +170,26 @@
     <div id="login-screen" class="hidden">
         <h1>FawakihAI Chat</h1>
         <p class="subtitle">مجتمع المستخدمين المحترفين</p>
-        
         <div class="input-group">
             <input type="text" id="username" placeholder="اكتب اسمك (أقصى حد 24 حرف)" maxlength="24">
-            
             <label class="custom-file-upload">
                 <input type="file" id="user-image" accept="image/*" onchange="updateFileName(this)">
                 <span id="file-label-text">📷 اختر صورة لحسابك</span>
             </label>
-            
             <button class="btn-primary" onclick="login()" id="login-btn">دخول الدردشة الآن</button>
         </div>
     </div>
 
     <div id="chat-screen" class="hidden">
         <div id="header">
-            <h3>شات FawakihAI العام</h3>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="back-to-general" class="back-btn hidden" onclick="openGeneralChat()">❮</button>
+                <h3 id="chat-title">شات FawakihAI العام</h3>
+            </div>
+            <button class="header-btn" onclick="openAdminSearch()">تواصل مع الإدارة 👑</button>
         </div>
         
-        <div id="messages"></div>
+        <div id="messages" class="messages-container"></div>
         
         <div id="attachment-preview">
             <div class="close-preview" onclick="removeAttachment()">✕</div>
@@ -428,6 +209,18 @@
             </button>
         </div>
     </div>
+
+    <div id="admin-search-screen" class="hidden">
+        <div class="search-header">
+            <button class="back-btn" onclick="closeAdminSearch()">❮</button>
+            <input type="text" id="search-input" class="search-input" placeholder="ابحث بالاسم أو الآيدي (مثال: 1111)..." onkeyup="filterAdmins()">
+        </div>
+        <div id="admins-list" class="admins-list">
+            </div>
+    </div>
+
+    <div id="custom-alert" class="custom-alert"></div>
+
 </div>
 
 <script>
@@ -442,15 +235,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // --- جلب معرف الجهاز الحقيقي (Android ID) ---
     let deviceId = null;
     try {
-        if (window.Android && window.Android.getDeviceID) {
-            deviceId = window.Android.getDeviceID();
-        }
-    } catch (e) {
-        console.log("Not running inside Android App");
-    }
+        if (window.Android && window.Android.getDeviceID) { deviceId = window.Android.getDeviceID(); }
+    } catch (e) { console.log("Not running inside Android App"); }
 
     if (!deviceId) {
         deviceId = localStorage.getItem("chat_device_id");
@@ -460,42 +248,51 @@
         }
     }
 
-    let currentUser = { name: "", image: "", isAdmin: false };
+    let currentUser = { name: "", image: "", adminId: null };
     let attachedImageBase64 = null;
+    let currentChatPath = 'messages_general'; // المسار الافتراضي للشات العام
+    let chatListener = null; // للاحتفاظ بمستمع الرسائل لإلغائه عند تغيير الشات
 
-    // --- التحقق التلقائي من تسجيل الدخول السابق (Auto Login) ---
+    function showAlert(msg) {
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.innerText = msg;
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+    }
+
     function checkAutoLogin() {
         db.ref('users/' + deviceId).once('value', snapshot => {
             if (snapshot.exists()) {
-                // المستخدم موجود مسبقاً في قاعدة البيانات
                 const userData = snapshot.val();
                 currentUser.name = userData.name;
                 currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
                 
-                // تحديث وقت آخر ظهور
                 db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
 
-                // التحقق من صلاحيات الأدمن
-                db.ref('admins/' + deviceId).once('value', adminSnap => {
-                    if (adminSnap.exists()) currentUser.isAdmin = true;
-                    
-                    // إخفاء شاشة التحميل وإظهار الدردشة مباشرة
+                // التحقق من أن المستخدم أدمن وجلب الآيدي الخاص به
+                db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                    if (adminSnap.exists()) {
+                        currentUser.adminId = adminSnap.val(); // الآيدي (مثال: 1111)
+                        // تحديث بيانات الأدمن في ملف profiles ليظهر في البحث بأحدث صورة واسم
+                        db.ref('admins_profiles/' + currentUser.adminId).set({
+                            deviceId: deviceId,
+                            name: currentUser.name,
+                            image: currentUser.image,
+                            id: currentUser.adminId
+                        });
+                    }
                     document.getElementById("loading-screen").classList.add("hidden");
-                    document.getElementById("chat-screen").classList.remove("hidden");
-                    loadMessages();
+                    openGeneralChat();
                 });
             } else {
-                // مستخدم جديد، إظهار شاشة تسجيل الدخول
                 document.getElementById("loading-screen").classList.add("hidden");
                 document.getElementById("login-screen").classList.remove("hidden");
             }
         });
     }
 
-    // تشغيل التحقق بمجرد تحميل الصفحة
     window.onload = checkAutoLogin;
 
-    // تغيير نص زر رفع الصورة عند الاختيار
     function updateFileName(input) {
         const label = document.getElementById("file-label-text");
         if(input.files && input.files[0]) {
@@ -507,7 +304,6 @@
         }
     }
 
-    // دالة ضغط الصور
     function compressImage(file, callback) {
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -533,22 +329,23 @@
         const fileInput = document.getElementById("user-image").files[0];
         const btn = document.getElementById("login-btn");
         
-        if (!name) return alert("يرجى إدخال اسمك أولاً.");
+        if (!name) return showAlert("يرجى إدخال اسمك أولاً.");
         
         btn.innerHTML = "جاري الدخول...";
         btn.disabled = true;
 
-        // التحقق من الحظر
         db.ref('bans/' + deviceId).once('value', snapshot => {
             if (snapshot.exists()) {
                 btn.innerHTML = "دخول الدردشة الآن";
                 btn.disabled = false;
-                return alert("عذراً، هذا الجهاز محظور من دخول الشات.");
+                return showAlert("عذراً، هذا الجهاز محظور.");
             }
             
             currentUser.name = name;
-            db.ref('admins/' + deviceId).once('value', adminSnap => {
-                if (adminSnap.exists()) currentUser.isAdmin = true;
+            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                if (adminSnap.exists()) {
+                    currentUser.adminId = adminSnap.val();
+                }
                 
                 if (fileInput) {
                     compressImage(fileInput, (compressedImg) => {
@@ -564,16 +361,16 @@
     }
 
     function finishLogin() {
-        // حفظ بيانات المستخدم في قاعدة البيانات للرجوع إليها لاحقاً
-        db.ref('users/' + deviceId).set({ 
-            name: currentUser.name, 
-            image: currentUser.image, 
-            lastLogin: Date.now() 
-        });
+        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
         
+        if(currentUser.adminId) {
+            db.ref('admins_profiles/' + currentUser.adminId).set({
+                deviceId: deviceId, name: currentUser.name, image: currentUser.image, id: currentUser.adminId
+            });
+        }
+
         document.getElementById("login-screen").classList.add("hidden");
-        document.getElementById("chat-screen").classList.remove("hidden");
-        loadMessages();
+        openGeneralChat();
     }
 
     function handleImageSelect(e) {
@@ -585,17 +382,12 @@
                 document.getElementById('attachment-preview').style.display = 'block';
             });
         }
-        e.target.value = ''; // لإعادة التعيين والسماح باختيار نفس الصورة مجدداً
+        e.target.value = ''; 
     }
 
-    function removeAttachment() {
-        attachedImageBase64 = null;
-        document.getElementById('attachment-preview').style.display = 'none';
-    }
+    function removeAttachment() { attachedImageBase64 = null; document.getElementById('attachment-preview').style.display = 'none'; }
 
-    function handleKeyPress(e) {
-        if (e.key === 'Enter') sendMessage();
-    }
+    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
     function sendMessage() {
         const inputField = document.getElementById("msg-input");
@@ -607,36 +399,49 @@
             deviceId: deviceId,
             sender: currentUser.name,
             senderImg: currentUser.image,
+            adminId: currentUser.adminId || null, // حفظ آيدي الأدمن مع الرسالة إن وجد
             text: text,
             image: attachedImageBase64 || null,
             timestamp: Date.now()
         };
 
-        db.ref('messages').push(msgData);
-        
+        db.ref(currentChatPath).push(msgData);
         inputField.value = "";
         removeAttachment();
     }
 
     let isScrolledToBottom = true;
     const messagesDiv = document.getElementById("messages");
-
     messagesDiv.addEventListener('scroll', () => {
         isScrolledToBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 20;
     });
 
-    function loadMessages() {
-        db.ref('messages').on('child_added', snapshot => {
+    // دالة مرنة لتحميل الرسائل بناءً على المسار
+    function loadMessages(path) {
+        if(chatListener) { db.ref(currentChatPath).off('child_added', chatListener); }
+        
+        messagesDiv.innerHTML = "";
+        currentChatPath = path;
+        
+        chatListener = db.ref(currentChatPath).on('child_added', snapshot => {
             const data = snapshot.val();
             const msgDiv = document.createElement("div");
             msgDiv.className = "message " + (data.deviceId === deviceId ? "mine" : "");
             
             const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
+            // إذا كان المرسل أدمن، نضيف الشارة ونجعل الصورة قابلة للضغط
+            let adminBadge = "";
+            let avatarAction = "";
+            if(data.adminId) {
+                adminBadge = `<span class="admin-badge">👑 Super Admin</span>`;
+                avatarAction = `onclick="showAdminId('${data.adminId}')"`;
+            }
+
             let html = `
-                <div class="msg-header" onclick="checkAdminClick('${data.deviceId}')">
-                    <img src="${data.senderImg}" alt="Avatar">
-                    <span class="msg-name">${data.sender}</span>
+                <div class="msg-header">
+                    <img src="${data.senderImg}" class="msg-avatar" alt="Avatar" ${avatarAction}>
+                    <span class="msg-name">${data.sender} ${adminBadge}</span>
                 </div>`;
             if (data.text) html += `<div class="msg-text">${data.text}</div>`;
             if (data.image) html += `<img src="${data.image}" class="msg-image">`;
@@ -645,20 +450,99 @@
             msgDiv.innerHTML = html;
             messagesDiv.appendChild(msgDiv);
             
-            // التمرير التلقائي للأسفل
             if (isScrolledToBottom || data.deviceId === deviceId) {
-                setTimeout(() => {
-                    messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' });
-                }, 100);
+                setTimeout(() => { messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' }); }, 100);
             }
         });
     }
 
-    function checkAdminClick(targetDeviceId) {
-        if (currentUser.isAdmin) {
-            alert("معرف الجهاز (Device ID) للمستخدم:\n" + targetDeviceId);
-        }
+    function showAdminId(adminId) {
+        showAlert("الآيدي الخاص بهذا الإداري هو: " + adminId);
     }
+
+    // --- قسم المحادثات الخاصة والبحث ---
+
+    function openGeneralChat() {
+        document.getElementById("chat-screen").classList.remove("hidden");
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-title").innerText = "شات FawakihAI العام";
+        document.getElementById("back-to-general").classList.add("hidden");
+        loadMessages('messages_general');
+    }
+
+    function openAdminSearch() {
+        document.getElementById("admin-search-screen").classList.remove("hidden");
+        document.getElementById("chat-screen").classList.add("hidden");
+        fetchAdmins();
+    }
+
+    function closeAdminSearch() {
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-screen").classList.remove("hidden");
+    }
+
+    function fetchAdmins() {
+        db.ref('admins_profiles').once('value', snapshot => {
+            const listDiv = document.getElementById('admins-list');
+            listDiv.innerHTML = "";
+            if(!snapshot.exists()) {
+                listDiv.innerHTML = "<p style='text-align:center; color:#a0a0b0;'>لا يوجد إداريين حالياً</p>";
+                return;
+            }
+            
+            snapshot.forEach(child => {
+                const admin = child.val();
+                const card = document.createElement('div');
+                card.className = 'admin-card';
+                card.setAttribute('data-search', (admin.name + admin.id).toLowerCase());
+                card.onclick = () => openPrivateChat(admin.id, admin.name);
+                
+                card.innerHTML = `
+                    <img src="${admin.image}" alt="admin">
+                    <div class="admin-card-info">
+                        <div class="admin-card-name">${admin.name} <span class="admin-badge">👑</span></div>
+                        <div class="admin-card-id">ID: ${admin.id}</div>
+                    </div>
+                    <div style="color:#bb86fc;">💬</div>
+                `;
+                listDiv.appendChild(card);
+            });
+        });
+    }
+
+    function filterAdmins() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const cards = document.querySelectorAll('.admin-card');
+        cards.forEach(card => {
+            if(card.getAttribute('data-search').includes(query)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function openPrivateChat(adminId, adminName) {
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-screen").classList.remove("hidden");
+        
+        document.getElementById("chat-title").innerText = "تواصل خاص مع: " + adminName;
+        document.getElementById("back-to-general").classList.remove("hidden");
+        
+        // إنشاء مسار فريد للشات الخاص (إذا كان المستخدم نفسه أدمن، نرتب الآيديات لمنع التكرار)
+        let roomPath = "";
+        if(currentUser.adminId) {
+            // أدمن يكلم أدمن
+            const ids = [currentUser.adminId, adminId].sort();
+            roomPath = `private_messages/admin_${ids[0]}_admin_${ids[1]}`;
+        } else {
+            // مستخدم عادي يكلم أدمن
+            roomPath = `private_messages/user_${deviceId}_admin_${adminId}`;
+        }
+        
+        loadMessages(roomPath);
+    }
+
 </script>
 
 </body>
