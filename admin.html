@@ -23,8 +23,13 @@
 
         /* اللوحة الرئيسية */
         #dashboard { display: none; height: 100vh; flex-direction: column; }
-        header { background: #1a1525; padding: 15px 20px; border-bottom: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; }
+        header { background: #1a1525; padding: 15px 20px; border-bottom: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         header h1 { margin: 0; color: #f39c12; font-size: 24px; }
+        
+        .admin-settings { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .admin-settings input { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
+        .admin-settings input:focus { border-color: #f39c12; }
+        
         .logout-btn { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
         .container { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
@@ -38,7 +43,7 @@
         .panel-content::-webkit-scrollbar { width: 6px; }
         .panel-content::-webkit-scrollbar-thumb { background: #f39c12; border-radius: 10px; }
 
-        /* العناصر (المستخدمين والرسائل) */
+        /* العناصر */
         .card { background: #2a233c; padding: 15px; border-radius: 10px; border: 1px solid #444; position: relative; }
         
         /* المستخدمين */
@@ -74,7 +79,9 @@
         #user-chat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: #1a1525; width: 90%; max-width: 600px; height: 80vh; border-radius: 15px; border: 1px solid #f39c12; display: flex; flex-direction: column; overflow: hidden; }
         .modal-header { padding: 15px; background: #221c30; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
-        .modal-header h3 { margin: 0; color: #f39c12; }
+        .modal-header h3 { margin: 0; color: #f39c12; font-size: 16px;}
+        .modal-header-actions { display: flex; gap: 8px; }
+        .modal-ban-btn { padding: 5px 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
         .close-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         #modal-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
@@ -84,6 +91,9 @@
 
         @media (max-width: 768px) {
             .container { flex-direction: column; }
+            header { flex-direction: column; align-items: flex-start; }
+            .admin-settings { width: 100%; }
+            .admin-settings input { flex: 1; }
         }
     </style>
 </head>
@@ -101,20 +111,22 @@
 <div id="dashboard">
     <header>
         <h1>🛠️ لوحة تحكم السوبر آدمن</h1>
-        <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+        <div class="admin-settings">
+            <input type="text" id="custom-admin-name" placeholder="اسمك كأدمن (مثال: المدير حمزة)" onchange="saveAdminConfig()">
+            <input type="text" id="custom-admin-img" placeholder="رابط صورة الأدمن" onchange="saveAdminConfig()">
+            <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+        </div>
     </header>
 
     <div class="container">
         <div class="panel">
             <div class="panel-header">👥 إدارة المستخدمين</div>
-            <div class="panel-content" id="users-list">
-                </div>
+            <div class="panel-content" id="users-list"></div>
         </div>
 
         <div class="panel">
             <div class="panel-header">💬 المراقبة العامة للرسائل</div>
-            <div class="panel-content" id="messages-list">
-                </div>
+            <div class="panel-content" id="messages-list"></div>
         </div>
     </div>
 </div>
@@ -123,12 +135,14 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modal-title">دردشة المستخدم</h3>
-            <button class="close-btn" onclick="closeUserChat()">إغلاق ✕</button>
-        </div>
-        <div id="modal-messages">
+            <div class="modal-header-actions">
+                <button id="modal-ban-action" class="modal-ban-btn" onclick="toggleModalBan()">حظر 🚫</button>
+                <button class="close-btn" onclick="closeUserChat()">إغلاق ✕</button>
             </div>
+        </div>
+        <div id="modal-messages"></div>
         <div class="reply-box">
-            <input type="text" id="admin-reply-input" placeholder="اكتب ردك المباشر للمستخدم...">
+            <input type="text" id="admin-reply-input" placeholder="اكتب ردك المباشر للمستخدم..." onkeypress="if(event.key === 'Enter') sendDirectReply()">
             <button onclick="sendDirectReply()">إرسال الرد</button>
         </div>
     </div>
@@ -161,6 +175,7 @@
         if (savedPass === ADMIN_PASSWORD) {
             grantAccess();
         }
+        loadAdminConfig();
     };
 
     function checkLogin() {
@@ -184,9 +199,19 @@
         initDashboard();
     }
 
+    // حفظ واسترجاع بيانات الأدمن المخصصة
+    function saveAdminConfig() {
+        localStorage.setItem("super_admin_name", document.getElementById("custom-admin-name").value);
+        localStorage.setItem("super_admin_img", document.getElementById("custom-admin-img").value);
+    }
+
+    function loadAdminConfig() {
+        document.getElementById("custom-admin-name").value = localStorage.getItem("super_admin_name") || "";
+        document.getElementById("custom-admin-img").value = localStorage.getItem("super_admin_img") || "";
+    }
+
     // --- تشغيل البيانات ---
     function initDashboard() {
-        // جلب الأدمنز والحظر أولاً لتحديث الواجهة
         db.ref('admins').on('value', snap => {
             globalAdmins = snap.val() || {};
             renderUsers();
@@ -195,15 +220,14 @@
         db.ref('bans').on('value', snap => {
             globalBans = snap.val() || {};
             renderUsers();
+            updateModalBanButton(); // تحديث زر الحظر في الشات إذا كان مفتوحاً
         });
 
-        // جلب المستخدمين
         db.ref('users').on('value', snap => {
             globalUsers = snap.val() || {};
             renderUsers();
         });
 
-        // مراقبة الرسائل
         loadAllMessages();
     }
 
@@ -220,7 +244,6 @@
             if (isAdmin) badgesHTML += `<span class="badge admin">آدمن</span>`;
             if (isBanned) badgesHTML += `<span class="badge banned">محظور</span>`;
 
-            // أزرار التحكم
             let adminBtn = isAdmin 
                 ? `<button class="action-btn btn-demote" onclick="demoteAdmin('${uid}')">تنزيل أدمن ▼</button>`
                 : `<button class="action-btn btn-promote" onclick="promoteAdmin('${uid}')">رفع أدمن ▲</button>`;
@@ -242,26 +265,17 @@
                     <div class="btn-group">
                         ${adminBtn}
                         ${banBtn}
-                        <button class="action-btn btn-view" onclick="openUserChat('${uid}', '${data.name}')">عرض الرسائل 👁️</button>
+                        <button class="action-btn btn-view" onclick="openUserChat('${uid}', '${data.name}')">الدردشة والتحكم 👁️</button>
                     </div>
                 </div>
             `;
         }
     }
 
-    // --- أوامر التحكم (رفع/تنزيل/حظر) ---
-    function promoteAdmin(uid) {
-        if(confirm("تأكيد رفع هذا المستخدم لمنصب أدمن؟")) db.ref('admins/' + uid).set({ role: 'admin' });
-    }
-    function demoteAdmin(uid) {
-        if(confirm("تأكيد تنزيل هذا المستخدم من الإدارة؟")) db.ref('admins/' + uid).remove();
-    }
-    function banUser(uid) {
-        if(confirm("هل أنت متأكد من حظر جهاز هذا المستخدم نهائياً؟")) db.ref('bans/' + uid).set(true);
-    }
-    function unbanUser(uid) {
-        if(confirm("هل تريد فك الحظر عن هذا الجهاز؟")) db.ref('bans/' + uid).remove();
-    }
+    function promoteAdmin(uid) { if(confirm("تأكيد رفع هذا المستخدم لمنصب أدمن؟")) db.ref('admins/' + uid).set({ role: 'admin' }); }
+    function demoteAdmin(uid) { if(confirm("تأكيد تنزيل هذا المستخدم من الإدارة؟")) db.ref('admins/' + uid).remove(); }
+    function banUser(uid) { db.ref('bans/' + uid).set(true); }
+    function unbanUser(uid) { db.ref('bans/' + uid).remove(); }
 
     // --- نظام الرسائل العام ---
     function loadAllMessages() {
@@ -272,10 +286,13 @@
             const data = snapshot.val();
             const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
+            // تمييز إذا كانت الرسالة من سوبر أدمن في اللوحة
+            const senderName = data.isSuperAdmin ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
+
             let msgHtml = `
                 <div class="card" id="msg-${key}">
                     <div class="msg-header">
-                        <span class="msg-sender">${data.sender}</span>
+                        <span class="msg-sender">${senderName}</span>
                         <span class="msg-time">${time}</span>
                     </div>
                     <div class="device-id" style="margin-bottom:8px;">${data.deviceId}</div>
@@ -286,26 +303,22 @@
 
             msgHtml += `
                     <div class="msg-actions">
-                        <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">رد</button>
+                        <button class="btn-reply" onclick="openUserChat('${data.deviceId === 'admin_system' ? data.targetId : data.deviceId}', '${data.sender}')">إجراء ورد</button>
                         <button class="btn-delete" onclick="deleteMessage('${key}')">مسح رسالة 🗑️</button>
                     </div>
                 </div>
             `;
             
-            // إضافة الرسالة للأعلى لتظهر الأحدث أولاً
             msgList.insertAdjacentHTML('afterbegin', msgHtml);
 
-            // إضافتها أيضاً في نافذة المستخدم المخصصة إذا كانت مفتوحة
             if(currentChatUserId === data.deviceId || (data.isAdminReply && data.targetId === currentChatUserId)) {
                 appendMsgToModal(key, data, time);
             }
         });
 
-        // عند حذف رسالة من الداتا بيس، إخفاؤها من الواجهة
         db.ref('messages').on('child_removed', snapshot => {
             const el = document.getElementById("msg-" + snapshot.key);
             if (el) el.remove();
-            
             const modalEl = document.getElementById("modal-msg-" + snapshot.key);
             if (modalEl) modalEl.remove();
         });
@@ -317,15 +330,16 @@
         }
     }
 
-    // --- نظام الشات المنفرد والرد ---
+    // --- نظام الشات المنفرد والرد والحظر ---
     function openUserChat(uid, userName) {
         currentChatUserId = uid;
         currentChatUserName = userName;
-        document.getElementById("modal-title").innerText = `رسائل: ${userName}`;
-        document.getElementById("modal-messages").innerHTML = ""; // تنظيف
+        document.getElementById("modal-title").innerText = `إدارة المستخدم: ${userName}`;
+        document.getElementById("modal-messages").innerHTML = ""; 
         document.getElementById("user-chat-modal").style.display = "flex";
+        
+        updateModalBanButton(); // تحديث حالة الزر فور الفتح
 
-        // جلب رسائل هذا المستخدم فقط أو ردود الإدارة عليه
         db.ref('messages').once('value', snapshot => {
             snapshot.forEach(child => {
                 const data = child.val();
@@ -334,7 +348,6 @@
                     appendMsgToModal(child.key, data, time);
                 }
             });
-            // التمرير للأسفل
             const modalMsgs = document.getElementById("modal-messages");
             modalMsgs.scrollTop = modalMsgs.scrollHeight;
         });
@@ -345,6 +358,27 @@
         currentChatUserId = null;
     }
 
+    function toggleModalBan() {
+        if (!currentChatUserId) return;
+        if (globalBans[currentChatUserId]) {
+            unbanUser(currentChatUserId);
+        } else {
+            banUser(currentChatUserId);
+        }
+    }
+
+    function updateModalBanButton() {
+        if (!currentChatUserId) return;
+        const btn = document.getElementById("modal-ban-action");
+        if (globalBans[currentChatUserId]) {
+            btn.innerText = "فك الحظر 🔓";
+            btn.style.background = "#2ecc71";
+        } else {
+            btn.innerText = "حظر من الشات 🚫";
+            btn.style.background = "#e74c3c";
+        }
+    }
+
     function appendMsgToModal(key, data, time) {
         const modalMsgs = document.getElementById("modal-messages");
         const isReply = data.isAdminReply;
@@ -352,7 +386,7 @@
         let html = `
             <div class="card" id="modal-msg-${key}" style="background: ${isReply ? '#27ae6033' : '#2a233c'}; border-color: ${isReply ? '#2ecc71' : '#444'};">
                 <div class="msg-header">
-                    <span class="msg-sender" style="color: ${isReply ? '#2ecc71' : '#f39c12'};">${data.sender}</span>
+                    <span class="msg-sender" style="color: ${isReply ? '#f1c40f' : '#f39c12'};">${data.sender}</span>
                     <span class="msg-time">${time}</span>
                 </div>
                 ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
@@ -369,17 +403,21 @@
     function sendDirectReply() {
         const input = document.getElementById("admin-reply-input");
         const text = input.value.trim();
-        if (!text) return;
+        if (!text || !currentChatUserId) return;
 
-        // تجهيز الرسالة لتظهر للجميع ولكن بصيغة رد إداري
+        // سحب البيانات المخصصة للأدمن
+        const customName = document.getElementById("custom-admin-name").value.trim() || "الإدارة المركزية";
+        const customImg = document.getElementById("custom-admin-img").value.trim() || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+
         const msgData = {
             deviceId: "admin_system", 
-            sender: "👨‍💻 الإدارة (رد على " + currentChatUserName + ")",
-            senderImg: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png",
-            text: "🔹 تم الرد عليك عبر الإدارة:\n" + text,
+            sender: customName,
+            senderImg: customImg,
+            text: "🔹 رد على " + currentChatUserName + ":\n" + text,
             timestamp: Date.now(),
             isAdminReply: true,
-            targetId: currentChatUserId // معرف المستخدم المستهدف
+            targetId: currentChatUserId, // معرف المستخدم المستهدف لإظهار الشعار له
+            isSuperAdmin: true // لتمييزه بشارة السوبر أدمن
         };
 
         db.ref('messages').push(msgData);
