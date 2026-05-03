@@ -2,156 +2,386 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Chat System Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
     <style>
-        /* التنسيق الاحترافي (Dark Premium) */
-        :root { --main-color: #00d2ff; --bg-dark: #0f0f13; --card-bg: #1c1c24; }
-        body { background-color: var(--bg-dark); color: #fff; margin: 0; font-family: 'Cairo', sans-serif; overflow: hidden; }
-        #chat-container { height: 100vh; display: flex; flex-direction: column; }
-        .header { background: var(--card-bg); padding: 15px; text-align: center; border-bottom: 2px solid var(--main-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--card-bg); padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 80%; align-self: flex-start; position: relative; animation: fadeIn 0.3s ease; }
-        .msg.mine { align-self: flex-end; background: var(--main-color); color: #000; border-radius: 15px 15px 15px 0; }
-        .user-img { width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-left: 8px; cursor: pointer; border: 1px solid var(--main-color); }
-        .time { font-size: 9px; opacity: 0.7; margin-top: 5px; display: block; }
-        .input-area { background: var(--card-bg); padding: 10px; display: flex; align-items: center; gap: 10px; }
-        input { flex: 1; background: #2a2a35; border: none; padding: 12px; border-radius: 25px; color: #fff; outline: none; }
-        .send-btn { background: var(--main-color); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        
+        body { 
+            background-color: #0b0714; 
+            color: #ffffff; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* خلفية FawakihAI المتحركة والناعمة */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            z-index: 0;
+            animation: float 12s infinite ease-in-out alternate;
+        }
+        .orb-1 { width: 350px; height: 350px; background: rgba(138, 43, 226, 0.4); top: -50px; left: -100px; }
+        .orb-2 { width: 450px; height: 450px; background: rgba(74, 0, 224, 0.3); bottom: -150px; right: -100px; animation-duration: 15s; }
+        .orb-3 { width: 250px; height: 250px; background: rgba(255, 0, 128, 0.2); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-duration: 10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 40px) scale(1.1); }
+        }
+
+        #app { 
+            width: 100%; 
+            max-width: 500px; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            z-index: 1;
+            /* تأثير الزجاج */
+            background: rgba(20, 15, 30, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .hidden { display: none !important; }
+        
+        /* شاشة تسجيل الدخول */
+        #login-screen { padding: 40px 30px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+        h1 { color: #d6b4fc; font-size: 32px; margin-bottom: 10px; text-shadow: 0 0 15px rgba(187, 134, 252, 0.5); }
+        p.subtitle { color: #a0a0b0; margin-bottom: 40px; font-size: 14px; }
+        
+        input[type="text"] { 
+            width: 100%; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 12px; background: rgba(0, 0, 0, 0.4); color: white; 
+            margin-bottom: 20px; outline: none; transition: 0.3s; font-size: 15px;
+        }
+        input[type="text"]:focus { border-color: #bb86fc; box-shadow: 0 0 10px rgba(187, 134, 252, 0.3); }
+        
+        /* تخصيص زر رفع الصورة */
+        .custom-file-upload {
+            display: inline-block; padding: 12px; width: 100%;
+            cursor: pointer; border-radius: 12px; border: 1px dashed rgba(187, 134, 252, 0.5);
+            background: rgba(187, 134, 252, 0.05); color: #d6b4fc;
+            margin-bottom: 30px; transition: 0.3s;
+        }
+        .custom-file-upload:hover { background: rgba(187, 134, 252, 0.1); }
+        input[type="file"] { display: none; }
+
+        button.btn-primary { 
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            color: #fff; border: none; padding: 16px; border-radius: 12px; 
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; 
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+        }
+        button.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6); }
+
+        /* شاشة الدردشة */
+        #chat-screen { display: flex; flex-direction: column; height: 100%; }
+        #header { 
+            background: rgba(0, 0, 0, 0.4); padding: 15px 20px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        #header h3 { margin: 0; color: #d6b4fc; font-weight: bold; letter-spacing: 1px; }
+        
+        /* منطقة الرسائل */
+        #messages { 
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; 
+            flex-direction: column; gap: 15px; scroll-behavior: smooth;
+        }
+        /* تخصيص شريط التمرير */
+        #messages::-webkit-scrollbar { width: 6px; }
+        #messages::-webkit-scrollbar-thumb { background: rgba(187, 134, 252, 0.3); border-radius: 10px; }
+
+        .message { 
+            background: rgba(40, 35, 55, 0.8); padding: 12px 16px; 
+            border-radius: 16px 16px 16px 4px; max-width: 85%; 
+            align-self: flex-start; word-wrap: break-word;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.02);
+            animation: fadeIn 0.3s ease;
+        }
+        .message.mine { 
+            background: linear-gradient(135deg, #8e2de2, #4a00e0); 
+            color: #fff; align-self: flex-end; 
+            border-radius: 16px 16px 4px 16px;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .hidden { display: none; }
+
+        .msg-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; }
+        .msg-header img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); }
+        .msg-name { font-weight: bold; font-size: 13px; color: #d6b4fc; }
+        .mine .msg-name { color: #e6d5ff; }
+        .msg-text { font-size: 15px; line-height: 1.4; }
+        .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; text-align: left; }
+        .msg-image { max-width: 100%; border-radius: 10px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* منطقة الإدخال */
+        #input-area { 
+            background: rgba(0, 0, 0, 0.5); padding: 15px; 
+            display: flex; gap: 10px; align-items: center; 
+            border-top: 1px solid rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(10px);
+        }
+        #input-area input[type="text"] { 
+            flex: 1; margin: 0; padding: 14px 20px; border: none; 
+            border-radius: 25px; background: rgba(255, 255, 255, 0.05); color: white; 
+            font-size: 15px; transition: 0.3s;
+        }
+        #input-area input[type="text"]:focus { background: rgba(255, 255, 255, 0.1); }
+        
+        .file-btn { 
+            background: rgba(255, 255, 255, 0.05); border-radius: 50%; 
+            cursor: pointer; color: #bb86fc; display: flex; 
+            justify-content: center; align-items: center; 
+            width: 45px; height: 45px; font-size: 20px; transition: 0.3s;
+        }
+        .file-btn:hover { background: rgba(187, 134, 252, 0.2); }
+        
+        .send-btn {
+            background: linear-gradient(45deg, #8e2de2, #4a00e0);
+            border: none; border-radius: 50%; width: 45px; height: 45px;
+            color: white; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 10px rgba(142, 45, 226, 0.4); transition: 0.3s;
+        }
+        .send-btn:hover { transform: scale(1.05); }
+        .send-btn svg { width: 20px; height: 20px; fill: currentColor; transform: rotate(180deg); margin-right: 3px;}
+
+        #attachment-preview {
+            position: absolute; bottom: 80px; right: 20px; background: rgba(0,0,0,0.8);
+            padding: 5px; border-radius: 10px; display: none; border: 1px solid #bb86fc;
+        }
+        #attachment-preview img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
     </style>
 </head>
 <body>
 
-<div id="chat-container">
-    <div class="header">
-        <h3 id="app-title" style="margin:0;">FawakihAI Chat</h3>
-    </div>
-    
-    <div id="login-box" style="padding: 20px; text-align: center; margin-top: 50px;">
-        <input type="text" id="user-name" placeholder="أدخل اسمك المستعار (24 حرف)" maxlength="24" style="width: 80%; margin-bottom: 20px;">
-        <button onclick="startChat()" class="send-btn" style="width: auto; padding: 0 30px; border-radius: 10px; font-size: 16px;">دخول</button>
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+
+<div id="app">
+    <div id="login-screen">
+        <h1>FawakihAI Chat</h1>
+        <p class="subtitle">مجتمع المستخدمين المحترفين</p>
+        
+        <input type="text" id="username" placeholder="اكتب اسمك (أقصى حد 24 حرف)" maxlength="24">
+        
+        <label class="custom-file-upload">
+            <input type="file" id="user-image" accept="image/*">
+            📷 اختر صورة لحسابك (يتم ضغطها تلقائياً)
+        </label>
+        
+        <button class="btn-primary" onclick="login()">دخول الدردشة الآن</button>
     </div>
 
-    <div id="chat-box" class="hidden" style="display:contents;">
+    <div id="chat-screen" class="hidden">
+        <div id="header">
+            <h3>شات FawakihAI العام</h3>
+        </div>
+        
         <div id="messages"></div>
-        <div class="input-area">
-            <label style="cursor:pointer; font-size: 24px;">🖼️<input type="file" id="img-upload" accept="image/*" style="display:none;" onchange="uploadPhoto(this)"></label>
-            <input type="text" id="msg-text" placeholder="اكتب رسالة...">
-            <button class="send-btn" onclick="sendMsg()">🚀</button>
+        
+        <div id="attachment-preview">
+            <img id="preview-img" src="" alt="preview">
+        </div>
+
+        <div id="input-area">
+            <label class="file-btn" title="إرفاق صورة">
+                +
+                <input type="file" id="msg-image" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
+            </label>
+            <input type="text" id="msg-input" placeholder="اكتب رسالتك هنا..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()" title="إرسال">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-    // تشفير الروابط والمفاتيح بـ Base64 لزيادة الأمان الاحترافي
-    const _0x4a = {
-        k: "QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3", // API Key
-        u: "aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA=", // DB URL
-        p: "Y2hhdGFwaS0xY2E3MQ==", // Project ID
-        s: "Y2hhdGFwaS0xY2E3MS5maXJlYmFzZXN0b3JhZ2UuYXBw" // Storage
-    };
-
+    // إعدادات Firebase
     const firebaseConfig = {
-        apiKey: atob(_0x4a.k),
-        databaseURL: atob(_0x4a.u),
-        projectId: atob(_0x4a.p),
-        storageBucket: atob(_0x4a.s)
+        apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
+        databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "chatapi-1ca71",
+        storageBucket: "chatapi-1ca71.firebasestorage.app",
+        appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // جلب معرف الأندرويد الحقيقي عبر الجسر البرمجي
-    let deviceId = "WebUser_" + Math.random().toString(36).substr(2, 9);
-    if (window.AndroidBridge) {
-        deviceId = window.AndroidBridge.getDeviceId();
+    
+    // --- جلب معرف الجهاز الحقيقي (Android ID) من التطبيق ---
+    let deviceId = null;
+    try {
+        if (window.Android && window.Android.getDeviceID) {
+            deviceId = window.Android.getDeviceID();
+        }
+    } catch (e) {
+        console.log("Not running inside Android App");
     }
 
-    let user = { name: "", isAdmin: false };
-    let tempImg = null;
+    // احتياطي في حال تم فتح الرابط من متصفح خارجي بدلاً من التطبيق
+    if (!deviceId) {
+        deviceId = localStorage.getItem("chat_device_id");
+        if (!deviceId) {
+            deviceId = 'web_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            localStorage.setItem("chat_device_id", deviceId);
+        }
+    }
 
-    function startChat() {
-        let name = document.getElementById("user-name").value.trim();
-        if(!name) return alert("الاسم مطلوب");
+    let currentUser = { name: "", image: "", isAdmin: false };
+    let attachedImageBase64 = null;
+
+    // دالة ضغط الصور
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 500; 
+                let width = img.width;
+                let height = img.height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', 0.6));
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function login() {
+        const name = document.getElementById("username").value.trim();
+        const fileInput = document.getElementById("user-image").files[0];
+        const btn = document.querySelector(".btn-primary");
         
-        // التحقق من الحظر والآدمن
-        db.ref('bans/' + deviceId).once('value', s => {
-            if(s.exists()) return alert("عذراً، جهازك محظور.");
+        if (!name) return alert("يرجى إدخال اسمك أولاً.");
+        
+        btn.innerHTML = "جاري الدخول...";
+        btn.disabled = true;
+
+        // التحقق من الحظر باستخدام Android ID القوي
+        db.ref('bans/' + deviceId).once('value', snapshot => {
+            if (snapshot.exists()) {
+                btn.innerHTML = "دخول الدردشة الآن";
+                btn.disabled = false;
+                return alert("عذراً، هذا الجهاز محظور من دخول الشات.");
+            }
             
-            user.name = name;
-            db.ref('admins/' + deviceId).once('value', a => {
-                if(a.exists()) user.isAdmin = true;
-                document.getElementById("login-box").classList.add("hidden");
-                loadMsgs();
+            currentUser.name = name;
+            db.ref('admins/' + deviceId).once('value', adminSnap => {
+                if (adminSnap.exists()) currentUser.isAdmin = true;
+                
+                if (fileInput) {
+                    compressImage(fileInput, (compressedImg) => {
+                        currentUser.image = compressedImg;
+                        finishLogin();
+                    });
+                } else {
+                    currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    finishLogin();
+                }
             });
         });
     }
 
-    function uploadPhoto(input) {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            // ضغط الصورة برمجياً قبل الرفع
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = 400; canvas.height = (img.height / img.width) * 400;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                tempImg = canvas.toDataURL('image/jpeg', 0.5); // جودة 50% لتقليل المساحة
-                alert("تم تجهيز الصورة مضغوطة ✅");
-            };
-            img.src = e.target.result;
+    function finishLogin() {
+        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("chat-screen").classList.remove("hidden");
+        loadMessages();
+    }
+
+    function handleImageSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            compressImage(file, (base64) => { 
+                attachedImageBase64 = base64; 
+                document.getElementById('preview-img').src = base64;
+                document.getElementById('attachment-preview').style.display = 'block';
+            });
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+        const inputField = document.getElementById("msg-input");
+        const text = inputField.value.trim();
+        
+        if (!text && !attachedImageBase64) return;
+
+        const msgData = {
+            deviceId: deviceId,
+            sender: currentUser.name,
+            senderImg: currentUser.image,
+            text: text,
+            image: attachedImageBase64 || null,
+            timestamp: Date.now()
         };
-        reader.readAsDataURL(file);
+
+        db.ref('messages').push(msgData);
+        
+        inputField.value = "";
+        attachedImageBase64 = null;
+        document.getElementById("msg-image").value = "";
+        document.getElementById('attachment-preview').style.display = 'none';
     }
 
-    function sendMsg() {
-        const txt = document.getElementById("msg-text").value.trim();
-        if(!txt && !tempImg) return;
-
-        db.ref('messages').push({
-            did: deviceId,
-            n: user.name,
-            t: txt,
-            img: tempImg,
-            time: Date.now()
-        });
-        document.getElementById("msg-text").value = "";
-        tempImg = null;
-    }
-
-    function loadMsgs() {
-        db.ref('messages').limitToLast(50).on('child_added', s => {
-            const d = s.val();
-            const isMine = d.did === deviceId;
-            const timeStr = new Date(d.time).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+    function loadMessages() {
+        const messagesDiv = document.getElementById("messages");
+        db.ref('messages').on('child_added', snapshot => {
+            const data = snapshot.val();
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "message " + (data.deviceId === deviceId ? "mine" : "");
             
-            const html = `
-                <div class="msg ${isMine?'mine':''}">
-                    <div style="font-size:11px; font-weight:bold; margin-bottom:5px;">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${d.did}" class="user-img" onclick="adminAction('${d.did}')">
-                        ${d.n}
-                    </div>
-                    ${d.t ? `<div>${d.t}</div>` : ''}
-                    ${d.img ? `<img src="${d.img}" style="max-width:100%; border-radius:10px; margin-top:5px;">` : ''}
-                    <span class="time">${timeStr}</span>
-                </div>
-            `;
-            document.getElementById("messages").innerHTML += html;
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+            const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            let html = `
+                <div class="msg-header" onclick="checkAdminClick('${data.deviceId}')">
+                    <img src="${data.senderImg}" alt="Avatar">
+                    <span class="msg-name">${data.sender}</span>
+                </div>`;
+            if (data.text) html += `<div class="msg-text">${data.text}</div>`;
+            if (data.image) html += `<img src="${data.image}" class="msg-image">`;
+            html += `<div class="msg-time">${time}</div>`;
+            
+            msgDiv.innerHTML = html;
+            messagesDiv.appendChild(msgDiv);
+            
+            // تمرير تلقائي وناعم للأسفل
+            messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' });
         });
     }
 
-    function adminAction(targetId) {
-        if(user.isAdmin) {
-            if(confirm("المعرف: " + targetId + "\nهل تريد حظر هذا الجهاز؟")) {
-                db.ref('bans/' + targetId).set(true);
-                alert("تم الحظر.");
-            }
+    function checkAdminClick(targetDeviceId) {
+        if (currentUser.isAdmin) {
+            alert("معرف الجهاز (Device ID) للمستخدم:\n" + targetDeviceId);
         }
     }
 </script>
