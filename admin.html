@@ -1,321 +1,137 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة تحكم الدعم - Fawakih AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-    body { background-color: #0f172a; color: #fff; height: 100vh; display: flex; overflow: hidden; }
-    
-    #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
-    .login-box { background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px; border: 1px solid #334155; }
-    .login-box input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; }
-    .login-box button { width: 100%; padding: 15px; background: #10b981; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    .login-box button:hover { background: #059669; }
-
-    .sidebar { width: 320px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; }
-    .sidebar-header { padding: 20px; background: #0f172a; text-align: center; border-bottom: 1px solid #334155; color: #10b981; font-weight: bold; display: flex; flex-direction: column; gap: 10px; }
-    
-    .admin-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-    .status-btn { padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; color: #fff; transition: 0.3s; }
-    .status-online { background: #10b981; }
-    .status-offline { background: #ef4444; }
-    .upload-pic-btn { background: #3b82f6; color: #fff; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; }
-
-    .users-list { flex: 1; overflow-y: auto; }
-    .user-item { padding: 15px 20px; border-bottom: 1px solid #334155; cursor: pointer; transition: 0.3s; position: relative; }
-    .user-item:hover, .user-item.active { background: #334155; border-right: 4px solid #10b981; }
-    .user-name { font-weight: bold; margin-bottom: 5px; }
-    .last-msg { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .chat-area { flex: 1; display: flex; flex-direction: column; background: #0f172a; }
-    .chat-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; font-weight: bold; font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
-    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-    
-    .msg-bubble { max-width: 70%; padding: 12px 16px; border-radius: 16px; font-size: 15px; position: relative; cursor: pointer; user-select: none; }
-    .msg-user { background: #334155; color: #fff; align-self: flex-start; border-bottom-right-radius: 4px; }
-    .msg-admin { background: #10b981; color: #fff; align-self: flex-end; border-bottom-left-radius: 4px; }
-    .msg-image { max-width: 250px; border-radius: 10px; margin-top: 5px; }
-
-    .controls { background: #1e293b; border-top: 1px solid #334155; padding: 15px; }
-    .shortcuts { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
-    .shortcut-btn { background: #334155; color: #10b981; border: 1px solid #10b981; padding: 5px 15px; border-radius: 15px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s; }
-    .shortcut-btn:hover { background: #10b981; color: #fff; }
-    
-    .input-box { display: flex; gap: 10px; }
-    input[type="text"] { flex: 1; padding: 15px; border-radius: 25px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none; }
-    input[type="text"]:focus { border-color: #10b981; }
-    button.send-btn { background: #10b981; color: #fff; border: none; padding: 0 25px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-    
-    .no-chat { flex: 1; display: flex; justify-content: center; align-items: center; color: #64748b; font-size: 20px; }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
-    @media (max-width: 768px) {
-        body { flex-direction: column; }
-        .sidebar { width: 100%; height: 35vh; }
-        .chat-area { height: 65vh; }
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة - الشات</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0d0d0d; color: #fff; margin: 0; padding: 20px; }
+        h1 { color: #f39c12; border-bottom: 2px solid #f39c12; padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .panel { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        ul { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
+        li { background: #262626; margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .user-info { display: flex; flex-direction: column; gap: 5px; }
+        .device-id { font-size: 12px; color: #f39c12; }
+        button { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-ban { background: #e74c3c; color: white; }
+        .btn-admin { background: #3498db; color: white; margin-right: 5px; }
+        img { max-width: 100px; border-radius: 5px; margin-top: 10px; }
+        
+        #access-denied { text-align: center; color: red; margin-top: 100px; font-size: 24px; }
+        #dashboard { display: none; }
+    </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h3>تسجيل الدخول للإدارة 🔒</h3>
-        <input type="password" id="adminPass" placeholder="أدخل كلمة المرور..." onkeypress="if(event.key==='Enter') verifyLogin()">
-        <button onclick="verifyLogin()">دخول</button>
-        <p id="loginError" style="color:#ef4444; margin-top:10px; display:none; font-size: 14px;">كلمة المرور غير صحيحة!</p>
-    </div>
-</div>
+<div id="access-denied">جاري التحقق من الصلاحيات...</div>
 
-<div class="sidebar">
-    <div class="sidebar-header">
-        👥 لوحة التحكم
-        <div class="admin-controls">
-            <button id="toggleStatusBtn" class="status-btn status-online" onclick="toggleAdminStatus()">الحالة: متصل الآن</button>
-            <button class="upload-pic-btn" onclick="document.getElementById('adminPicInput').click()">📷 تحديد صورة الأدمن</button>
-            <input type="file" id="adminPicInput" accept="image/*" style="display:none" onchange="uploadAdminPic(event)">
+<div id="dashboard">
+    <h1>لوحة تحكم السوبر آدمن</h1>
+    <div class="grid">
+        <div class="panel">
+            <h3>قائمة المستخدمين</h3>
+            <ul id="users-list"></ul>
+        </div>
+        <div class="panel">
+            <h3>مراقبة الرسائل</h3>
+            <ul id="messages-list"></ul>
         </div>
     </div>
-    <div class="users-list" id="usersList"></div>
 </div>
 
-<div class="chat-area" id="chatArea" style="display: none;">
-    <div class="chat-header">
-        <span id="currentChatName">اختر محادثة</span>
-        <span style="font-size:12px; color:#94a3b8; font-weight:normal;">(اضغط مطولاً على رسالة المستخدم لمعرفة جهازه)</span>
-    </div>
-    <div class="messages-container" id="messagesBox"></div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
+        databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "chatapi-1ca71"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // التحقق من الصلاحيات عبر نفس معرف الجهاز
+    let deviceId = localStorage.getItem("chat_device_id");
     
-    <div class="controls">
-        <div class="shortcuts">
-            <button class="shortcut-btn" onclick="sendShortcut('أهلاً بك في خدمة عملاء Fawakih AI، كيف يمكنني مساعدتك اليوم؟')">ترحيب</button>
-            <button class="shortcut-btn" onclick="sendShortcut('يرجى تزويدي بصورة للمشكلة التي تواجهك لتوضيح الأمر.')">طلب صورة</button>
-            <button class="shortcut-btn" onclick="sendShortcut('جاري العمل على حل مشكلتك، يرجى الانتظار لحين الفحص.')">جاري الفحص</button>
-            <button class="shortcut-btn" onclick="sendShortcut('تم حل المشكلة، شكراً لاستخدامك تطبيق Fawakih AI 🍏')">تم الحل</button>
-        </div>
-        <div class="input-box">
-            <input type="text" id="adminMsg" placeholder="اكتب رسالتك للمستخدم..." onkeypress="handleEnter(event)">
-            <button class="send-btn" onclick="sendAdminMsg()">إرسال</button>
-        </div>
-    </div>
-</div>
-
-<div class="no-chat" id="noChatSelected">
-    👈 الرجاء اختيار مستخدم من القائمة الجانبية للبدء
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
-  authDomain: "chatapi-1ca71.firebaseapp.com",
-  databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "chatapi-1ca71",
-  storageBucket: "chatapi-1ca71.firebasestorage.app"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const SECURE_HASH = "Z21haWwzNDU2Nw=="; 
-
-// التحقق من وجود تسجيل دخول مسبق محفوظ (تذكرني)
-window.onload = function() {
-    if (localStorage.getItem("admin_auth_fawakih") === SECURE_HASH) {
-        document.getElementById("loginOverlay").style.display = "none";
-        requestNotificationPermission();
-        loadDashboard();
-    }
-};
-
-window.verifyLogin = function() {
-    const pass = document.getElementById("adminPass").value;
-    if (btoa(pass) === SECURE_HASH) {
-        // حفض تسجيل دخول
-        localStorage.setItem("admin_auth_fawakih", SECURE_HASH);
-        document.getElementById("loginOverlay").style.display = "none";
-        requestNotificationPermission();
-        loadDashboard();
-    } else {
-        document.getElementById("loginError").style.display = "block";
-    }
-};
-
-function requestNotificationPermission() {
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
-}
-
-let activeUserId = null;
-let activeUserName = "";
-let isOnline = true;
-let lastKnownTimes = {}; // لتتبع الرسائل الجديدة وتفعيل الإشعارات
-
-const usersList = document.getElementById("usersList");
-const messagesBox = document.getElementById("messagesBox");
-const chatArea = document.getElementById("chatArea");
-const noChatSelected = document.getElementById("noChatSelected");
-const currentChatName = document.getElementById("currentChatName");
-const toggleStatusBtn = document.getElementById("toggleStatusBtn");
-
-function loadDashboard() {
-    onValue(ref(db, 'admin_settings/isOnline'), (snapshot) => {
-        isOnline = snapshot.val() !== false; 
-        if(isOnline) {
-            toggleStatusBtn.className = "status-btn status-online";
-            toggleStatusBtn.innerText = "الحالة: متصل الآن";
+    // إجبار النظام على جعل أول من يفتح الصفحة هو السوبر آدمن (لأول مرة فقط)
+    db.ref('admins').once('value', snapshot => {
+        if (!snapshot.exists()) {
+            db.ref('admins/' + deviceId).set({ role: 'superadmin' });
+            grantAccess();
         } else {
-            toggleStatusBtn.className = "status-btn status-offline";
-            toggleStatusBtn.innerText = "الحالة: غير متصل (أوفلاين)";
+            if (snapshot.hasChild(deviceId)) {
+                grantAccess();
+            } else {
+                document.getElementById("access-denied").innerText = "ليس لديك صلاحية لدخول لوحة التحكم. الـ Device ID الخاص بك: " + deviceId;
+            }
         }
     });
 
-    onValue(ref(db, 'support_chats'), (snapshot) => {
-        usersList.innerHTML = "";
-        const allUsers = [];
-        snapshot.forEach(child => {
-            if(child.key !== "admin_settings") {
-                const userData = child.val().info;
-                allUsers.push({ id: child.key, data: userData });
-                
-                // نظام إشعارات سطح المكتب
-                if (userData && userData.lastUpdate) {
-                    if (lastKnownTimes[child.key] && userData.lastUpdate > lastKnownTimes[child.key]) {
-                        // التحقق إذا كانت آخر رسالة ليست من الأدمن
-                        if (userData.lastMessage && !userData.lastMessage.startsWith("أنت:")) {
-                            showNotification("رسالة جديدة من " + userData.name, userData.lastMessage);
-                        }
-                    }
-                    lastKnownTimes[child.key] = userData.lastUpdate;
-                }
-            }
-        });
-        
-        allUsers.sort((a, b) => (b.data?.lastUpdate || 0) - (a.data?.lastUpdate || 0));
+    function grantAccess() {
+        document.getElementById("access-denied").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        loadUsers();
+        loadMessages();
+    }
 
-        allUsers.forEach(user => {
-            if(user.data) {
-                const isActive = activeUserId === user.id ? "active" : "";
-                let msgPreview = user.data.lastMessage || 'رسالة جديدة';
-                if(msgPreview.includes('data:image')) msgPreview = "📷 أرسل صورة";
-                
+    function loadUsers() {
+        db.ref('users').on('value', snapshot => {
+            const usersList = document.getElementById("users-list");
+            usersList.innerHTML = "";
+            snapshot.forEach(child => {
+                const uid = child.key;
+                const data = child.val();
                 usersList.innerHTML += `
-                    <div class="user-item ${isActive}" onclick="openChat('${user.id}', '${user.data.name}', '${user.data.deviceId || 'غير معروف'}')">
-                        <div class="user-name">${user.data.name}</div>
-                        <div class="last-msg">${msgPreview}</div>
-                    </div>
+                    <li>
+                        <div class="user-info">
+                            <strong>${data.name}</strong>
+                            <span class="device-id">ID: ${uid}</span>
+                        </div>
+                        <div>
+                            <button class="btn-ban" onclick="banUser('${uid}')">حظر الجهاز</button>
+                            <button class="btn-admin" onclick="makeAdmin('${uid}')">تعيين كأدمن</button>
+                        </div>
+                    </li>
                 `;
-            }
-        });
-    });
-}
-
-function showNotification(title, body) {
-    if (Notification.permission === "granted") {
-        const notification = new Notification(title, {
-            body: body,
-            icon: "https://cdn-icons-png.flaticon.com/512/1063/1063309.png"
-        });
-        notification.onclick = function() { window.focus(); };
-    }
-}
-
-window.toggleAdminStatus = function() { set(ref(db, 'admin_settings/isOnline'), !isOnline); };
-
-window.uploadAdminPic = function(event) {
-    const file = event.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_SIZE = 150; 
-            let width = img.width; let height = img.height;
-            if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
-            else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressedPic = canvas.toDataURL('image/webp', 0.8);
-            set(ref(db, 'admin_settings/adminAvatar'), compressedPic).then(() => {
-                alert("تم تحديث صورة الأدمن بنجاح وسيتم عرضها للعملاء!");
             });
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-};
-
-let activeDeviceId = "غير معروف";
-
-window.openChat = function(userId, userName, deviceId) {
-    activeUserId = userId;
-    activeUserName = userName;
-    activeDeviceId = deviceId;
-    chatArea.style.display = "flex";
-    noChatSelected.style.display = "none";
-    currentChatName.innerText = `دردشة مع: ${userName}`;
-    
-    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-    
-    onValue(ref(db, `support_chats/${userId}/messages`), (snapshot) => {
-        if(activeUserId !== userId) return; 
-        messagesBox.innerHTML = "";
-        snapshot.forEach(child => {
-            const msgData = child.val();
-            const isAdmin = msgData.sender === "admin";
-            const alignClass = isAdmin ? "msg-admin" : "msg-user";
-            let content = msgData.message;
-            
-            if(msgData.image) { content += `<br><img src="${msgData.image}" class="msg-image">`; }
-            
-            // إضافة كود الضغط المطول فقط لرسائل المستخدم
-            let pressEvents = "";
-            if(!isAdmin) {
-                pressEvents = `onmousedown="startPressTimer()" onmouseup="clearPressTimer()" onmouseleave="clearPressTimer()" ontouchstart="startPressTimer()" ontouchend="clearPressTimer()"`;
-            }
-
-            messagesBox.innerHTML += `<div class="msg-bubble ${alignClass}" ${pressEvents}>${content}</div>`;
         });
-        messagesBox.scrollTop = messagesBox.scrollHeight;
-    });
-};
-
-// --- أكواد الضغط المطول (Long Press) ---
-let pressTimer;
-window.startPressTimer = function() {
-    pressTimer = window.setTimeout(function() {
-        alert(`📱 معلومات المستخدم:\n\nالاسم: ${activeUserName}\nمعرف الجهاز (ID): ${activeDeviceId}\n\n* هذا المعرف ثابت لهذا المتصفح.`);
-    }, 800); // 800 جزء من الثانية = ضغطة مطولة
-};
-window.clearPressTimer = function() {
-    clearTimeout(pressTimer);
-};
-// ----------------------------------------
-
-window.sendAdminMsg = function() {
-    const msg = document.getElementById("adminMsg").value.trim();
-    if(msg !== "" && activeUserId) {
-        push(ref(db, `support_chats/${activeUserId}/messages`), { sender: "admin", message: msg, timestamp: serverTimestamp() });
-        // وضع "أنت:" لكي لا يظهر الإشعار للأدمن نفسه
-        set(ref(db, `support_chats/${activeUserId}/info/lastMessage`), "أنت: " + msg);
-        set(ref(db, `support_chats/${activeUserId}/info/lastUpdate`), Date.now());
-        document.getElementById("adminMsg").value = "";
     }
-};
 
-window.sendShortcut = function(text) { document.getElementById("adminMsg").value = text; sendAdminMsg(); };
-window.handleEnter = function(e) { if(e.key === 'Enter') sendAdminMsg(); };
+    function loadMessages() {
+        db.ref('messages').on('child_added', snapshot => {
+            const data = snapshot.val();
+            const time = new Date(data.timestamp).toLocaleTimeString();
+            let msgContent = data.text ? `<p>${data.text}</p>` : "";
+            if (data.image) msgContent += `<img src="${data.image}">`;
+            
+            document.getElementById("messages-list").innerHTML += `
+                <li style="flex-direction: column; align-items: flex-start;">
+                    <div style="width: 100%; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px;">
+                        <span style="color:#f39c12;">${data.sender}</span> 
+                        <span style="font-size:10px; color:#aaa;">(${time})</span>
+                        <div class="device-id">ID: ${data.deviceId}</div>
+                    </div>
+                    ${msgContent}
+                </li>
+            `;
+        });
+    }
+
+    function banUser(uid) {
+        if(confirm("هل أنت متأكد من حظر هذا الجهاز نهائياً؟")) {
+            db.ref('bans/' + uid).set(true);
+            alert("تم الحظر بنجاح.");
+        }
+    }
+
+    function makeAdmin(uid) {
+        if(confirm("هل تريد تعيين هذا الجهاز كأدمن؟")) {
+            db.ref('admins/' + uid).set({ role: 'admin' });
+            alert("تم التعيين كأدمن.");
+        }
+    }
 </script>
 
 </body>
