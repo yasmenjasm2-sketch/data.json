@@ -24,7 +24,8 @@
         /* اللوحة الرئيسية */
         #dashboard { display: none; height: 100vh; flex-direction: column; }
         header { background: #1a1525; padding: 15px 20px; border-bottom: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        header h1 { margin: 0; color: #f39c12; font-size: 24px; }
+        header h1 { margin: 0; color: #f39c12; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        #admin-id-display { background: rgba(243, 156, 18, 0.2); color: #f39c12; font-size: 14px; padding: 4px 10px; border-radius: 8px; border: 1px solid #f39c12; }
         
         .admin-settings { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .admin-settings input[type="text"] { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
@@ -114,7 +115,7 @@
 
 <div id="dashboard">
     <header>
-        <h1>🛠️ لوحة تحكم السوبر آدمن</h1>
+        <h1>🛠️ لوحة تحكم السوبر آدمن <span id="admin-id-display"></span></h1>
         <div class="admin-settings">
             <input type="text" id="custom-admin-name" placeholder="اسمك كأدمن (مثال: المدير حمزة)" onchange="saveAdminName()">
             <label for="custom-admin-img" class="file-upload-btn">تحديد صورتك 🖼️</label>
@@ -154,8 +155,7 @@
 </div>
 
 <script>
-    // --- تشفير الإعدادات وكلمة المرور (Base64) لمنع القراءة المباشرة ---
-    const _p = atob("Z21haWwzNDU2Nw=="); // كلمة المرور المشفرة
+    const _p = atob("Z21haWwzNDU2Nw=="); 
     const firebaseConfig = {
         apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
         databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
@@ -167,14 +167,12 @@
     }
     const db = firebase.database();
 
-    // متغيرات النظام
     let globalUsers = {};
     let globalAdmins = {};
     let globalBans = {};
     let currentChatUserId = null;
     let currentChatUserName = null;
 
-    // --- نظام تسجيل الدخول ---
     const ADMIN_PASSWORD = _p;
 
     window.onload = () => {
@@ -182,7 +180,6 @@
         if (savedPass === ADMIN_PASSWORD) {
             grantAccess();
         }
-        loadAdminConfig();
     };
 
     function checkLogin() {
@@ -203,12 +200,47 @@
     function grantAccess() {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("dashboard").style.display = "flex";
+        loadAdminConfig();
         initDashboard();
     }
 
-    // --- حفظ واسترجاع بيانات الأدمن (الاسم والصورة من الاستديو) ---
+    // --- مزامنة وربط ملفات السوبر أدمن بالتطبيق ---
+    function syncAdminProfile() {
+        let myAdminId = localStorage.getItem("super_admin_id");
+        let myDeviceId = localStorage.getItem("chat_device_id");
+        
+        // توليد آيدي للأدمن إذا لم يكن موجوداً
+        if (!myAdminId) {
+            const possibleIDs = ["1111", "2222", "3333", "4444", "5555", "7777", "8888", "9999"];
+            myAdminId = possibleIDs[Math.floor(Math.random() * possibleIDs.length)];
+            localStorage.setItem("super_admin_id", myAdminId);
+        }
+        
+        // توليد معرف جهاز للوحة إذا لم يكن موجوداً
+        if (!myDeviceId) {
+            myDeviceId = 'admin_panel_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem("chat_device_id", myDeviceId);
+        }
+
+        document.getElementById("admin-id-display").innerText = "ID: " + myAdminId;
+
+        const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
+        const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+
+        // الرفع إلى قاعدة البيانات ليتعرف عليه تطبيق الشات
+        db.ref('admins_list/' + myDeviceId).set(myAdminId);
+        db.ref('admins_profiles/' + myAdminId).set({
+            deviceId: myDeviceId,
+            name: customName,
+            image: customImg,
+            id: myAdminId
+        });
+        db.ref('admins/' + myDeviceId).set({ role: 'admin' });
+    }
+
     function saveAdminName() {
         localStorage.setItem("super_admin_name", document.getElementById("custom-admin-name").value);
+        syncAdminProfile();
     }
 
     function saveAdminImage(event) {
@@ -217,8 +249,9 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const base64Image = e.target.result;
-                localStorage.setItem("super_admin_img", base64Image); // حفظ الصورة كنص مشفر طويل في الذاكرة
-                alert("تم حفظ صورتك بنجاح! سيتم استخدامها في رسائلك القادمة.");
+                localStorage.setItem("super_admin_img", base64Image); 
+                syncAdminProfile();
+                alert("تم حفظ صورتك بنجاح! سيتم استخدامها في رسائلك القادمة وتحديثها في الشات.");
             };
             reader.readAsDataURL(file);
         }
@@ -226,9 +259,9 @@
 
     function loadAdminConfig() {
         document.getElementById("custom-admin-name").value = localStorage.getItem("super_admin_name") || "";
+        syncAdminProfile();
     }
 
-    // --- تشغيل البيانات ---
     function initDashboard() {
         db.ref('admins').on('value', snap => {
             globalAdmins = snap.val() || {};
@@ -238,7 +271,7 @@
         db.ref('bans').on('value', snap => {
             globalBans = snap.val() || {};
             renderUsers();
-            updateModalBanButton(); // تحديث زر الحظر في الشات إذا كان مفتوحاً
+            updateModalBanButton(); 
         });
 
         db.ref('users').on('value', snap => {
@@ -249,7 +282,6 @@
         loadAllMessages();
     }
 
-    // --- رسم قائمة المستخدمين ---
     function renderUsers() {
         const list = document.getElementById("users-list");
         list.innerHTML = "";
@@ -295,17 +327,16 @@
     function banUser(uid) { db.ref('bans/' + uid).set(true); }
     function unbanUser(uid) { db.ref('bans/' + uid).remove(); }
 
-    // --- نظام الرسائل العام ---
     function loadAllMessages() {
         const msgList = document.getElementById("messages-list");
         
-        db.ref('messages').on('child_added', snapshot => {
+        // تم تغيير مسار القراءة إلى messages_general للتوافق مع تطبيق الشات
+        db.ref('messages_general').on('child_added', snapshot => {
             const key = snapshot.key;
             const data = snapshot.val();
             const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
-            // تمييز إذا كانت الرسالة من سوبر أدمن في اللوحة
-            const senderName = data.isSuperAdmin ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
+            const senderName = data.adminId ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
 
             let msgHtml = `
                 <div class="card" id="msg-${key}">
@@ -321,7 +352,7 @@
 
             msgHtml += `
                     <div class="msg-actions">
-                        <button class="btn-reply" onclick="openUserChat('${data.deviceId === 'admin_system' ? data.targetId : data.deviceId}', '${data.sender}')">إجراء ورد</button>
+                        <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">إجراء ورد</button>
                         <button class="btn-delete" onclick="deleteMessage('${key}')">مسح رسالة 🗑️</button>
                     </div>
                 </div>
@@ -329,12 +360,12 @@
             
             msgList.insertAdjacentHTML('afterbegin', msgHtml);
 
-            if(currentChatUserId === data.deviceId || (data.isAdminReply && data.targetId === currentChatUserId)) {
+            if(currentChatUserId === data.deviceId || (data.targetId === currentChatUserId)) {
                 appendMsgToModal(key, data, time);
             }
         });
 
-        db.ref('messages').on('child_removed', snapshot => {
+        db.ref('messages_general').on('child_removed', snapshot => {
             const el = document.getElementById("msg-" + snapshot.key);
             if (el) el.remove();
             const modalEl = document.getElementById("modal-msg-" + snapshot.key);
@@ -344,11 +375,10 @@
 
     function deleteMessage(key) {
         if(confirm("هل أنت متأكد من مسح هذه الرسالة للجميع؟")) {
-            db.ref('messages/' + key).remove();
+            db.ref('messages_general/' + key).remove();
         }
     }
 
-    // --- نظام الشات المنفرد والرد والحظر ---
     function openUserChat(uid, userName) {
         currentChatUserId = uid;
         currentChatUserName = userName;
@@ -356,12 +386,12 @@
         document.getElementById("modal-messages").innerHTML = ""; 
         document.getElementById("user-chat-modal").style.display = "flex";
         
-        updateModalBanButton(); // تحديث حالة الزر فور الفتح
+        updateModalBanButton(); 
 
-        db.ref('messages').once('value', snapshot => {
+        db.ref('messages_general').once('value', snapshot => {
             snapshot.forEach(child => {
                 const data = child.val();
-                if (data.deviceId === uid || (data.isAdminReply && data.targetId === uid)) {
+                if (data.deviceId === uid || data.targetId === uid) {
                     const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                     appendMsgToModal(child.key, data, time);
                 }
@@ -399,7 +429,7 @@
 
     function appendMsgToModal(key, data, time) {
         const modalMsgs = document.getElementById("modal-messages");
-        const isReply = data.isAdminReply;
+        const isReply = data.adminId && data.deviceId === localStorage.getItem("chat_device_id");
         
         let html = `
             <div class="card" id="modal-msg-${key}" style="background: ${isReply ? '#27ae6033' : '#2a233c'}; border-color: ${isReply ? '#2ecc71' : '#444'};">
@@ -423,22 +453,24 @@
         const text = input.value.trim();
         if (!text || !currentChatUserId) return;
 
-        // سحب البيانات المخصصة للأدمن (بما في ذلك الصورة المرفوعة من الاستديو)
-        const customName = document.getElementById("custom-admin-name").value.trim() || "الإدارة المركزية";
+        const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
         const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+        const myAdminId = localStorage.getItem("super_admin_id");
+        const myDeviceId = localStorage.getItem("chat_device_id");
 
         const msgData = {
-            deviceId: "admin_system", 
+            deviceId: myDeviceId, 
+            adminId: myAdminId, // إضافة الآيدي ليتعرف عليه الشات العام ويضع شارة 👑
             sender: customName,
             senderImg: customImg,
             text: "🔹 رد على " + currentChatUserName + ":\n" + text,
             timestamp: Date.now(),
             isAdminReply: true,
-            targetId: currentChatUserId, // معرف المستخدم المستهدف لإظهار الشعار له
-            isSuperAdmin: true // لتمييزه بشارة السوبر أدمن
+            targetId: currentChatUserId, 
+            isSuperAdmin: true 
         };
 
-        db.ref('messages').push(msgData);
+        db.ref('messages_general').push(msgData);
         input.value = "";
     }
 </script>
