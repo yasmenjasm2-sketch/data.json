@@ -3,134 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - الشات</title>
+    <title>لوحة الإدارة المتقدمة - FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: #0d0d0d; color: #fff; margin: 0; padding: 20px; }
-        h1 { color: #f39c12; border-bottom: 2px solid #f39c12; padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        .panel { background: #1a1a1a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
-        ul { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
-        li { background: #262626; margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .user-info { display: flex; flex-direction: column; gap: 5px; }
-        .device-id { font-size: 12px; color: #f39c12; }
-        button { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-ban { background: #e74c3c; color: white; }
-        .btn-admin { background: #3498db; color: white; margin-right: 5px; }
-        img { max-width: 100px; border-radius: 5px; margin-top: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #0b0714; color: #fff; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        #access-denied { text-align: center; color: red; margin-top: 100px; font-size: 24px; }
-        #dashboard { display: none; }
+        /* شاشة تسجيل الدخول */
+        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #0b0714; z-index: 100; position: absolute; width: 100%; top: 0; }
+        .login-box { background: #1a1525; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.2); width: 90%; max-width: 400px; }
+        .login-box h2 { color: #f39c12; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; text-align: center; font-size: 18px; outline: none; }
+        .login-box input:focus { border-color: #f39c12; }
+        .login-box button { width: 100%; background: #f39c12; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .login-box button:hover { background: #e67e22; }
+
+        /* اللوحة الرئيسية */
+        #dashboard { display: none; height: 100vh; flex-direction: column; }
+        header { background: #1a1525; padding: 15px 20px; border-bottom: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; color: #f39c12; font-size: 24px; }
+        .logout-btn { background: #e74c3c; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        .container { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
+        
+        /* الأعمدة */
+        .panel { background: #1a1525; border-radius: 15px; border: 1px solid #333; display: flex; flex-direction: column; overflow: hidden; flex: 1; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .panel-header { background: #221c30; padding: 15px; font-weight: bold; color: #f39c12; border-bottom: 1px solid #333; text-align: center; font-size: 18px; }
+        .panel-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* التمرير */
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-thumb { background: #f39c12; border-radius: 10px; }
+
+        /* العناصر (المستخدمين والرسائل) */
+        .card { background: #2a233c; padding: 15px; border-radius: 10px; border: 1px solid #444; position: relative; }
+        
+        /* المستخدمين */
+        .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .user-header img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #f39c12; }
+        .user-info h4 { margin: 0 0 5px 0; color: #fff; font-size: 16px; }
+        .device-id { font-size: 11px; color: #aaa; background: #111; padding: 3px 8px; border-radius: 5px; font-family: monospace; }
+        .badges { display: flex; gap: 5px; margin-top: 5px; }
+        .badge { font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        .badge.admin { background: #3498db; color: white; }
+        .badge.banned { background: #e74c3c; color: white; }
+
+        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        button.action-btn { flex: 1; min-width: 100px; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; color: white; }
+        .btn-ban { background: #e74c3c; } .btn-ban:hover { background: #c0392b; }
+        .btn-unban { background: #2ecc71; } .btn-unban:hover { background: #27ae60; }
+        .btn-promote { background: #3498db; } .btn-promote:hover { background: #2980b9; }
+        .btn-demote { background: #95a5a6; } .btn-demote:hover { background: #7f8c8d; }
+        .btn-view { background: #9b59b6; } .btn-view:hover { background: #8e44ad; }
+
+        /* الرسائل */
+        .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .msg-sender { color: #f39c12; font-weight: bold; }
+        .msg-time { font-size: 11px; color: #888; }
+        .msg-text { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+        .msg-image { max-width: 150px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+        
+        .msg-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-reply { background: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+
+        /* نافذة شات المستخدم المنفرد (Modal) */
+        #user-chat-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #1a1525; width: 90%; max-width: 600px; height: 80vh; border-radius: 15px; border: 1px solid #f39c12; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 15px; background: #221c30; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
+        .modal-header h3 { margin: 0; color: #f39c12; }
+        .close-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        #modal-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        
+        .reply-box { padding: 15px; background: #221c30; border-top: 1px solid #444; display: flex; gap: 10px; }
+        .reply-box input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: white; outline: none; }
+        .reply-box button { background: #f39c12; color: black; font-weight: bold; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
-<div id="access-denied">جاري التحقق من الصلاحيات...</div>
+<div id="login-screen">
+    <div class="login-box">
+        <h2>لوحة الإدارة السرية</h2>
+        <input type="password" id="admin-pass" placeholder="أدخل كلمة المرور" onkeypress="if(event.key === 'Enter') checkLogin()">
+        <button onclick="checkLogin()">تسجيل الدخول</button>
+        <p id="login-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">كلمة المرور غير صحيحة!</p>
+    </div>
+</div>
 
 <div id="dashboard">
-    <h1>لوحة تحكم السوبر آدمن</h1>
-    <div class="grid">
+    <header>
+        <h1>🛠️ لوحة تحكم السوبر آدمن</h1>
+        <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+    </header>
+
+    <div class="container">
         <div class="panel">
-            <h3>قائمة المستخدمين</h3>
-            <ul id="users-list"></ul>
+            <div class="panel-header">👥 إدارة المستخدمين</div>
+            <div class="panel-content" id="users-list">
+                </div>
         </div>
+
         <div class="panel">
-            <h3>مراقبة الرسائل</h3>
-            <ul id="messages-list"></ul>
+            <div class="panel-header">💬 المراقبة العامة للرسائل</div>
+            <div class="panel-content" id="messages-list">
+                </div>
+        </div>
+    </div>
+</div>
+
+<div id="user-chat-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">دردشة المستخدم</h3>
+            <button class="close-btn" onclick="closeUserChat()">إغلاق ✕</button>
+        </div>
+        <div id="modal-messages">
+            </div>
+        <div class="reply-box">
+            <input type="text" id="admin-reply-input" placeholder="اكتب ردك المباشر للمستخدم...">
+            <button onclick="sendDirectReply()">إرسال الرد</button>
         </div>
     </div>
 </div>
 
 <script>
+    // إعدادات Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
         databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "chatapi-1ca71"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
 
-    // التحقق من الصلاحيات عبر نفس معرف الجهاز
-    let deviceId = localStorage.getItem("chat_device_id");
-    
-    // إجبار النظام على جعل أول من يفتح الصفحة هو السوبر آدمن (لأول مرة فقط)
-    db.ref('admins').once('value', snapshot => {
-        if (!snapshot.exists()) {
-            db.ref('admins/' + deviceId).set({ role: 'superadmin' });
+    // متغيرات النظام
+    let globalUsers = {};
+    let globalAdmins = {};
+    let globalBans = {};
+    let currentChatUserId = null;
+    let currentChatUserName = null;
+
+    // --- نظام تسجيل الدخول ---
+    const ADMIN_PASSWORD = "gmail34567";
+
+    window.onload = () => {
+        const savedPass = localStorage.getItem("admin_auth_pass");
+        if (savedPass === ADMIN_PASSWORD) {
+            grantAccess();
+        }
+    };
+
+    function checkLogin() {
+        const pass = document.getElementById("admin-pass").value;
+        if (pass === ADMIN_PASSWORD) {
+            localStorage.setItem("admin_auth_pass", pass);
             grantAccess();
         } else {
-            if (snapshot.hasChild(deviceId)) {
-                grantAccess();
-            } else {
-                document.getElementById("access-denied").innerText = "ليس لديك صلاحية لدخول لوحة التحكم. الـ Device ID الخاص بك: " + deviceId;
-            }
+            document.getElementById("login-error").style.display = "block";
         }
-    });
+    }
+
+    function logout() {
+        localStorage.removeItem("admin_auth_pass");
+        location.reload();
+    }
 
     function grantAccess() {
-        document.getElementById("access-denied").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
-        loadUsers();
-        loadMessages();
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("dashboard").style.display = "flex";
+        initDashboard();
     }
 
-    function loadUsers() {
-        db.ref('users').on('value', snapshot => {
-            const usersList = document.getElementById("users-list");
-            usersList.innerHTML = "";
-            snapshot.forEach(child => {
-                const uid = child.key;
-                const data = child.val();
-                usersList.innerHTML += `
-                    <li>
+    // --- تشغيل البيانات ---
+    function initDashboard() {
+        // جلب الأدمنز والحظر أولاً لتحديث الواجهة
+        db.ref('admins').on('value', snap => {
+            globalAdmins = snap.val() || {};
+            renderUsers();
+        });
+
+        db.ref('bans').on('value', snap => {
+            globalBans = snap.val() || {};
+            renderUsers();
+        });
+
+        // جلب المستخدمين
+        db.ref('users').on('value', snap => {
+            globalUsers = snap.val() || {};
+            renderUsers();
+        });
+
+        // مراقبة الرسائل
+        loadAllMessages();
+    }
+
+    // --- رسم قائمة المستخدمين ---
+    function renderUsers() {
+        const list = document.getElementById("users-list");
+        list.innerHTML = "";
+
+        for (const [uid, data] of Object.entries(globalUsers)) {
+            const isAdmin = globalAdmins[uid] ? true : false;
+            const isBanned = globalBans[uid] ? true : false;
+
+            let badgesHTML = "";
+            if (isAdmin) badgesHTML += `<span class="badge admin">آدمن</span>`;
+            if (isBanned) badgesHTML += `<span class="badge banned">محظور</span>`;
+
+            // أزرار التحكم
+            let adminBtn = isAdmin 
+                ? `<button class="action-btn btn-demote" onclick="demoteAdmin('${uid}')">تنزيل أدمن ▼</button>`
+                : `<button class="action-btn btn-promote" onclick="promoteAdmin('${uid}')">رفع أدمن ▲</button>`;
+
+            let banBtn = isBanned
+                ? `<button class="action-btn btn-unban" onclick="unbanUser('${uid}')">فك الحظر 🔓</button>`
+                : `<button class="action-btn btn-ban" onclick="banUser('${uid}')">حظر الجهاز 🚫</button>`;
+
+            list.innerHTML += `
+                <div class="card">
+                    <div class="user-header">
+                        <img src="${data.image || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" alt="صورة">
                         <div class="user-info">
-                            <strong>${data.name}</strong>
-                            <span class="device-id">ID: ${uid}</span>
+                            <h4>${data.name}</h4>
+                            <div class="device-id">${uid}</div>
+                            <div class="badges">${badgesHTML}</div>
                         </div>
-                        <div>
-                            <button class="btn-ban" onclick="banUser('${uid}')">حظر الجهاز</button>
-                            <button class="btn-admin" onclick="makeAdmin('${uid}')">تعيين كأدمن</button>
-                        </div>
-                    </li>
-                `;
-            });
-        });
-    }
-
-    function loadMessages() {
-        db.ref('messages').on('child_added', snapshot => {
-            const data = snapshot.val();
-            const time = new Date(data.timestamp).toLocaleTimeString();
-            let msgContent = data.text ? `<p>${data.text}</p>` : "";
-            if (data.image) msgContent += `<img src="${data.image}">`;
-            
-            document.getElementById("messages-list").innerHTML += `
-                <li style="flex-direction: column; align-items: flex-start;">
-                    <div style="width: 100%; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px;">
-                        <span style="color:#f39c12;">${data.sender}</span> 
-                        <span style="font-size:10px; color:#aaa;">(${time})</span>
-                        <div class="device-id">ID: ${data.deviceId}</div>
                     </div>
-                    ${msgContent}
-                </li>
+                    <div class="btn-group">
+                        ${adminBtn}
+                        ${banBtn}
+                        <button class="action-btn btn-view" onclick="openUserChat('${uid}', '${data.name}')">عرض الرسائل 👁️</button>
+                    </div>
+                </div>
             `;
+        }
+    }
+
+    // --- أوامر التحكم (رفع/تنزيل/حظر) ---
+    function promoteAdmin(uid) {
+        if(confirm("تأكيد رفع هذا المستخدم لمنصب أدمن؟")) db.ref('admins/' + uid).set({ role: 'admin' });
+    }
+    function demoteAdmin(uid) {
+        if(confirm("تأكيد تنزيل هذا المستخدم من الإدارة؟")) db.ref('admins/' + uid).remove();
+    }
+    function banUser(uid) {
+        if(confirm("هل أنت متأكد من حظر جهاز هذا المستخدم نهائياً؟")) db.ref('bans/' + uid).set(true);
+    }
+    function unbanUser(uid) {
+        if(confirm("هل تريد فك الحظر عن هذا الجهاز؟")) db.ref('bans/' + uid).remove();
+    }
+
+    // --- نظام الرسائل العام ---
+    function loadAllMessages() {
+        const msgList = document.getElementById("messages-list");
+        
+        db.ref('messages').on('child_added', snapshot => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            let msgHtml = `
+                <div class="card" id="msg-${key}">
+                    <div class="msg-header">
+                        <span class="msg-sender">${data.sender}</span>
+                        <span class="msg-time">${time}</span>
+                    </div>
+                    <div class="device-id" style="margin-bottom:8px;">${data.deviceId}</div>
+            `;
+
+            if (data.text) msgHtml += `<div class="msg-text">${data.text}</div>`;
+            if (data.image) msgHtml += `<img src="${data.image}" class="msg-image" onclick="window.open('${data.image}')">`;
+
+            msgHtml += `
+                    <div class="msg-actions">
+                        <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">رد</button>
+                        <button class="btn-delete" onclick="deleteMessage('${key}')">مسح رسالة 🗑️</button>
+                    </div>
+                </div>
+            `;
+            
+            // إضافة الرسالة للأعلى لتظهر الأحدث أولاً
+            msgList.insertAdjacentHTML('afterbegin', msgHtml);
+
+            // إضافتها أيضاً في نافذة المستخدم المخصصة إذا كانت مفتوحة
+            if(currentChatUserId === data.deviceId || (data.isAdminReply && data.targetId === currentChatUserId)) {
+                appendMsgToModal(key, data, time);
+            }
+        });
+
+        // عند حذف رسالة من الداتا بيس، إخفاؤها من الواجهة
+        db.ref('messages').on('child_removed', snapshot => {
+            const el = document.getElementById("msg-" + snapshot.key);
+            if (el) el.remove();
+            
+            const modalEl = document.getElementById("modal-msg-" + snapshot.key);
+            if (modalEl) modalEl.remove();
         });
     }
 
-    function banUser(uid) {
-        if(confirm("هل أنت متأكد من حظر هذا الجهاز نهائياً؟")) {
-            db.ref('bans/' + uid).set(true);
-            alert("تم الحظر بنجاح.");
+    function deleteMessage(key) {
+        if(confirm("هل أنت متأكد من مسح هذه الرسالة للجميع؟")) {
+            db.ref('messages/' + key).remove();
         }
     }
 
-    function makeAdmin(uid) {
-        if(confirm("هل تريد تعيين هذا الجهاز كأدمن؟")) {
-            db.ref('admins/' + uid).set({ role: 'admin' });
-            alert("تم التعيين كأدمن.");
-        }
+    // --- نظام الشات المنفرد والرد ---
+    function openUserChat(uid, userName) {
+        currentChatUserId = uid;
+        currentChatUserName = userName;
+        document.getElementById("modal-title").innerText = `رسائل: ${userName}`;
+        document.getElementById("modal-messages").innerHTML = ""; // تنظيف
+        document.getElementById("user-chat-modal").style.display = "flex";
+
+        // جلب رسائل هذا المستخدم فقط أو ردود الإدارة عليه
+        db.ref('messages').once('value', snapshot => {
+            snapshot.forEach(child => {
+                const data = child.val();
+                if (data.deviceId === uid || (data.isAdminReply && data.targetId === uid)) {
+                    const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                    appendMsgToModal(child.key, data, time);
+                }
+            });
+            // التمرير للأسفل
+            const modalMsgs = document.getElementById("modal-messages");
+            modalMsgs.scrollTop = modalMsgs.scrollHeight;
+        });
+    }
+
+    function closeUserChat() {
+        document.getElementById("user-chat-modal").style.display = "none";
+        currentChatUserId = null;
+    }
+
+    function appendMsgToModal(key, data, time) {
+        const modalMsgs = document.getElementById("modal-messages");
+        const isReply = data.isAdminReply;
+        
+        let html = `
+            <div class="card" id="modal-msg-${key}" style="background: ${isReply ? '#27ae6033' : '#2a233c'}; border-color: ${isReply ? '#2ecc71' : '#444'};">
+                <div class="msg-header">
+                    <span class="msg-sender" style="color: ${isReply ? '#2ecc71' : '#f39c12'};">${data.sender}</span>
+                    <span class="msg-time">${time}</span>
+                </div>
+                ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
+                ${data.image ? `<img src="${data.image}" class="msg-image">` : ''}
+                <div class="msg-actions">
+                    <button class="btn-delete" onclick="deleteMessage('${key}')">مسح 🗑️</button>
+                </div>
+            </div>
+        `;
+        modalMsgs.innerHTML += html;
+        modalMsgs.scrollTop = modalMsgs.scrollHeight;
+    }
+
+    function sendDirectReply() {
+        const input = document.getElementById("admin-reply-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        // تجهيز الرسالة لتظهر للجميع ولكن بصيغة رد إداري
+        const msgData = {
+            deviceId: "admin_system", 
+            sender: "👨‍💻 الإدارة (رد على " + currentChatUserName + ")",
+            senderImg: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png",
+            text: "🔹 تم الرد عليك عبر الإدارة:\n" + text,
+            timestamp: Date.now(),
+            isAdminReply: true,
+            targetId: currentChatUserId // معرف المستخدم المستهدف
+        };
+
+        db.ref('messages').push(msgData);
+        input.value = "";
     }
 </script>
 
