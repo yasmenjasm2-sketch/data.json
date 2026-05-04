@@ -81,7 +81,7 @@
         
         .msg-actions { display: flex; gap: 10px; justify-content: flex-end; }
         .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .btn-reply { background: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-reply { color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.3s; }
 
         /* نوافذ الشات المنسدلة (Modals) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -138,6 +138,10 @@
         <div class="panel">
             <div class="panel-header">💬 المراقبة العامة للرسائل</div>
             <div class="panel-content" id="messages-list"></div>
+            <div class="reply-box">
+                <input type="text" id="admin-general-input" placeholder="اكتب رسالتك لترسل في الشات العام..." onkeypress="if(event.key === 'Enter') sendGeneralReply()">
+                <button onclick="sendGeneralReply()">إرسال للعام</button>
+            </div>
         </div>
     </div>
 </div>
@@ -145,7 +149,7 @@
 <div id="user-chat-modal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modal-title">دردشة المستخدم</h3>
+            <h3 id="modal-title">الدردشة الخاصة مع المستخدم</h3>
             <div class="modal-header-actions">
                 <button id="modal-ban-action" class="modal-ban-btn" onclick="toggleModalBan()">حظر 🚫</button>
                 <button class="close-btn" onclick="closeUserChat()">إغلاق ✕</button>
@@ -153,8 +157,8 @@
         </div>
         <div id="modal-messages"></div>
         <div class="reply-box">
-            <input type="text" id="admin-reply-input" placeholder="اكتب ردك المباشر للمستخدم..." onkeypress="if(event.key === 'Enter') sendDirectReply()">
-            <button onclick="sendDirectReply()">إرسال الرد</button>
+            <input type="text" id="admin-reply-input" placeholder="اكتب ردك الخاص والسري للمستخدم..." onkeypress="if(event.key === 'Enter') sendDirectReply()">
+            <button onclick="sendDirectReply()">إرسال بالخاص</button>
         </div>
     </div>
 </div>
@@ -355,7 +359,7 @@
                     <div class="btn-group">
                         ${adminBtn}
                         ${banBtn}
-                        <button class="action-btn btn-view" onclick="openUserChat('${uid}', '${data.name}')">الدردشة والتحكم 👁️</button>
+                        <button class="action-btn btn-view" onclick="openUserChat('${uid}', '${data.name}')">مراسلة خاص 📩</button>
                     </div>
                 </div>
             `;
@@ -379,8 +383,6 @@
         db.ref('messages_general').on('child_removed', snapshot => {
             removeMessageUI(snapshot.key);
         });
-
-        // تم إزالة الاستماع للرسائل الخاصة من الشاشة العامة لكي لا تظهر للجميع
     }
 
     function renderMessageToPanel(key, data, isPrivate, fullPath) {
@@ -402,21 +404,19 @@
         if (data.text) msgHtml += `<div class="msg-text">${data.text}</div>`;
         if (data.image) msgHtml += `<img src="${data.image}" class="msg-image" onclick="window.open('${data.image}')">`;
 
+        // تعديل الأزرار لضمان العزل التام
         msgHtml += `
                 <div class="msg-actions">
-                    <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">إجراء ورد</button>
-                    <button class="btn-delete" onclick="deleteMessage('${fullPath}', '${key}')">مسح رسالة 🗑️</button>
+                    <button class="btn-reply" style="background:#3498db;" onclick="prepareGeneralReply('${data.sender}')">رد بالعام</button>
+                    <button class="btn-reply" style="background:#8e44ad;" onclick="openUserChat('${data.deviceId}', '${data.sender}')">خاص 📩</button>
+                    <button class="btn-delete" onclick="deleteMessage('${fullPath}', '${key}')">مسح 🗑️</button>
                 </div>
             </div>
         `;
         
         msgList.insertAdjacentHTML('afterbegin', msgHtml);
-
-        if(currentChatUserId === data.deviceId || (data.targetId === currentChatUserId)) {
-            if(!document.getElementById(`modal-msg-${key}`)) {
-                appendMsgToModal(key, data, time, isPrivate, fullPath);
-            }
-        }
+        
+        // تم حذف كود النقل التلقائي لنافذة الخاص للعزل التام
     }
 
     function removeMessageUI(key) {
@@ -433,28 +433,50 @@
         }
     }
 
+    // دالة جديدة لتجهيز الرد في الشات العام
+    function prepareGeneralReply(senderName) {
+        const input = document.getElementById("admin-general-input");
+        input.value = "@" + senderName + " ";
+        input.focus();
+    }
+
+    // دالة جديدة لإرسال الرسائل للشات العام مباشرة (منعاً للخلط)
+    function sendGeneralReply() {
+        const input = document.getElementById("admin-general-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
+        const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+        const myAdminId = localStorage.getItem("super_admin_id");
+        const myDeviceId = localStorage.getItem("chat_device_id");
+
+        const msgData = {
+            deviceId: myDeviceId,
+            adminId: myAdminId,
+            sender: customName,
+            senderImg: customImg,
+            text: text,
+            timestamp: Date.now()
+        };
+
+        db.ref('messages_general').push(msgData);
+        input.value = "";
+    }
+
     function openUserChat(uid, userName) {
         currentChatUserId = uid;
         currentChatUserName = userName;
-        document.getElementById("modal-title").innerText = `إدارة المستخدم: ${userName}`;
+        document.getElementById("modal-title").innerText = `رسائل الخاص مع: ${userName}`;
         const modalMsgs = document.getElementById("modal-messages");
         modalMsgs.innerHTML = ""; 
         document.getElementById("user-chat-modal").style.display = "flex";
         
         updateModalBanButton(); 
 
-        // جلب الرسائل العامة للمستخدم
-        db.ref('messages_general').once('value', snapshot => {
-            snapshot.forEach(child => {
-                const data = child.val();
-                if (data.deviceId === uid || data.targetId === uid) {
-                    const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                    appendMsgToModal(child.key, data, time, false, 'messages_general/' + child.key);
-                }
-            });
-        });
+        // تم حذف كود جلب الرسائل العامة لتوفير عزل تام للخاص
 
-        // جلب الرسائل الخاصة للمستخدم مع هذا الآدمن تحديداً
+        // جلب الرسائل الخاصة للمستخدم مع هذا الآدمن تحديداً (فقط)
         const myAdminId = localStorage.getItem("super_admin_id");
         const roomPath = `private_messages/user_${uid}_admin_${myAdminId}`;
         
@@ -553,7 +575,7 @@
         input.value = "";
     }
 
-    // --- الوظائف الجديدة الخاصة بصندوق الخاص للآدمن المعزول ---
+    // --- الوظائف الخاصة بصندوق الخاص للآدمن المعزول ---
     function openPrivateMessagesModal() {
         const myAdminId = localStorage.getItem("super_admin_id");
         if (!myAdminId) {
@@ -598,7 +620,7 @@
                                 ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
                                 ${data.image ? `<img src="${data.image}" class="msg-image" onclick="window.open('${data.image}')">` : ''}
                                 <div class="msg-actions">
-                                    <button class="btn-reply" onclick="replyFromPrivateModal('${data.deviceId}', '${data.sender}')">فتح الدردشة والرد</button>
+                                    <button class="btn-reply" style="background:#2ecc71;" onclick="replyFromPrivateModal('${data.deviceId}', '${data.sender}')">فتح الدردشة والرد</button>
                                     <button class="btn-delete" onclick="deleteMessage('${fullPath}', '${msgKey}')">مسح 🗑️</button>
                                 </div>
                             </div>
