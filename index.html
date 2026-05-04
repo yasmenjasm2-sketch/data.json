@@ -263,6 +263,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
+    // إعداد المؤثر الصوتي للرسائل الجديدة
+    const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+    msgNotificationSound.volume = 0.5;
+
     let deviceId = null;
     try {
         if (window.Android && window.Android.getDeviceID) { deviceId = window.Android.getDeviceID(); }
@@ -454,6 +458,11 @@
             const data = snapshot.val();
             const msgDiv = document.createElement("div");
             msgDiv.className = "message " + (data.deviceId === deviceId ? "mine" : "");
+
+            // تشغيل الصوت للرسائل الواردة الجديدة (التي تم إرسالها خلال آخر 3 ثوانٍ فقط)
+            if (data.deviceId !== deviceId && (Date.now() - data.timestamp) < 3000) {
+                msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
+            }
             
             const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
