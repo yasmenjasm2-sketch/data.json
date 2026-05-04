@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم والإرسال التلقائي</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+
+        body {
+            background-color: #0b0714;
+            color: #ffffff;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .panel-container {
+            background: rgba(20, 15, 30, 0.9);
+            border: 1px solid rgba(187, 134, 252, 0.4);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.3);
+        }
+
+        h2 {
+            text-align: center;
+            color: #d6b4fc;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0a0b0;
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(187, 134, 252, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #bb86fc;
+            box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-send {
+            width: 100%;
+            background: linear-gradient(90deg, #8e2de2, #4a00e0);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+        }
+
+        .btn-send:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #a5f3bc;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel-container">
+        <h2>لوحة التحكم والإرسال 🚀</h2>
+        
+        <div class="form-group">
+            <label>اسم المستخدم (سيتم ترقيمه تلقائياً إذا اخترت أكثر من مستخدم):</label>
+            <input type="text" id="botName" placeholder="مثال: يوزر جديد" required>
+        </div>
+
+        <div class="form-group">
+            <label>الرسالة المراد إرسالها:</label>
+            <textarea id="botMessage" placeholder="اكتب الرسالة هنا..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label>عدد المستخدمين (حسابات وهمية):</label>
+                <input type="number" id="usersCount" value="1" min="1" max="50">
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+                <label>تكرار الرسالة لكل مستخدم:</label>
+                <input type="number" id="msgsCount" value="1" min="1" max="100">
+            </div>
+        </div>
+
+        <button class="btn-send" id="sendBtn" onclick="startSending()">بدء الإرسال للشات العام</button>
+        <div id="statusMsg" class="status">✅ تم الانتهاء من إرسال جميع الرسائل!</div>
+    </div>
+
+    <script>
+        // استخدام نفس إعدادات التطبيق لربط اللوحة بالشات
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
+            databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "chatapi-1ca71",
+            storageBucket: "chatapi-1ca71.firebasestorage.app",
+            appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // وظيفة الإرسال وصناعة الحسابات
+        async function startSending() {
+            const baseName = document.getElementById('botName').value.trim();
+            const text = document.getElementById('botMessage').value.trim();
+            const usersCount = parseInt(document.getElementById('usersCount').value) || 1;
+            const msgsCount = parseInt(document.getElementById('msgsCount').value) || 1;
+            const sendBtn = document.getElementById('sendBtn');
+            const statusMsg = document.getElementById('statusMsg');
+
+            if (!baseName || !text) {
+                alert("يرجى إدخال الاسم والرسالة.");
+                return;
+            }
+
+            sendBtn.disabled = true;
+            sendBtn.innerText = "جاري المعالجة والإرسال...";
+            statusMsg.style.display = "none";
+
+            try {
+                // إنشاء مستخدمين وإرسال رسائل بناءً على العدد
+                for(let i = 0; i < usersCount; i++) {
+                    // صنع آيدي حقيقي لتسجيله في قاعدة البيانات
+                    const botDeviceId = 'bot_' + Math.random().toString(36).substr(2, 9) + Date.now();
+                    // ترقيم الأسماء في حال وجود أكثر من مستخدم
+                    const finalName = usersCount > 1 ? `${baseName} ${i + 1}` : baseName;
+                    
+                    // تسجيل الحساب الوهمي/الجديد في فايربيس وكأنه مستخدم حقيقي
+                    await db.ref('users/' + botDeviceId).set({
+                        name: finalName,
+                        image: "https://cdn-icons-png.flaticon.com/512/149/149071.png", // صورة افتراضية
+                        lastLogin: Date.now()
+                    });
+
+                    // إرسال عدد الرسائل المطلوبة من هذا الحساب
+                    for(let j = 0; j < msgsCount; j++) {
+                        const msgData = {
+                            deviceId: botDeviceId,
+                            sender: finalName,
+                            senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+                            adminId: null, // رسائل من مستخدمين عاديين
+                            text: text,
+                            image: null,
+                            timestamp: Date.now() + j // إضافة j لتفادي تشابه الوقت تماماً
+                        };
+                        
+                        // دفع الرسالة للروم العام الذي يقرأ منه ملف index.html
+                        await db.ref('messages_general').push(msgData);
+                    }
+                }
+
+                statusMsg.style.display = "block";
+            } catch (error) {
+                console.error("حدث خطأ أثناء الإرسال:", error);
+                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = "بدء الإرسال للشات العام";
+                
+                // إخفاء رسالة النجاح بعد 3 ثواني
+                setTimeout(() => {
+                    statusMsg.style.display = "none";
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
