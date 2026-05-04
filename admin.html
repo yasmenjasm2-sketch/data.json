@@ -175,8 +175,39 @@
 
     const ADMIN_PASSWORD = _p;
 
+    // --- نظام الحفظ المعزز والمزدوج لمنع فقدان الدخول ---
+    function setPermanentLogin(pass) {
+        // الحفظ في LocalStorage
+        localStorage.setItem("admin_auth_pass", pass);
+        // الحفظ في Cookies لمدة 10 سنوات
+        let d = new Date();
+        d.setTime(d.getTime() + (10*365*24*60*60*1000));
+        document.cookie = "admin_auth_pass=" + pass + ";expires=" + d.toUTCString() + ";path=/";
+    }
+
+    function getPermanentLogin() {
+        // التحقق من LocalStorage أولاً
+        let pass = localStorage.getItem("admin_auth_pass");
+        if (pass) return pass;
+        
+        // التحقق من Cookies كجدار حماية ثاني
+        let name = "admin_auth_pass=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') { c = c.substring(1); }
+            if (c.indexOf(name) == 0) { 
+                let cookiePass = c.substring(name.length, c.length);
+                localStorage.setItem("admin_auth_pass", cookiePass); // استعادة التخزين المحلي من الكوكيز
+                return cookiePass;
+            }
+        }
+        return null;
+    }
+
     window.onload = () => {
-        const savedPass = localStorage.getItem("admin_auth_pass");
+        const savedPass = getPermanentLogin();
         if (savedPass === ADMIN_PASSWORD) {
             grantAccess();
         }
@@ -185,7 +216,7 @@
     function checkLogin() {
         const pass = document.getElementById("admin-pass").value;
         if (pass === ADMIN_PASSWORD) {
-            localStorage.setItem("admin_auth_pass", pass);
+            setPermanentLogin(pass);
             grantAccess();
         } else {
             document.getElementById("login-error").style.display = "block";
@@ -194,6 +225,7 @@
 
     function logout() {
         localStorage.removeItem("admin_auth_pass");
+        document.cookie = "admin_auth_pass=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         location.reload();
     }
 
@@ -458,16 +490,25 @@
         const myAdminId = localStorage.getItem("super_admin_id");
         const myDeviceId = localStorage.getItem("chat_device_id");
 
+        // تم التعديل هنا لدعم الشعار والزر المخصص في تطبيق المستخدم (المنطق الاحترافي)
         const msgData = {
             deviceId: myDeviceId, 
-            adminId: myAdminId, // إضافة الآيدي ليتعرف عليه الشات العام ويضع شارة 👑
+            adminId: myAdminId,
             sender: customName,
             senderImg: customImg,
-            text: "🔹 رد على " + currentChatUserName + ":\n" + text,
+            text: "👑 رسالة إدارية خاصة من [" + customName + "]\n\n" + text, // نص منسق لضمان ظهوره بشكل فخم
             timestamp: Date.now(),
             isAdminReply: true,
             targetId: currentChatUserId, 
-            isSuperAdmin: true 
+            isSuperAdmin: true,
+            
+            // البيانات الإضافية التي سيقرأها تطبيق المستخدم ليعرض الزر والشعار المخصص فوق
+            isPrivateMessage: true, 
+            adminHeaderData: {
+                title: "إدارة النظام",
+                buttonLabel: customName,
+                icon: customImg
+            }
         };
 
         db.ref('messages_general').push(msgData);
