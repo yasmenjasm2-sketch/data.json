@@ -186,6 +186,10 @@
     }
     const db = firebase.database();
 
+    // إعداد المؤثر الصوتي للرسائل الجديدة
+    const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+    msgNotificationSound.volume = 0.5;
+
     let globalUsers = {};
     let globalAdmins = {};
     let globalBans = {};
@@ -377,12 +381,33 @@
         
         // مراقبة الرسائل العامة (فقط) في الشاشة الرئيسية
         db.ref('messages_general').on('child_added', snapshot => {
-            renderMessageToPanel(snapshot.key, snapshot.val(), false, 'messages_general/' + snapshot.key);
+            const data = snapshot.val();
+            // تشغيل الصوت للرسائل العامة الواردة
+            if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
+                msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
+            }
+            renderMessageToPanel(snapshot.key, data, false, 'messages_general/' + snapshot.key);
         });
 
         db.ref('messages_general').on('child_removed', snapshot => {
             removeMessageUI(snapshot.key);
         });
+
+        // إضافة مستمع عالمي لرسائل الخاص لتشغيل الصوت عند وصول رسالة جديدة للآدمن
+        const myAdminId = localStorage.getItem("super_admin_id");
+        if (myAdminId) {
+            db.ref('private_messages').on('child_added', roomSnapshot => {
+                if (roomSnapshot.key.endsWith('_admin_' + myAdminId)) {
+                    db.ref('private_messages/' + roomSnapshot.key).on('child_added', msgSnapshot => {
+                        const data = msgSnapshot.val();
+                        // تشغيل الصوت إذا لم تكن الرسالة مرسلة من الآدمن نفسه وكانت حديثة
+                        if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
+                            msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
+                        }
+                    });
+                }
+            });
+        }
     }
 
     function renderMessageToPanel(key, data, isPrivate, fullPath) {
@@ -415,8 +440,6 @@
         `;
         
         msgList.insertAdjacentHTML('afterbegin', msgHtml);
-        
-        // تم حذف كود النقل التلقائي لنافذة الخاص للعزل التام
     }
 
     function removeMessageUI(key) {
@@ -473,8 +496,6 @@
         document.getElementById("user-chat-modal").style.display = "flex";
         
         updateModalBanButton(); 
-
-        // تم حذف كود جلب الرسائل العامة لتوفير عزل تام للخاص
 
         // جلب الرسائل الخاصة للمستخدم مع هذا الآدمن تحديداً (فقط)
         const myAdminId = localStorage.getItem("super_admin_id");
