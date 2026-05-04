@@ -177,20 +177,16 @@
 
     // --- نظام الحفظ المعزز والمزدوج لمنع فقدان الدخول ---
     function setPermanentLogin(pass) {
-        // الحفظ في LocalStorage
         localStorage.setItem("admin_auth_pass", pass);
-        // الحفظ في Cookies لمدة 10 سنوات
         let d = new Date();
         d.setTime(d.getTime() + (10*365*24*60*60*1000));
         document.cookie = "admin_auth_pass=" + pass + ";expires=" + d.toUTCString() + ";path=/";
     }
 
     function getPermanentLogin() {
-        // التحقق من LocalStorage أولاً
         let pass = localStorage.getItem("admin_auth_pass");
         if (pass) return pass;
         
-        // التحقق من Cookies كجدار حماية ثاني
         let name = "admin_auth_pass=";
         let decodedCookie = decodeURIComponent(document.cookie);
         let ca = decodedCookie.split(';');
@@ -199,7 +195,7 @@
             while (c.charAt(0) == ' ') { c = c.substring(1); }
             if (c.indexOf(name) == 0) { 
                 let cookiePass = c.substring(name.length, c.length);
-                localStorage.setItem("admin_auth_pass", cookiePass); // استعادة التخزين المحلي من الكوكيز
+                localStorage.setItem("admin_auth_pass", cookiePass);
                 return cookiePass;
             }
         }
@@ -241,14 +237,12 @@
         let myAdminId = localStorage.getItem("super_admin_id");
         let myDeviceId = localStorage.getItem("chat_device_id");
         
-        // توليد آيدي للأدمن إذا لم يكن موجوداً
         if (!myAdminId) {
             const possibleIDs = ["1111", "2222", "3333", "4444", "5555", "7777", "8888", "9999"];
             myAdminId = possibleIDs[Math.floor(Math.random() * possibleIDs.length)];
             localStorage.setItem("super_admin_id", myAdminId);
         }
         
-        // توليد معرف جهاز للوحة إذا لم يكن موجوداً
         if (!myDeviceId) {
             myDeviceId = 'admin_panel_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem("chat_device_id", myDeviceId);
@@ -259,7 +253,6 @@
         const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
         const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
 
-        // الرفع إلى قاعدة البيانات ليتعرف عليه تطبيق الشات
         db.ref('admins_list/' + myDeviceId).set(myAdminId);
         db.ref('admins_profiles/' + myAdminId).set({
             deviceId: myDeviceId,
@@ -359,55 +352,83 @@
     function banUser(uid) { db.ref('bans/' + uid).set(true); }
     function unbanUser(uid) { db.ref('bans/' + uid).remove(); }
 
+    // --- التعديل الجذري: دمج مسار العام والخاص في اللوحة ---
     function loadAllMessages() {
         const msgList = document.getElementById("messages-list");
+        msgList.innerHTML = "";
         
-        // تم تغيير مسار القراءة إلى messages_general للتوافق مع تطبيق الشات
+        // 1. مراقبة الرسائل العامة
         db.ref('messages_general').on('child_added', snapshot => {
-            const key = snapshot.key;
-            const data = snapshot.val();
-            const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-
-            const senderName = data.adminId ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
-
-            let msgHtml = `
-                <div class="card" id="msg-${key}">
-                    <div class="msg-header">
-                        <span class="msg-sender">${senderName}</span>
-                        <span class="msg-time">${time}</span>
-                    </div>
-                    <div class="device-id" style="margin-bottom:8px;">${data.deviceId}</div>
-            `;
-
-            if (data.text) msgHtml += `<div class="msg-text">${data.text}</div>`;
-            if (data.image) msgHtml += `<img src="${data.image}" class="msg-image" onclick="window.open('${data.image}')">`;
-
-            msgHtml += `
-                    <div class="msg-actions">
-                        <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">إجراء ورد</button>
-                        <button class="btn-delete" onclick="deleteMessage('${key}')">مسح رسالة 🗑️</button>
-                    </div>
-                </div>
-            `;
-            
-            msgList.insertAdjacentHTML('afterbegin', msgHtml);
-
-            if(currentChatUserId === data.deviceId || (data.targetId === currentChatUserId)) {
-                appendMsgToModal(key, data, time);
-            }
+            renderMessageToPanel(snapshot.key, snapshot.val(), false, 'messages_general/' + snapshot.key);
         });
 
         db.ref('messages_general').on('child_removed', snapshot => {
-            const el = document.getElementById("msg-" + snapshot.key);
-            if (el) el.remove();
-            const modalEl = document.getElementById("modal-msg-" + snapshot.key);
-            if (modalEl) modalEl.remove();
+            removeMessageUI(snapshot.key);
+        });
+
+        // 2. مراقبة الرسائل الخاصة (هنا كان النقص، اللوحة لم تكن تقرأ مسار الخاص)
+        db.ref('private_messages').on('child_added', roomSnapshot => {
+            const roomKey = roomSnapshot.key;
+            const roomPath = 'private_messages/' + roomKey;
+            
+            db.ref(roomPath).on('child_added', snapshot => {
+                renderMessageToPanel(snapshot.key, snapshot.val(), true, roomPath + '/' + snapshot.key);
+            });
+
+            db.ref(roomPath).on('child_removed', snapshot => {
+                removeMessageUI(snapshot.key);
+            });
         });
     }
 
-    function deleteMessage(key) {
-        if(confirm("هل أنت متأكد من مسح هذه الرسالة للجميع؟")) {
-            db.ref('messages_general/' + key).remove();
+    function renderMessageToPanel(key, data, isPrivate, fullPath) {
+        const msgList = document.getElementById("messages-list");
+        const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+        const senderName = data.adminId ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
+        const privateBadge = isPrivate ? `<span style="background:#8e44ad; color:white; font-size:10px; padding:2px 5px; border-radius:4px; margin-right:5px;">🔒 خاص</span>` : '';
+
+        let msgHtml = `
+            <div class="card" id="msg-${key}">
+                <div class="msg-header">
+                    <span class="msg-sender">${privateBadge} ${senderName}</span>
+                    <span class="msg-time">${time}</span>
+                </div>
+                <div class="device-id" style="margin-bottom:8px;">${data.deviceId}</div>
+        `;
+
+        if (data.text) msgHtml += `<div class="msg-text">${data.text}</div>`;
+        if (data.image) msgHtml += `<img src="${data.image}" class="msg-image" onclick="window.open('${data.image}')">`;
+
+        msgHtml += `
+                <div class="msg-actions">
+                    <button class="btn-reply" onclick="openUserChat('${data.deviceId}', '${data.sender}')">إجراء ورد</button>
+                    <button class="btn-delete" onclick="deleteMessage('${fullPath}', '${key}')">مسح رسالة 🗑️</button>
+                </div>
+            </div>
+        `;
+        
+        msgList.insertAdjacentHTML('afterbegin', msgHtml);
+
+        // تحديث المودال إذا كان مفتوحاً على نفس المستخدم
+        if(currentChatUserId === data.deviceId || (data.targetId === currentChatUserId)) {
+            if(!document.getElementById(`modal-msg-${key}`)) {
+                appendMsgToModal(key, data, time, isPrivate, fullPath);
+            }
+        }
+    }
+
+    function removeMessageUI(key) {
+        const el = document.getElementById("msg-" + key);
+        if (el) el.remove();
+        const modalEl = document.getElementById("modal-msg-" + key);
+        if (modalEl) modalEl.remove();
+    }
+
+    function deleteMessage(fullPath, key) {
+        if(confirm("هل أنت متأكد من مسح هذه الرسالة؟")) {
+            if (!fullPath.includes('/')) fullPath = 'messages_general/' + fullPath; // حماية احتياطية
+            db.ref(fullPath).remove();
         }
     }
 
@@ -415,21 +436,34 @@
         currentChatUserId = uid;
         currentChatUserName = userName;
         document.getElementById("modal-title").innerText = `إدارة المستخدم: ${userName}`;
-        document.getElementById("modal-messages").innerHTML = ""; 
+        const modalMsgs = document.getElementById("modal-messages");
+        modalMsgs.innerHTML = ""; 
         document.getElementById("user-chat-modal").style.display = "flex";
         
         updateModalBanButton(); 
 
+        // جلب الرسائل العامة للمستخدم
         db.ref('messages_general').once('value', snapshot => {
             snapshot.forEach(child => {
                 const data = child.val();
                 if (data.deviceId === uid || data.targetId === uid) {
                     const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                    appendMsgToModal(child.key, data, time);
+                    appendMsgToModal(child.key, data, time, false, 'messages_general/' + child.key);
                 }
             });
-            const modalMsgs = document.getElementById("modal-messages");
-            modalMsgs.scrollTop = modalMsgs.scrollHeight;
+        });
+
+        // جلب الرسائل الخاصة للمستخدم
+        const myAdminId = localStorage.getItem("super_admin_id");
+        const roomPath = `private_messages/user_${uid}_admin_${myAdminId}`;
+        
+        db.ref(roomPath).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const data = child.val();
+                const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                appendMsgToModal(child.key, data, time, true, roomPath + '/' + child.key);
+            });
+            setTimeout(() => { modalMsgs.scrollTop = modalMsgs.scrollHeight; }, 200);
         });
     }
 
@@ -459,20 +493,21 @@
         }
     }
 
-    function appendMsgToModal(key, data, time) {
+    function appendMsgToModal(key, data, time, isPrivate, fullPath) {
         const modalMsgs = document.getElementById("modal-messages");
         const isReply = data.adminId && data.deviceId === localStorage.getItem("chat_device_id");
+        const privateBadge = isPrivate ? `<span style="font-size:10px; color:#8e44ad; border:1px solid #8e44ad; padding:1px 4px; border-radius:3px; margin-right:5px;">خاص</span>` : '';
         
         let html = `
             <div class="card" id="modal-msg-${key}" style="background: ${isReply ? '#27ae6033' : '#2a233c'}; border-color: ${isReply ? '#2ecc71' : '#444'};">
                 <div class="msg-header">
-                    <span class="msg-sender" style="color: ${isReply ? '#f1c40f' : '#f39c12'};">${data.sender}</span>
+                    <span class="msg-sender" style="color: ${isReply ? '#f1c40f' : '#f39c12'};">${data.sender} ${privateBadge}</span>
                     <span class="msg-time">${time}</span>
                 </div>
                 ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
                 ${data.image ? `<img src="${data.image}" class="msg-image">` : ''}
                 <div class="msg-actions">
-                    <button class="btn-delete" onclick="deleteMessage('${key}')">مسح 🗑️</button>
+                    <button class="btn-delete" onclick="deleteMessage('${fullPath || 'messages_general/'+key}', '${key}')">مسح 🗑️</button>
                 </div>
             </div>
         `;
@@ -490,19 +525,16 @@
         const myAdminId = localStorage.getItem("super_admin_id");
         const myDeviceId = localStorage.getItem("chat_device_id");
 
-        // تم التعديل هنا لدعم الشعار والزر المخصص في تطبيق المستخدم (المنطق الاحترافي)
         const msgData = {
             deviceId: myDeviceId, 
             adminId: myAdminId,
             sender: customName,
             senderImg: customImg,
-            text: "👑 رسالة إدارية خاصة من [" + customName + "]\n\n" + text, // نص منسق لضمان ظهوره بشكل فخم
+            text: "👑 رسالة إدارية خاصة من [" + customName + "]\n\n" + text, 
             timestamp: Date.now(),
             isAdminReply: true,
             targetId: currentChatUserId, 
             isSuperAdmin: true,
-            
-            // البيانات الإضافية التي سيقرأها تطبيق المستخدم ليعرض الزر والشعار المخصص فوق
             isPrivateMessage: true, 
             adminHeaderData: {
                 title: "إدارة النظام",
@@ -511,7 +543,10 @@
             }
         };
 
-        db.ref('messages_general').push(msgData);
+        // الإصلاح الرئيسي: توجيه الرد مباشرة لغرفة الخاص الخاصة بالمستخدم ليراه فوراً
+        const roomPath = `private_messages/user_${currentChatUserId}_admin_${myAdminId}`;
+        db.ref(roomPath).push(msgData);
+        
         input.value = "";
     }
 </script>
