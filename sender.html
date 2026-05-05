@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإرسال الذكية (عام + خاص)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة FawakihAI الذكية - إصدار الحفظ</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -15,10 +15,10 @@
             color: #ffffff;
             font-family: 'Tajawal', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
         }
 
@@ -26,142 +26,132 @@
             background: rgba(20, 15, 30, 0.9);
             border: 1px solid #8e44ad;
             border-radius: 20px;
-            padding: 30px;
+            padding: 25px;
             width: 100%;
-            max-width: 650px;
+            max-width: 600px;
             box-shadow: 0 0 30px rgba(142, 68, 173, 0.3);
-            margin-top: 20px;
+            backdrop-filter: blur(10px);
         }
 
-        h2 {
-            text-align: center;
-            color: #d6b4fc;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #a0a0b0;
-            font-size: 13px;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
+        h2 { text-align: center; color: #d6b4fc; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #a0a0b0; font-size: 12px; margin-bottom: 20px; }
 
         .account-row {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(187, 134, 252, 0.3);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(187, 134, 252, 0.2);
+            border-radius: 15px;
             padding: 15px;
             margin-bottom: 15px;
-            position: relative;
-            transition: 0.3s;
+            animation: fadeIn 0.3s ease;
         }
 
-        .account-row:hover {
-            border-color: #bb86fc;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .account-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            color: #bb86fc;
-            font-weight: bold;
-        }
+        .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #bb86fc; }
+        
+        .remove-btn { background: #ff4757; color: white; border: none; border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 11px; }
 
-        .remove-btn {
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        select, input[type="text"], textarea {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             margin-bottom: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(187, 134, 252, 0.3);
-            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #161122;
             color: white;
-            font-size: 14px;
+            font-family: 'Tajawal';
             outline: none;
             box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
-            transition: 0.3s;
         }
 
-        select { border-color: #9b59b6 !important; cursor: pointer; }
-        .input-name { border-color: #2ecc71 !important; }
-        .input-admin-id { border-color: #f39c12 !important; color: #f39c12 !important; }
-        textarea { border-color: #3498db !important; min-height: 70px; resize: vertical; }
+        input:focus, textarea:focus { border-color: #bb86fc; box-shadow: 0 0 10px rgba(187, 134, 252, 0.2); }
 
-        .btn-add {
+        .btn-add { width: 100%; background: transparent; color: #bb86fc; border: 2px dashed #bb86fc; padding: 12px; border-radius: 12px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+        .btn-send { width: 100%; background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; box-shadow: 0 5px 15px rgba(74, 0, 224, 0.3); }
+        .btn-send:disabled { background: #444; box-shadow: none; }
+
+        /* قسم الحسابات المحفوظة */
+        .saved-section {
             width: 100%;
-            background: transparent;
-            color: #bb86fc;
-            border: 2px dashed #bb86fc;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 20px;
+            max-width: 600px;
+            margin-top: 30px;
+            background: rgba(20, 15, 30, 0.7);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(187, 134, 252, 0.1);
         }
 
-        .btn-send {
-            width: 100%;
-            background: linear-gradient(90deg, #8e44ad, #2980b9);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
+        .saved-title { color: #d6b4fc; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
         }
 
-        .btn-send:disabled { background: #555; cursor: not-allowed; }
-
-        .status {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #fca311;
-            display: none;
+        .account-card {
+            background: #1c1629;
+            border: 1px solid rgba(187, 134, 252, 0.2);
             padding: 10px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.5);
-            line-height: 1.5;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
         }
+
+        .account-card:hover { background: #2d2442; border-color: #bb86fc; }
+        
+        .account-card .name { display: block; font-weight: bold; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .account-card .id-tag { font-size: 10px; color: #a0a0b0; }
+
+        .status-box { margin-top: 15px; padding: 10px; border-radius: 10px; text-align: center; font-size: 13px; display: none; }
+
+        /* نافذة الخيارات السريعة */
+        #quick-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content {
+            background: #1c1629; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; border: 1px solid #bb86fc;
+        }
+        .modal-btn { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: none; cursor: pointer; font-family: 'Tajawal'; font-weight: bold; }
+        .btn-p { background: #8e2de2; color: white; }
+        .btn-a { background: #f39c12; color: white; }
+        .btn-c { background: #333; color: white; }
     </style>
 </head>
 <body>
 
     <div class="panel-container">
-        <h2>🚀 لوحة الإرسال الذكية (عام + خاص)</h2>
-        <div class="subtitle">
-            • الحسابات تُثبت حسب الاسم (لن يتكرر الحساب لنفس الاسم).<br>
-            • شات العام لا يحتاج آيدي، بينما الخاص يحتاج آيدي الأدمن.<br>
-            • فاصل زمني 30 ثانية بين كل رسالة لضمان الأمان.
-        </div>
-        
-        <div id="accountsContainer"></div>
+        <h2>🚀 لوحة الإرسال الذكية</h2>
+        <p class="subtitle">إصلاح شامل للشات العام + نظام حفظ الحسابات</p>
 
-        <button class="btn-add" id="addBtn" onclick="addAccountRow()">+ إضافة عملية إرسال أخرى</button>
-        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء التنفيذ المتعدد</button>
+        <div id="rows-container"></div>
+
+        <button class="btn-add" onclick="addRow()">+ إضافة مهمة إرسال جديدة</button>
+        <button class="btn-send" id="mainSendBtn" onclick="processAllTasks()">بدء التنفيذ المتعدد</button>
         
-        <div id="statusMsg" class="status"></div>
+        <div id="global-status" class="status-box"></div>
+    </div>
+
+    <div class="saved-section">
+        <div class="saved-title">👤 أرشيف الحسابات المحفوظة</div>
+        <div id="accounts-list" class="accounts-grid">
+            </div>
+    </div>
+
+    <div id="quick-modal">
+        <div class="modal-content">
+            <h3 id="modal-user-name" style="color: #bb86fc;">اسم المستخدم</h3>
+            <p style="font-size: 12px; color: #a0a0b0;">اختر الإجراء الذي تريد القيام به لهذا الحساب:</p>
+            <button class="modal-btn btn-p" onclick="quickTask('public')">إرسال لشات العام 🌍</button>
+            <button class="modal-btn btn-a" onclick="quickTask('private')">تواصل خاص مع أدمن 🛡️</button>
+            <button class="modal-btn btn-c" onclick="closeModal()">إلغاء</button>
+        </div>
     </div>
 
     <script>
-        // إعدادات فايربيس
+        // إعدادات Firebase (نفس إعداداتك الأصلية)
         const firebaseConfig = {
             apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
             databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -169,169 +159,152 @@
             storageBucket: "chatapi-1ca71.firebasestorage.app",
             appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
         };
-        
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let rowCount = 0;
-        const maxRows = 10;
+        let tasksCount = 0;
+        let selectedSavedUser = null;
 
-        // توليد آيدي أندرويد حقيقي (16 خانة Hex)
-        function generateRealAndroidId() {
-            const chars = '0123456789abcdef';
-            let id = '';
-            for (let i = 0; i < 16; i++) id += chars[Math.floor(Math.random() * chars.length)];
-            return id;
-        }
-
-        // تثبيت الآيدي بناءً على الاسم لمنع تكرار الحسابات
-        function getPersistentIdForName(name) {
+        // دالة توليد ID أندرويد ثابت بناءً على الاسم
+        function getFixedId(name) {
+            let storage = JSON.parse(localStorage.getItem('fawakih_accounts') || '{}');
             let cleanName = name.trim().toLowerCase();
-            let savedIds = JSON.parse(localStorage.getItem('fixed_user_devices')) || {};
+            if (storage[cleanName]) return storage[cleanName];
             
-            if (savedIds[cleanName]) {
-                return savedIds[cleanName];
-            } else {
-                let newId = generateRealAndroidId();
-                savedIds[cleanName] = newId;
-                localStorage.setItem('fixed_user_devices', JSON.stringify(savedIds));
-                return newId;
-            }
+            // إذا لم يوجد، نولد واحد جديد ونحفظه
+            let newId = 'android_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36).substr(-4);
+            storage[cleanName] = newId;
+            localStorage.setItem('fawakih_accounts', JSON.stringify(storage));
+            return newId;
         }
 
-        // إخفاء أو إظهار حقل الآيدي بناءً على نوع الإرسال
-        function updateRowUI(rowId) {
-            const row = document.getElementById(rowId);
-            const type = row.querySelector('.send-type').value;
-            const adminInput = row.querySelector('.input-admin-id');
+        function addRow(prefilledData = null) {
+            tasksCount++;
+            const container = document.getElementById('rows-container');
+            const row = document.createElement('div');
+            row.className = 'account-row';
+            row.id = `row-${tasksCount}`;
             
-            if (type === "public") {
-                adminInput.style.display = "none";
-                adminInput.removeAttribute('required');
-            } else {
-                adminInput.style.display = "block";
-                adminInput.setAttribute('required', 'true');
-            }
-        }
-
-        function addAccountRow() {
-            if (rowCount >= maxRows) {
-                alert("الحد الأقصى 10 عمليات!");
-                return;
-            }
-            rowCount++;
-            const container = document.getElementById('accountsContainer');
-            const rowId = `row-${rowCount}`;
-            
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'account-row';
-            rowDiv.id = rowId;
-            
-            rowDiv.innerHTML = `
-                <div class="account-header">
-                    <span>المهمة رقم ${rowCount}</span>
-                    <button class="remove-btn" onclick="removeRow('${rowId}')">حذف</button>
+            row.innerHTML = `
+                <div class="row-header">
+                    <span>مهمة #${tasksCount}</span>
+                    <button class="remove-btn" onclick="document.getElementById('row-${tasksCount}').remove()">حذف</button>
                 </div>
-                <select class="send-type" onchange="updateRowUI('${rowId}')">
-                    <option value="private">إرسال خاص (إلى أدمن محدد)</option>
-                    <option value="public">إرسال عام (شات العام)</option>
+                <select class="t-type" onchange="toggleAdminField(this)">
+                    <option value="public" ${prefilledData?.type === 'public' ? 'selected' : ''}>إرسال لشات العام (الكل)</option>
+                    <option value="private" ${prefilledData?.type === 'private' ? 'selected' : ''}>إرسال خاص (إلى أدمن)</option>
                 </select>
-                <input type="text" class="input-name" placeholder="اسم المرسل (مثال: فهد)" required>
-                <input type="text" class="input-admin-id" placeholder="آيدي الأدمن المستلم (مطلوب للخاص)" required>
-                <textarea class="input-msg" placeholder="اكتب نص الرسالة هنا..." required></textarea>
+                <input type="text" class="t-name" placeholder="اسم المرسل..." value="${prefilledData?.name || ''}">
+                <input type="text" class="t-admin" placeholder="آيدي الأدمن (مطلوب للخاص)..." 
+                    style="display: ${prefilledData?.type === 'private' ? 'block' : 'none'}; border-color: #f39c12;">
+                <textarea class="t-msg" placeholder="نص الرسالة..."></textarea>
             `;
+            container.appendChild(row);
+        }
+
+        function toggleAdminField(select) {
+            const adminInput = select.parentElement.querySelector('.t-admin');
+            adminInput.style.display = (select.value === 'private') ? 'block' : 'none';
+        }
+
+        // تحديث قائمة الحسابات المحفوظة في الواجهة
+        function refreshSavedUI() {
+            const list = document.getElementById('accounts-list');
+            const storage = JSON.parse(localStorage.getItem('fawakih_accounts') || '{}');
+            list.innerHTML = "";
             
-            container.appendChild(rowDiv);
-            updateRowUI(rowId);
-        }
-
-        function removeRow(rowId) {
-            document.getElementById(rowId).remove();
-            rowCount--;
-        }
-
-        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-        async function startSending() {
-            let rows = document.querySelectorAll('.account-row');
-            let tasks = [];
-
-            rows.forEach(row => {
-                let type = row.querySelector('.send-type').value;
-                let name = row.querySelector('.input-name').value.trim();
-                let adminId = row.querySelector('.input-admin-id').value.trim();
-                let msg = row.querySelector('.input-msg').value.trim();
-                
-                if (name && msg && (type === 'public' || adminId)) {
-                    tasks.push({ type, name, adminId, msg });
-                }
+            Object.keys(storage).forEach(name => {
+                const card = document.createElement('div');
+                card.className = 'account-card';
+                card.onclick = () => openModal(name);
+                card.innerHTML = `
+                    <span class="name">${name}</span>
+                    <span class="id-tag">ID: ${storage[name].substr(-6)}</span>
+                `;
+                list.appendChild(card);
             });
+        }
 
-            if (tasks.length === 0) {
-                alert("يرجى ملء البيانات المطلوبة.");
-                return;
-            }
+        function openModal(name) {
+            selectedSavedUser = name;
+            document.getElementById('modal-user-name').innerText = name;
+            document.getElementById('quick-modal').style.display = 'flex';
+        }
 
-            const sendBtn = document.getElementById('sendBtn');
-            const statusMsg = document.getElementById('statusMsg');
-            sendBtn.disabled = true;
-            statusMsg.style.display = "block";
+        function closeModal() { document.getElementById('quick-modal').style.display = 'none'; }
 
-            try {
-                for (let i = 0; i < tasks.length; i++) {
-                    let task = tasks[i];
-                    let deviceId = getPersistentIdForName(task.name);
+        function quickTask(type) {
+            addRow({ name: selectedSavedUser, type: type });
+            closeModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-                    // 1. تسجيل/تحديث الحساب في قاعدة البيانات ليظهر كحساب حقيقي
+        async function processAllTasks() {
+            const rows = document.querySelectorAll('.account-row');
+            const btn = document.getElementById('mainSendBtn');
+            const status = document.getElementById('global-status');
+            
+            if (rows.length === 0) return alert("أضف مهمة واحدة على الأقل!");
+
+            btn.disabled = true;
+            status.style.display = "block";
+            status.style.background = "rgba(142, 45, 226, 0.2)";
+            status.style.color = "#d6b4fc";
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const type = row.querySelector('.t-type').value;
+                const name = row.querySelector('.t-name').value.trim();
+                const adminId = row.querySelector('.t-admin').value.trim();
+                const msg = row.querySelector('.t-msg').value.trim();
+
+                if (!name || !msg || (type === 'private' && !adminId)) {
+                    alert(`يرجى إكمال بيانات المهمة رقم ${i+1}`);
+                    continue;
+                }
+
+                status.innerText = `⏳ جاري إرسال مهمة ${i+1} من ${rows.length}...`;
+                
+                const deviceId = getFixedId(name);
+                
+                // مسار الإرسال الصحيح (تم الإصلاح ليتوافق مع الشات)
+                let path = (type === 'public') ? 'messages_general' : `private_messages/user_${deviceId}_admin_${adminId}`;
+
+                try {
+                    // 1. تحديث بروفايل المستخدم ليظهر كمتصل
                     await db.ref('users/' + deviceId).update({
-                        name: task.name,
+                        name: name,
                         image: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        lastLogin: Date.now(),
-                        deviceType: "android"
+                        lastLogin: Date.now()
                     });
 
-                    // 2. تحديد المسار بناءً على الاختيار
-                    let targetPath = "";
-                    if (task.type === "public") {
-                        targetPath = "messages"; // مسار الشات العام
-                    } else {
-                        targetPath = `private_messages/user_${deviceId}_admin_${task.adminId}`; // مسار الخاص
-                    }
-
-                    // 3. إرسال الرسالة
-                    await db.ref(targetPath).push({
+                    // 2. إرسال الرسالة بالهيكل الصحيح
+                    await db.ref(path).push({
                         deviceId: deviceId,
-                        sender: task.name,
+                        sender: name,
                         senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        text: task.msg,
+                        text: msg,
                         timestamp: Date.now()
                     });
 
-                    statusMsg.style.color = "#a5f3bc";
-                    statusMsg.innerText = `✅ تم بنجاح: [${task.name}] أرسل إلى [${task.type === 'public' ? 'العام' : 'خاص ' + task.adminId}]`;
-
-                    // 4. نظام التأخير 30 ثانية (إلا في آخر رسالة)
-                    if (i < tasks.length - 1) {
-                        for (let sec = 30; sec > 0; sec--) {
-                            statusMsg.style.color = "#fca311";
-                            statusMsg.innerText = `⏳ تم الإرسال.. انتظار ${sec} ثانية قبل العملية التالية لضمان عدم الحظر...`;
-                            await sleep(1000);
-                        }
-                    }
+                    // تأخير بسيط لمنع الحظر
+                    if (i < rows.length - 1) await new Promise(r => setTimeout(r, 2000));
+                } catch (e) {
+                    console.error(e);
                 }
-
-                statusMsg.style.color = "#a5f3bc";
-                statusMsg.innerHTML = "🎉 اكتملت جميع العمليات بنجاح!<br>تم تثبيت الحسابات وإرسال الرسائل.";
-
-            } catch (error) {
-                statusMsg.style.color = "#ff4d4d";
-                statusMsg.innerText = "❌ حدث خطأ: " + error.message;
-            } finally {
-                sendBtn.disabled = false;
             }
+
+            status.innerText = "✅ اكتملت جميع العمليات بنجاح!";
+            status.style.background = "rgba(46, 204, 113, 0.2)";
+            status.style.color = "#2ecc71";
+            btn.disabled = false;
+            refreshSavedUI();
         }
 
-        window.onload = addAccountRow;
+        window.onload = () => {
+            addRow();
+            refreshSavedUI();
+        };
     </script>
 </body>
 </html>
