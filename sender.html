@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم والإرسال التلقائي المتقدم</title>
+    <title>لوحة الإرسال الخاص للإدارة</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -24,12 +24,12 @@
 
         .panel-container {
             background: rgba(20, 15, 30, 0.9);
-            border: 1px solid rgba(187, 134, 252, 0.4);
+            border: 1px solid #8e44ad;
             border-radius: 20px;
             padding: 30px;
             width: 100%;
             max-width: 600px;
-            box-shadow: 0 0 30px rgba(138, 43, 226, 0.3);
+            box-shadow: 0 0 30px rgba(142, 68, 173, 0.3);
             margin-top: 20px;
         }
 
@@ -91,9 +91,19 @@
             font-family: 'Tajawal', sans-serif;
         }
 
+        .input-admin-id {
+            border-color: #f39c12 !important;
+            color: #f39c12 !important;
+        }
+
         input:focus, textarea:focus {
             border-color: #bb86fc;
             box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+        }
+        
+        .input-admin-id:focus {
+            border-color: #f39c12;
+            box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
         }
 
         textarea {
@@ -122,7 +132,7 @@
 
         .btn-send {
             width: 100%;
-            background: linear-gradient(90deg, #8e2de2, #4a00e0);
+            background: linear-gradient(90deg, #8e44ad, #2980b9);
             color: white;
             border: none;
             padding: 15px;
@@ -136,7 +146,7 @@
 
         .btn-send:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+            box-shadow: 0 8px 20px rgba(142, 68, 173, 0.6);
         }
 
         .btn-send:disabled {
@@ -153,20 +163,23 @@
             font-weight: bold;
             color: #fca311;
             display: none;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
     <div class="panel-container">
-        <h2>لوحة التحكم المتقدمة 🚀</h2>
-        <div class="subtitle">الحد الأقصى 10 حسابات مع فاصل 30 ثانية بين كل رسالة</div>
+        <h2>📩 إرسال خاص للأدمنية</h2>
+        <div class="subtitle">يتم الإرسال لصندوق الخاص للأدمن المحدد بفاصل 30 ثانية</div>
         
         <div id="accountsContainer">
             </div>
 
         <button class="btn-add" id="addBtn" onclick="addAccountRow()">+ إضافة حساب ورسالة أخرى</button>
-        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء إرسال الجميع</button>
+        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء الإرسال للخاص</button>
         
         <div id="statusMsg" class="status"></div>
     </div>
@@ -186,7 +199,7 @@
         let rowCount = 0;
         const maxRows = 10;
 
-        // دالة لإنشاء آيدي يشبه آيدي أجهزة الأندرويد الحقيقية (16 حرف ورقم)
+        // دالة لإنشاء آيدي يشبه آيدي أجهزة الأندرويد الحقيقية
         function generateRealDeviceId() {
             const chars = '0123456789abcdef';
             let id = '';
@@ -196,17 +209,16 @@
             return id;
         }
 
-        // دالة للحصول على آيدي ثابت لنفس الاسم لعدم تكرار الحسابات
+        // دالة للحصول على آيدي ثابت لنفس الاسم لعدم تكرار الحسابات نهائياً
+        // الحساب يُصنع فقط عندما تكتبه هنا
         function getPersistentIdForName(name) {
-            let savedIds = JSON.parse(localStorage.getItem('saved_users_ids')) || {};
-            // إذا كان الاسم مسجل مسبقاً، استرجع الآيدي الخاص به
+            let savedIds = JSON.parse(localStorage.getItem('private_sender_ids')) || {};
             if (savedIds[name]) {
                 return savedIds[name];
             } else {
-                // إذا كان اسماً جديداً، اصنع له آيدي جديد واحفظه
                 let newId = generateRealDeviceId();
                 savedIds[name] = newId;
-                localStorage.setItem('saved_users_ids', JSON.stringify(savedIds));
+                localStorage.setItem('private_sender_ids', JSON.stringify(savedIds));
                 return newId;
             }
         }
@@ -225,57 +237,56 @@
             rowDiv.className = 'account-row';
             rowDiv.id = `row-${rowCount}`;
             
+            // تمت إضافة حقل مخصص لآيدي الأدمن
             rowDiv.innerHTML = `
                 <div class="account-header">
-                    <span>حساب ورسالة رقم ${rowCount}</span>
+                    <span>الرسالة رقم ${rowCount}</span>
                     <button class="remove-btn" onclick="removeRow('row-${rowCount}')">حذف</button>
                 </div>
-                <input type="text" class="input-name" placeholder="اسم المستخدم (مثال: سارة)" required>
-                <textarea class="input-msg" placeholder="الرسالة الخاصة بهذا المستخدم..." required></textarea>
+                <input type="text" class="input-name" placeholder="اسم المستخدم الوهمي المرسل (مثال: سارة)" required>
+                <input type="text" class="input-admin-id" placeholder="آيدي الأدمن المستلم (مثال: 1111 أو 2222)" required>
+                <textarea class="input-msg" placeholder="اكتب الرسالة التي ستصل لخاص الأدمن..." required></textarea>
             `;
             
             container.appendChild(rowDiv);
             
-            // إخفاء زر الإضافة إذا وصلنا للحد الأقصى
             if(rowCount >= maxRows) {
                 document.getElementById('addBtn').style.display = 'none';
             }
         }
 
-        // دالة لحذف حقل
         function removeRow(rowId) {
             document.getElementById(rowId).remove();
             rowCount--;
             document.getElementById('addBtn').style.display = 'block';
             
-            // إعادة ترتيب العناوين
             let rows = document.querySelectorAll('.account-row');
             rows.forEach((row, index) => {
-                row.querySelector('.account-header span').innerText = `حساب ورسالة رقم ${index + 1}`;
+                row.querySelector('.account-header span').innerText = `الرسالة رقم ${index + 1}`;
             });
         }
 
-        // دالة لتأخير الوقت (نظام الـ 30 ثانية)
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        // دالة الإرسال الرئيسية
         async function startSending() {
             let rows = document.querySelectorAll('.account-row');
             let tasks = [];
 
-            // تجميع البيانات من جميع الحقول
+            // تجميع البيانات من جميع الحقول بما فيها آيدي الأدمن
             rows.forEach(row => {
                 let name = row.querySelector('.input-name').value.trim();
+                let adminId = row.querySelector('.input-admin-id').value.trim();
                 let msg = row.querySelector('.input-msg').value.trim();
-                if(name && msg) {
-                    tasks.push({name: name, msg: msg});
+                
+                if(name && msg && adminId) {
+                    tasks.push({name: name, adminId: adminId, msg: msg});
                 }
             });
 
             if (tasks.length === 0) {
-                alert("يرجى تعبئة حقل واحد على الأقل (الاسم والرسالة).");
+                alert("يرجى تعبئة جميع الحقول (الاسم، آيدي الأدمن، والرسالة).");
                 return;
             }
 
@@ -286,47 +297,48 @@
             statusMsg.style.display = "block";
 
             try {
-                // حلقة للمرور على جميع الحسابات المرسلة
                 for (let i = 0; i < tasks.length; i++) {
                     let task = tasks[i];
                     
-                    // استخراج أو إنشاء آيدي ثابت لهذا الاسم
+                    // استخراج آيدي ثابت للمرسل
                     let deviceId = getPersistentIdForName(task.name);
                     
-                    // تحديث/إنشاء بيانات المستخدم في القاعدة لتثبيته كحساب حقيقي
-                    await db.ref('users/' + deviceId).set({
+                    // إنشاء حساب المستخدم في النظام ليظهر كحساب حقيقي
+                    await db.ref('users/' + deviceId).update({
                         name: task.name,
                         image: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
                         lastLogin: Date.now()
                     });
 
-                    // إرسال الرسالة إلى الشات
-                    await db.ref('messages_general').push({
+                    // المسار الدقيق لغرفة الخاص بين هذا المستخدم والأدمن المستهدف
+                    let privateRoomPath = `private_messages/user_${deviceId}_admin_${task.adminId}`;
+
+                    // إرسال الرسالة إلى مسار الخاص بدلاً من العام
+                    await db.ref(privateRoomPath).push({
                         deviceId: deviceId,
                         sender: task.name,
                         senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        adminId: null,
+                        adminId: null, // يظل null لأن المرسل مستخدم عادي وليس أدمن
                         text: task.msg,
                         image: null,
                         timestamp: Date.now()
                     });
 
                     statusMsg.style.color = "#a5f3bc";
-                    statusMsg.innerText = `✅ تم إرسال رسالة "${task.name}" بنجاح.`;
+                    statusMsg.innerText = `✅ تم إرسال رسالة من "${task.name}" إلى خاص الأدمن (${task.adminId}).`;
 
-                    // إذا لم تكن هذه هي الرسالة الأخيرة، قم بالانتظار 30 ثانية
+                    // نظام التأخير الإجباري 30 ثانية
                     if (i < tasks.length - 1) {
                         for(let sec = 30; sec > 0; sec--) {
                             statusMsg.style.color = "#fca311";
-                            statusMsg.innerText = `⏳ جاري انتظار ${sec} ثانية لإرسال رسالة "${tasks[i+1].name}"...`;
+                            statusMsg.innerText = `⏳ انتظار ${sec} ثانية قبل مراسلة الأدمن (${tasks[i+1].adminId})...`;
                             await sleep(1000);
                         }
                     }
                 }
 
-                // نهاية جميع الرسائل
                 statusMsg.style.color = "#a5f3bc";
-                statusMsg.innerText = "🎉 تم الانتهاء من إرسال جميع الرسائل بنجاح!";
+                statusMsg.innerText = "🎉 تمت عملية الإرسال للخاص بنجاح!";
                 
             } catch (error) {
                 console.error("خطأ:", error);
@@ -334,11 +346,10 @@
                 statusMsg.innerText = "❌ حدث خطأ في الاتصال بقاعدة البيانات.";
             } finally {
                 sendBtn.disabled = false;
-                sendBtn.innerText = "🚀 بدء إرسال الجميع";
+                sendBtn.innerText = "🚀 بدء الإرسال للخاص";
             }
         }
 
-        // إضافة حقل واحد افتراضياً عند فتح الصفحة
         window.onload = () => {
             addAccountRow();
         };
