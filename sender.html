@@ -45,15 +45,21 @@
             color: #a0a0b0;
             font-size: 13px;
             margin-bottom: 25px;
+            line-height: 1.6;
         }
 
         .account-row {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(187, 134, 252, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(187, 134, 252, 0.3);
             border-radius: 12px;
             padding: 15px;
             margin-bottom: 15px;
             position: relative;
+            transition: 0.3s;
+        }
+
+        .account-row:hover {
+            border-color: #bb86fc;
         }
 
         .account-header {
@@ -82,7 +88,7 @@
             margin-bottom: 10px;
             border-radius: 8px;
             border: 1px solid rgba(187, 134, 252, 0.3);
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             color: white;
             font-size: 14px;
             outline: none;
@@ -95,20 +101,19 @@
             border-color: #f39c12 !important;
             color: #f39c12 !important;
         }
+        
+        .input-name {
+            border-color: #2ecc71 !important;
+        }
 
         input:focus, textarea:focus {
-            border-color: #bb86fc;
             box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
-        }
-        
-        .input-admin-id:focus {
-            border-color: #f39c12;
-            box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
         }
 
         textarea {
             resize: vertical;
-            min-height: 60px;
+            min-height: 70px;
+            border-color: #3498db !important;
         }
 
         .btn-add {
@@ -172,20 +177,22 @@
 <body>
 
     <div class="panel-container">
-        <h2>📩 إرسال خاص للأدمنية</h2>
-        <div class="subtitle">يتم الإرسال لصندوق الخاص للأدمن المحدد بفاصل 30 ثانية</div>
+        <h2>📩 إرسال خاص للأدمنية المتعدد</h2>
+        <div class="subtitle">
+            كل رسالة لها حساب وهمي ثابت (حسب الاسم) وتستهدف أدمن معين.<br>
+            الرسالة الأولى ترسل فوراً، والباقي بفاصل زمني 30 ثانية لكل رسالة لتجنب الحظر.
+        </div>
         
-        <div id="accountsContainer">
-            </div>
+        <div id="accountsContainer"></div>
 
-        <button class="btn-add" id="addBtn" onclick="addAccountRow()">+ إضافة حساب ورسالة أخرى</button>
-        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء الإرسال للخاص</button>
+        <button class="btn-add" id="addBtn" onclick="addAccountRow()">+ إضافة رسالة / حساب آخر</button>
+        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء إرسال جميع الرسائل</button>
         
         <div id="statusMsg" class="status"></div>
     </div>
 
     <script>
-        // إعدادات فايربيس الخاصة بك
+        // إعدادات فايربيس
         const firebaseConfig = {
             apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
             databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -193,40 +200,44 @@
             storageBucket: "chatapi-1ca71.firebasestorage.app",
             appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
         let rowCount = 0;
         const maxRows = 10;
 
-        // دالة لإنشاء آيدي يشبه آيدي أجهزة الأندرويد الحقيقية
-        function generateRealDeviceId() {
+        // دالة لإنشاء آيدي هاتف أندرويد حقيقي (16 حرف ورقم Hex) لا يحتوي على كلمة bot
+        function generateRealAndroidId() {
             const chars = '0123456789abcdef';
-            let id = '';
+            let androidId = '';
             for (let i = 0; i < 16; i++) {
-                id += chars[Math.floor(Math.random() * chars.length)];
+                androidId += chars[Math.floor(Math.random() * chars.length)];
             }
-            return id;
+            return androidId;
         }
 
-        // دالة للحصول على آيدي ثابت لنفس الاسم لعدم تكرار الحسابات نهائياً
-        // الحساب يُصنع فقط عندما تكتبه هنا
+        // دالة لربط وتثبيت الآيدي بالاسم المدخل (حتى لو تم الإرسال عدة مرات لنفس الاسم لن يكرر الحساب)
         function getPersistentIdForName(name) {
-            let savedIds = JSON.parse(localStorage.getItem('private_sender_ids')) || {};
-            if (savedIds[name]) {
-                return savedIds[name];
+            let cleanName = name.trim().toLowerCase(); // تنظيف الاسم لمنع الأخطاء
+            let savedIds = JSON.parse(localStorage.getItem('real_sender_devices')) || {};
+            
+            if (savedIds[cleanName]) {
+                return savedIds[cleanName]; // إرجاع الآيدي الحقيقي المحفوظ مسبقاً لهذا الاسم
             } else {
-                let newId = generateRealDeviceId();
-                savedIds[name] = newId;
-                localStorage.setItem('private_sender_ids', JSON.stringify(savedIds));
-                return newId;
+                let newDeviceId = generateRealAndroidId(); // صنع آيدي أندرويد حقيقي
+                savedIds[cleanName] = newDeviceId;
+                localStorage.setItem('real_sender_devices', JSON.stringify(savedIds));
+                return newDeviceId;
             }
         }
 
-        // دالة لإضافة حقل اسم ورسالة جديد
+        // إضافة حقل رسالة جديد
         function addAccountRow() {
             if (rowCount >= maxRows) {
-                alert("الحد الأقصى هو 10 حسابات في المرة الواحدة!");
+                alert("الحد الأقصى هو 10 رسائل في الدفعة الواحدة!");
                 return;
             }
 
@@ -237,15 +248,14 @@
             rowDiv.className = 'account-row';
             rowDiv.id = `row-${rowCount}`;
             
-            // تمت إضافة حقل مخصص لآيدي الأدمن
             rowDiv.innerHTML = `
                 <div class="account-header">
                     <span>الرسالة رقم ${rowCount}</span>
-                    <button class="remove-btn" onclick="removeRow('row-${rowCount}')">حذف</button>
+                    ${rowCount > 1 ? `<button class="remove-btn" onclick="removeRow('row-${rowCount}')">حذف</button>` : ''}
                 </div>
-                <input type="text" class="input-name" placeholder="اسم المستخدم الوهمي المرسل (مثال: سارة)" required>
-                <input type="text" class="input-admin-id" placeholder="آيدي الأدمن المستلم (مثال: 1111 أو 2222)" required>
-                <textarea class="input-msg" placeholder="اكتب الرسالة التي ستصل لخاص الأدمن..." required></textarea>
+                <input type="text" class="input-name" placeholder="اسم المرسل (مثال: سارة) - سيتم تثبيت حسابها بهذا الاسم" required>
+                <input type="text" class="input-admin-id" placeholder="آيدي الأدمن المستلم (مثال: 1111)" required>
+                <textarea class="input-msg" placeholder="محتوى الرسالة التي ستصل للخاص..." required></textarea>
             `;
             
             container.appendChild(rowDiv);
@@ -260,6 +270,7 @@
             rowCount--;
             document.getElementById('addBtn').style.display = 'block';
             
+            // إعادة ترقيم الرسائل
             let rows = document.querySelectorAll('.account-row');
             rows.forEach((row, index) => {
                 row.querySelector('.account-header span').innerText = `الرسالة رقم ${index + 1}`;
@@ -274,7 +285,7 @@
             let rows = document.querySelectorAll('.account-row');
             let tasks = [];
 
-            // تجميع البيانات من جميع الحقول بما فيها آيدي الأدمن
+            // جمع بيانات جميع الحقول
             rows.forEach(row => {
                 let name = row.querySelector('.input-name').value.trim();
                 let adminId = row.querySelector('.input-admin-id').value.trim();
@@ -286,59 +297,63 @@
             });
 
             if (tasks.length === 0) {
-                alert("يرجى تعبئة جميع الحقول (الاسم، آيدي الأدمن، والرسالة).");
+                alert("يرجى تعبئة جميع الحقول المطلوبة في الرسائل.");
                 return;
             }
 
             const sendBtn = document.getElementById('sendBtn');
             const statusMsg = document.getElementById('statusMsg');
+            const addBtn = document.getElementById('addBtn');
             
             sendBtn.disabled = true;
+            addBtn.style.display = 'none';
             statusMsg.style.display = "block";
 
             try {
                 for (let i = 0; i < tasks.length; i++) {
                     let task = tasks[i];
                     
-                    // استخراج آيدي ثابت للمرسل
+                    // استخراج آيدي ثابت وحقيقي للمرسل بناءً على اسمه
                     let deviceId = getPersistentIdForName(task.name);
                     
-                    // إنشاء حساب المستخدم في النظام ليظهر كحساب حقيقي
+                    // تحديث بيانات المستخدم ليظهر في النظام كجهاز أندرويد حقيقي
                     await db.ref('users/' + deviceId).update({
                         name: task.name,
                         image: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        lastLogin: Date.now()
+                        lastLogin: Date.now(),
+                        deviceType: "android", // تمويه إضافي
+                        isBot: false // تمويه إضافي
                     });
 
-                    // المسار الدقيق لغرفة الخاص بين هذا المستخدم والأدمن المستهدف
+                    // مسار الخاص المباشر بين هذا الحساب والأدمن المستهدف
                     let privateRoomPath = `private_messages/user_${deviceId}_admin_${task.adminId}`;
 
-                    // إرسال الرسالة إلى مسار الخاص بدلاً من العام
+                    // إرسال الرسالة
                     await db.ref(privateRoomPath).push({
                         deviceId: deviceId,
                         sender: task.name,
                         senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                        adminId: null, // يظل null لأن المرسل مستخدم عادي وليس أدمن
+                        adminId: null, // المرسل ليس أدمن
                         text: task.msg,
                         image: null,
                         timestamp: Date.now()
                     });
 
                     statusMsg.style.color = "#a5f3bc";
-                    statusMsg.innerText = `✅ تم إرسال رسالة من "${task.name}" إلى خاص الأدمن (${task.adminId}).`;
+                    statusMsg.innerText = `✅ تم الإرسال من [${task.name}] إلى الأدمن [${task.adminId}]`;
 
-                    // نظام التأخير الإجباري 30 ثانية
+                    // نظام التأخير 30 ثانية للرسائل المتبقية فقط
                     if (i < tasks.length - 1) {
                         for(let sec = 30; sec > 0; sec--) {
                             statusMsg.style.color = "#fca311";
-                            statusMsg.innerText = `⏳ انتظار ${sec} ثانية قبل مراسلة الأدمن (${tasks[i+1].adminId})...`;
+                            statusMsg.innerText = `⏳ جاري تأخير الرسالة التالية لتجنب الحظر... الانتظار: ${sec} ثانية`;
                             await sleep(1000);
                         }
                     }
                 }
 
                 statusMsg.style.color = "#a5f3bc";
-                statusMsg.innerText = "🎉 تمت عملية الإرسال للخاص بنجاح!";
+                statusMsg.innerText = "🎉 تم إرسال جميع الرسائل بنجاح وبدون مشاكل!";
                 
             } catch (error) {
                 console.error("خطأ:", error);
@@ -346,11 +361,13 @@
                 statusMsg.innerText = "❌ حدث خطأ في الاتصال بقاعدة البيانات.";
             } finally {
                 sendBtn.disabled = false;
-                sendBtn.innerText = "🚀 بدء الإرسال للخاص";
+                sendBtn.innerText = "🚀 بدء إرسال جميع الرسائل";
+                if(rowCount < maxRows) addBtn.style.display = 'block';
             }
         }
 
         window.onload = () => {
+            // فتح حقل واحد كبداية
             addAccountRow();
         };
     </script>
