@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم والإرسال التلقائي</title>
+    <title>لوحة التحكم والإرسال التلقائي المتقدم</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -18,7 +18,7 @@
             padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
         }
 
@@ -28,39 +28,67 @@
             border-radius: 20px;
             padding: 30px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             box-shadow: 0 0 30px rgba(138, 43, 226, 0.3);
+            margin-top: 20px;
         }
 
         h2 {
             text-align: center;
             color: #d6b4fc;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
+        .subtitle {
+            text-align: center;
             color: #a0a0b0;
-            font-size: 14px;
+            font-size: 13px;
+            margin-bottom: 25px;
         }
 
-        input[type="text"], input[type="number"], textarea {
-            width: 100%;
-            padding: 15px;
+        .account-row {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(187, 134, 252, 0.2);
             border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #bb86fc;
+            font-weight: bold;
+        }
+
+        .remove-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
             border: 1px solid rgba(187, 134, 252, 0.3);
             background: rgba(0, 0, 0, 0.5);
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
             transition: 0.3s;
             box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
         }
 
         input:focus, textarea:focus {
@@ -70,7 +98,26 @@
 
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 60px;
+        }
+
+        .btn-add {
+            width: 100%;
+            background: transparent;
+            color: #bb86fc;
+            border: 2px dashed #bb86fc;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-add:hover {
+            background: rgba(187, 134, 252, 0.1);
         }
 
         .btn-send {
@@ -84,7 +131,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            font-family: 'Tajawal', sans-serif;
         }
 
         .btn-send:hover {
@@ -102,8 +149,9 @@
         .status {
             text-align: center;
             margin-top: 15px;
-            font-size: 14px;
-            color: #a5f3bc;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fca311;
             display: none;
         }
     </style>
@@ -111,36 +159,20 @@
 <body>
 
     <div class="panel-container">
-        <h2>لوحة التحكم والإرسال 🚀</h2>
+        <h2>لوحة التحكم المتقدمة 🚀</h2>
+        <div class="subtitle">الحد الأقصى 10 حسابات مع فاصل 30 ثانية بين كل رسالة</div>
         
-        <div class="form-group">
-            <label>اسم المستخدم (سيتم ترقيمه تلقائياً إذا اخترت أكثر من مستخدم):</label>
-            <input type="text" id="botName" placeholder="مثال: يوزر جديد" required>
-        </div>
-
-        <div class="form-group">
-            <label>الرسالة المراد إرسالها:</label>
-            <textarea id="botMessage" placeholder="اكتب الرسالة هنا..." required></textarea>
-        </div>
-
-        <div style="display: flex; gap: 15px;">
-            <div class="form-group" style="flex: 1;">
-                <label>عدد المستخدمين (حسابات وهمية):</label>
-                <input type="number" id="usersCount" value="1" min="1" max="50">
+        <div id="accountsContainer">
             </div>
 
-            <div class="form-group" style="flex: 1;">
-                <label>تكرار الرسالة لكل مستخدم:</label>
-                <input type="number" id="msgsCount" value="1" min="1" max="100">
-            </div>
-        </div>
-
-        <button class="btn-send" id="sendBtn" onclick="startSending()">بدء الإرسال للشات العام</button>
-        <div id="statusMsg" class="status">✅ تم الانتهاء من إرسال جميع الرسائل!</div>
+        <button class="btn-add" id="addBtn" onclick="addAccountRow()">+ إضافة حساب ورسالة أخرى</button>
+        <button class="btn-send" id="sendBtn" onclick="startSending()">🚀 بدء إرسال الجميع</button>
+        
+        <div id="statusMsg" class="status"></div>
     </div>
 
     <script>
-        // استخدام نفس إعدادات التطبيق لربط اللوحة بالشات
+        // إعدادات فايربيس الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
             databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -151,70 +183,165 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // وظيفة الإرسال وصناعة الحسابات
-        async function startSending() {
-            const baseName = document.getElementById('botName').value.trim();
-            const text = document.getElementById('botMessage').value.trim();
-            const usersCount = parseInt(document.getElementById('usersCount').value) || 1;
-            const msgsCount = parseInt(document.getElementById('msgsCount').value) || 1;
-            const sendBtn = document.getElementById('sendBtn');
-            const statusMsg = document.getElementById('statusMsg');
+        let rowCount = 0;
+        const maxRows = 10;
 
-            if (!baseName || !text) {
-                alert("يرجى إدخال الاسم والرسالة.");
+        // دالة لإنشاء آيدي يشبه آيدي أجهزة الأندرويد الحقيقية (16 حرف ورقم)
+        function generateRealDeviceId() {
+            const chars = '0123456789abcdef';
+            let id = '';
+            for (let i = 0; i < 16; i++) {
+                id += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return id;
+        }
+
+        // دالة للحصول على آيدي ثابت لنفس الاسم لعدم تكرار الحسابات
+        function getPersistentIdForName(name) {
+            let savedIds = JSON.parse(localStorage.getItem('saved_users_ids')) || {};
+            // إذا كان الاسم مسجل مسبقاً، استرجع الآيدي الخاص به
+            if (savedIds[name]) {
+                return savedIds[name];
+            } else {
+                // إذا كان اسماً جديداً، اصنع له آيدي جديد واحفظه
+                let newId = generateRealDeviceId();
+                savedIds[name] = newId;
+                localStorage.setItem('saved_users_ids', JSON.stringify(savedIds));
+                return newId;
+            }
+        }
+
+        // دالة لإضافة حقل اسم ورسالة جديد
+        function addAccountRow() {
+            if (rowCount >= maxRows) {
+                alert("الحد الأقصى هو 10 حسابات في المرة الواحدة!");
                 return;
             }
 
+            rowCount++;
+            const container = document.getElementById('accountsContainer');
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'account-row';
+            rowDiv.id = `row-${rowCount}`;
+            
+            rowDiv.innerHTML = `
+                <div class="account-header">
+                    <span>حساب ورسالة رقم ${rowCount}</span>
+                    <button class="remove-btn" onclick="removeRow('row-${rowCount}')">حذف</button>
+                </div>
+                <input type="text" class="input-name" placeholder="اسم المستخدم (مثال: سارة)" required>
+                <textarea class="input-msg" placeholder="الرسالة الخاصة بهذا المستخدم..." required></textarea>
+            `;
+            
+            container.appendChild(rowDiv);
+            
+            // إخفاء زر الإضافة إذا وصلنا للحد الأقصى
+            if(rowCount >= maxRows) {
+                document.getElementById('addBtn').style.display = 'none';
+            }
+        }
+
+        // دالة لحذف حقل
+        function removeRow(rowId) {
+            document.getElementById(rowId).remove();
+            rowCount--;
+            document.getElementById('addBtn').style.display = 'block';
+            
+            // إعادة ترتيب العناوين
+            let rows = document.querySelectorAll('.account-row');
+            rows.forEach((row, index) => {
+                row.querySelector('.account-header span').innerText = `حساب ورسالة رقم ${index + 1}`;
+            });
+        }
+
+        // دالة لتأخير الوقت (نظام الـ 30 ثانية)
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // دالة الإرسال الرئيسية
+        async function startSending() {
+            let rows = document.querySelectorAll('.account-row');
+            let tasks = [];
+
+            // تجميع البيانات من جميع الحقول
+            rows.forEach(row => {
+                let name = row.querySelector('.input-name').value.trim();
+                let msg = row.querySelector('.input-msg').value.trim();
+                if(name && msg) {
+                    tasks.push({name: name, msg: msg});
+                }
+            });
+
+            if (tasks.length === 0) {
+                alert("يرجى تعبئة حقل واحد على الأقل (الاسم والرسالة).");
+                return;
+            }
+
+            const sendBtn = document.getElementById('sendBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            
             sendBtn.disabled = true;
-            sendBtn.innerText = "جاري المعالجة والإرسال...";
-            statusMsg.style.display = "none";
+            statusMsg.style.display = "block";
 
             try {
-                // إنشاء مستخدمين وإرسال رسائل بناءً على العدد
-                for(let i = 0; i < usersCount; i++) {
-                    // صنع آيدي حقيقي لتسجيله في قاعدة البيانات
-                    const botDeviceId = 'bot_' + Math.random().toString(36).substr(2, 9) + Date.now();
-                    // ترقيم الأسماء في حال وجود أكثر من مستخدم
-                    const finalName = usersCount > 1 ? `${baseName} ${i + 1}` : baseName;
+                // حلقة للمرور على جميع الحسابات المرسلة
+                for (let i = 0; i < tasks.length; i++) {
+                    let task = tasks[i];
                     
-                    // تسجيل الحساب الوهمي/الجديد في فايربيس وكأنه مستخدم حقيقي
-                    await db.ref('users/' + botDeviceId).set({
-                        name: finalName,
-                        image: "https://cdn-icons-png.flaticon.com/512/149/149071.png", // صورة افتراضية
+                    // استخراج أو إنشاء آيدي ثابت لهذا الاسم
+                    let deviceId = getPersistentIdForName(task.name);
+                    
+                    // تحديث/إنشاء بيانات المستخدم في القاعدة لتثبيته كحساب حقيقي
+                    await db.ref('users/' + deviceId).set({
+                        name: task.name,
+                        image: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
                         lastLogin: Date.now()
                     });
 
-                    // إرسال عدد الرسائل المطلوبة من هذا الحساب
-                    for(let j = 0; j < msgsCount; j++) {
-                        const msgData = {
-                            deviceId: botDeviceId,
-                            sender: finalName,
-                            senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
-                            adminId: null, // رسائل من مستخدمين عاديين
-                            text: text,
-                            image: null,
-                            timestamp: Date.now() + j // إضافة j لتفادي تشابه الوقت تماماً
-                        };
-                        
-                        // دفع الرسالة للروم العام الذي يقرأ منه ملف index.html
-                        await db.ref('messages_general').push(msgData);
+                    // إرسال الرسالة إلى الشات
+                    await db.ref('messages_general').push({
+                        deviceId: deviceId,
+                        sender: task.name,
+                        senderImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+                        adminId: null,
+                        text: task.msg,
+                        image: null,
+                        timestamp: Date.now()
+                    });
+
+                    statusMsg.style.color = "#a5f3bc";
+                    statusMsg.innerText = `✅ تم إرسال رسالة "${task.name}" بنجاح.`;
+
+                    // إذا لم تكن هذه هي الرسالة الأخيرة، قم بالانتظار 30 ثانية
+                    if (i < tasks.length - 1) {
+                        for(let sec = 30; sec > 0; sec--) {
+                            statusMsg.style.color = "#fca311";
+                            statusMsg.innerText = `⏳ جاري انتظار ${sec} ثانية لإرسال رسالة "${tasks[i+1].name}"...`;
+                            await sleep(1000);
+                        }
                     }
                 }
 
-                statusMsg.style.display = "block";
+                // نهاية جميع الرسائل
+                statusMsg.style.color = "#a5f3bc";
+                statusMsg.innerText = "🎉 تم الانتهاء من إرسال جميع الرسائل بنجاح!";
+                
             } catch (error) {
-                console.error("حدث خطأ أثناء الإرسال:", error);
-                alert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+                console.error("خطأ:", error);
+                statusMsg.style.color = "#ff4d4d";
+                statusMsg.innerText = "❌ حدث خطأ في الاتصال بقاعدة البيانات.";
             } finally {
                 sendBtn.disabled = false;
-                sendBtn.innerText = "بدء الإرسال للشات العام";
-                
-                // إخفاء رسالة النجاح بعد 3 ثواني
-                setTimeout(() => {
-                    statusMsg.style.display = "none";
-                }, 3000);
+                sendBtn.innerText = "🚀 بدء إرسال الجميع";
             }
         }
+
+        // إضافة حقل واحد افتراضياً عند فتح الصفحة
+        window.onload = () => {
+            addAccountRow();
+        };
     </script>
 </body>
 </html>
