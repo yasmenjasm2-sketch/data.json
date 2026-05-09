@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم بوت FawakihAI</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background-color: #0b0714; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        
+        .bot-panel {
+            background: rgba(20, 15, 30, 0.9);
+            border: 2px solid #00d2ff;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
+        }
+        h1 { color: #00d2ff; text-align: center; text-shadow: 0 0 15px rgba(0, 210, 255, 0.5); margin-bottom: 30px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #a0a0b0; font-weight: bold; }
+        input[type="text"], textarea, select {
+            width: 100%; padding: 15px; border-radius: 10px; border: 1px solid rgba(0, 210, 255, 0.3);
+            background: rgba(0, 0, 0, 0.5); color: white; font-size: 15px; outline: none; transition: 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+        
+        .poll-section { background: rgba(0, 210, 255, 0.05); padding: 15px; border-radius: 10px; border: 1px dashed #00d2ff; }
+        
+        .btn-send {
+            width: 100%; background: linear-gradient(90deg, #00d2ff, #3a7bd5); color: #fff; border: none;
+            padding: 18px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-send:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4); }
+        
+        .file-upload { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; cursor: pointer; }
+        .file-upload input { display: none; }
+        .file-upload:hover { background: rgba(255,255,255,0.1); }
+        
+        #preview-img { max-width: 100px; border-radius: 10px; display: none; margin-top: 10px; border: 1px solid #00d2ff; }
+        #status-msg { text-align: center; margin-top: 15px; font-weight: bold; color: #4caf50; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="bot-panel">
+    <h1>🤖 نظام البوت لـ FawakihAI</h1>
+    
+    <div class="form-group">
+        <label>نص الإعلان أو التحديث:</label>
+        <textarea id="bot-text" rows="4" placeholder="اكتب رسالة البوت هنا..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>إرفاق صورة (اختياري):</label>
+        <label class="file-upload">
+            <span>📷 اختر صورة</span>
+            <input type="file" id="bot-image" accept="image/*" onchange="handleImage(event)">
+        </label>
+        <img id="preview-img" src="">
+    </div>
+
+    <div class="form-group poll-section">
+        <label>إضافة تصويت (اختياري):</label>
+        <input type="text" id="poll-title" placeholder="عنوان التصويت (مثال: هل أعجبكم التحديث؟)" style="margin-bottom: 10px;">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="poll-opt1" placeholder="الخيار الأول (مثال: نعم)">
+            <input type="text" id="poll-opt2" placeholder="الخيار الثاني (مثال: لا)">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>جدولة الإرسال:</label>
+        <select id="schedule-time">
+            <option value="0">إرسال الآن فورا 🚀</option>
+            <option value="2">إرسال بعد ساعتين ⏳</option>
+            <option value="24">إرسال بعد 24 ساعة 📅</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>تكرار الإعلان:</label>
+        <select id="repeat-count">
+            <option value="1">إرسال مرة واحدة فقط</option>
+            <option value="3">إرسال 3 مرات (بين كل مرة ساعة)</option>
+        </select>
+    </div>
+
+    <button class="btn-send" onclick="prepareBotMessage()">إطلاق البوت 🚀</button>
+    <div id="status-msg">تمت الجدولة بنجاح! سيقوم البوت بعمله.</div>
+</div>
+
+<script>
+    // نفس بيانات قاعدة البيانات الخاصة بك
+    const firebaseConfig = {
+        apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
+        databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "chatapi-1ca71",
+        storageBucket: "chatapi-1ca71.firebasestorage.app",
+        appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // إعدادات البوت الثابتة
+    const BOT_NAME = "🤖 FawakihAI System";
+    const BOT_IMAGE = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"; // أيقونة روبوت احترافية
+    const BOT_ID = "SYSTEM_BOT_001";
+    let attachedImageBase64 = null;
+
+    function handleImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500; 
+                    let width = img.width, height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    attachedImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    const preview = document.getElementById('preview-img');
+                    preview.src = attachedImageBase64;
+                    preview.style.display = 'block';
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function prepareBotMessage() {
+        const text = document.getElementById("bot-text").value.trim();
+        const pollTitle = document.getElementById("poll-title").value.trim();
+        const pollOpt1 = document.getElementById("poll-opt1").value.trim();
+        const pollOpt2 = document.getElementById("poll-opt2").value.trim();
+        const delayHours = parseInt(document.getElementById("schedule-time").value);
+        const repeatCount = parseInt(document.getElementById("repeat-count").value);
+
+        if (!text && !attachedImageBase64 && !pollTitle) {
+            alert("الرجاء إدخال رسالة أو صورة أو تصويت.");
+            return;
+        }
+
+        // تجهيز بيانات الرسالة
+        const msgData = {
+            deviceId: BOT_ID,
+            sender: BOT_NAME,
+            senderImg: BOT_IMAGE,
+            isBot: true, // مهم جداً لتمييز الرسالة في الشات
+            text: text || null,
+            image: attachedImageBase64 || null,
+        };
+
+        // إضافة التصويت إذا وجد
+        if (pollTitle && pollOpt1 && pollOpt2) {
+            msgData.poll = {
+                title: pollTitle,
+                option1: pollOpt1,
+                option2: pollOpt2,
+                votes1: 0,
+                votes2: 0,
+                votedUsers: { "init": 0 }
+            };
+        }
+
+        // حساب وقت الجدولة
+        const delayMs = delayHours * 60 * 60 * 1000;
+        
+        document.getElementById('status-msg').style.display = 'block';
+
+        if (delayMs === 0) {
+            executeBotTask(msgData, repeatCount);
+        } else {
+            // الجدولة (تعمل طالما هذه الصفحة مفتوحة في متصفحك)
+            setTimeout(() => {
+                executeBotTask(msgData, repeatCount);
+            }, delayMs);
+        }
+    }
+
+    function executeBotTask(baseMsgData, repeatCount) {
+        // إرسال المرة الأولى
+        sendToFirebase(baseMsgData);
+
+        if (repeatCount > 1) {
+            let count = 1;
+            const intervalHours = 1; // تكرار كل ساعة
+            const intervalMs = intervalHours * 60 * 60 * 1000;
+
+            const intervalId = setInterval(() => {
+                sendToFirebase(baseMsgData);
+                count++;
+                if (count >= repeatCount) clearInterval(intervalId);
+            }, intervalMs);
+        }
+    }
+
+    function sendToFirebase(msgData) {
+        // تحديث الوقت لكل إرسال جديد
+        msgData.timestamp = Date.now();
+        db.ref('messages_general').push(msgData)
+          .then(() => console.log("تم إرسال رسالة البوت بنجاح!"))
+          .catch(err => alert("حدث خطأ: " + err));
+    }
+</script>
+
+</body>
+</html>
