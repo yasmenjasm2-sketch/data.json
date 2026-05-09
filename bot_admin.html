@@ -50,10 +50,9 @@
         .file-upload:hover { background: rgba(255,255,255,0.1); }
         
         #preview-img, #preview-bot-img { max-width: 100px; border-radius: 10px; display: none; margin-top: 10px; border: 1px solid #00d2ff; }
-        #preview-bot-img { display: block; max-width: 60px; border-radius: 50%; } /* تنسيق لصورة البوت الدائرية */
+        #preview-bot-img { display: block; width: 60px; height: 60px; border-radius: 50%; object-fit: cover; } 
         #status-msg { text-align: center; margin-top: 15px; font-weight: bold; color: #4caf50; display: none; }
         
-        /* إخفاء اللوحة الرئيسية افتراضياً */
         #main-dashboard { display: none; }
     </style>
 </head>
@@ -74,7 +73,7 @@
     <div class="bot-identity">
         <div class="form-group" style="margin-bottom: 10px;">
             <label>اسم البوت:</label>
-            <input type="text" id="bot-name-input" value="🤖 FawakihAI System" placeholder="اكتب اسم البوت هنا...">
+            <input type="text" id="bot-name-input" value="🤖 FawakihAI System" placeholder="اكتب اسم البوت هنا..." oninput="saveBotName()">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
             <label>صورة البوت (الصورة الشخصية):</label>
@@ -133,20 +132,40 @@
 </div>
 
 <script>
-    // --- نظام تسجيل الدخول ---
     const SECRET_PASSWORD = "hamzagmail34567";
+    let botProfileImageBase64 = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"; 
 
-    // التحقق عند تحميل الصفحة
+    // --- تحميل البيانات المحفوظة عند فتح المتصفح ---
     window.onload = function() {
+        // التحقق من تسجيل الدخول
         if(localStorage.getItem("fawakih_admin_logged") === "true") {
             showDashboard();
         }
+
+        // استرجاع اسم البوت المحفوظ
+        const savedName = localStorage.getItem("fawakih_bot_name");
+        if(savedName) {
+            document.getElementById("bot-name-input").value = savedName;
+        }
+
+        // استرجاع صورة البوت المحفوظة
+        const savedImg = localStorage.getItem("fawakih_bot_image");
+        if(savedImg) {
+            botProfileImageBase64 = savedImg;
+            document.getElementById('preview-bot-img').src = savedImg;
+        }
     };
+
+    // حفظ الاسم عند الكتابة
+    function saveBotName() {
+        const name = document.getElementById("bot-name-input").value;
+        localStorage.setItem("fawakih_bot_name", name);
+    }
 
     function checkLogin() {
         const pass = document.getElementById("admin-password").value;
         if(pass === SECRET_PASSWORD) {
-            localStorage.setItem("fawakih_admin_logged", "true"); // حفظ تسجيل الدخول
+            localStorage.setItem("fawakih_admin_logged", "true");
             showDashboard();
         } else {
             alert("كلمة المرور غير صحيحة ❌");
@@ -165,14 +184,7 @@
         document.getElementById("main-dashboard").style.display = "none";
     }
 
-    // السماح بالدخول عند الضغط على زر Enter
-    document.getElementById("admin-password").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            checkLogin();
-        }
-    });
-
-    // --- إعدادات فايربيس والبوت ---
+    // --- إعدادات فايربيس ---
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
         databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -185,9 +197,7 @@
 
     const BOT_ID = "SYSTEM_BOT_001";
     let attachedImageBase64 = null;
-    let botProfileImageBase64 = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"; // الصورة الافتراضية
 
-    // دالة لضغط واستدعاء صورة البوت الشخصية (أصغر حجماً لتوفير المساحة)
     function handleBotProfileImage(e) {
         const file = e.target.files[0];
         if (file) {
@@ -196,16 +206,18 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 150; // حجم صغير للبروفايل لتوفير مساحة القاعدة
+                    const MAX_WIDTH = 150; 
                     let width = img.width, height = img.height;
                     if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    // ضغط بجودة 0.5 للصورة الشخصية
+                    
                     botProfileImageBase64 = canvas.toDataURL('image/jpeg', 0.5); 
-                    const preview = document.getElementById('preview-bot-img');
-                    preview.src = botProfileImageBase64;
+                    document.getElementById('preview-bot-img').src = botProfileImageBase64;
+                    
+                    // حفظ الصورة في الذاكرة المحلية
+                    localStorage.setItem("fawakih_bot_image", botProfileImageBase64);
                 }
                 img.src = event.target.result;
             }
@@ -213,7 +225,6 @@
         }
     }
 
-    // دالة لضغط صورة المنشور المرفقة
     function handleImage(e) {
         const file = e.target.files[0];
         if (file) {
@@ -253,12 +264,6 @@
             return;
         }
 
-        if (!botName) {
-            alert("الرجاء التأكد من كتابة اسم البوت.");
-            return;
-        }
-
-        // تجهيز بيانات الرسالة باستخدام الاسم والصورة المضغوطة
         const msgData = {
             deviceId: BOT_ID,
             sender: botName,
@@ -268,7 +273,6 @@
             image: attachedImageBase64 || null,
         };
 
-        // إضافة التصويت إذا وجد
         if (pollTitle && pollOpt1 && pollOpt2) {
             msgData.poll = {
                 title: pollTitle,
@@ -280,22 +284,16 @@
             };
         }
 
-        // حساب وقت الجدولة
         const delayMs = delayHours * 60 * 60 * 1000;
-        
         document.getElementById('status-msg').style.display = 'block';
         setTimeout(() => { document.getElementById('status-msg').style.display = 'none'; }, 5000);
 
         if (delayMs === 0) {
             executeBotTask(msgData, repeatCount);
         } else {
-            // الجدولة
-            setTimeout(() => {
-                executeBotTask(msgData, repeatCount);
-            }, delayMs);
+            setTimeout(() => { executeBotTask(msgData, repeatCount); }, delayMs);
         }
         
-        // تفريغ الحقول بعد الإرسال
         document.getElementById("bot-text").value = "";
         attachedImageBase64 = null;
         document.getElementById('preview-img').style.display = 'none';
@@ -303,14 +301,10 @@
     }
 
     function executeBotTask(baseMsgData, repeatCount) {
-        // إرسال المرة الأولى
         sendToFirebase(baseMsgData);
-
         if (repeatCount > 1) {
             let count = 1;
-            const intervalHours = 1; // تكرار كل ساعة
-            const intervalMs = intervalHours * 60 * 60 * 1000;
-
+            const intervalMs = 1 * 60 * 60 * 1000;
             const intervalId = setInterval(() => {
                 sendToFirebase(baseMsgData);
                 count++;
@@ -320,11 +314,10 @@
     }
 
     function sendToFirebase(msgData) {
-        // تحديث الوقت لكل إرسال جديد
         msgData.timestamp = Date.now();
         db.ref('messages_general').push(msgData)
-          .then(() => console.log("تم إرسال رسالة البوت بنجاح!"))
-          .catch(err => alert("حدث خطأ: " + err));
+          .then(() => console.log("تم الإرسال!"))
+          .catch(err => alert("خطأ: " + err));
     }
 </script>
 
