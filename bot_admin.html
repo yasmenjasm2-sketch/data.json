@@ -49,7 +49,8 @@
         .file-upload input { display: none; }
         .file-upload:hover { background: rgba(255,255,255,0.1); }
         
-        #preview-img { max-width: 100px; border-radius: 10px; display: none; margin-top: 10px; border: 1px solid #00d2ff; }
+        #preview-img, #preview-bot-img { max-width: 100px; border-radius: 10px; display: none; margin-top: 10px; border: 1px solid #00d2ff; }
+        #preview-bot-img { display: block; max-width: 60px; border-radius: 50%; } /* تنسيق لصورة البوت الدائرية */
         #status-msg { text-align: center; margin-top: 15px; font-weight: bold; color: #4caf50; display: none; }
         
         /* إخفاء اللوحة الرئيسية افتراضياً */
@@ -76,8 +77,12 @@
             <input type="text" id="bot-name-input" value="🤖 FawakihAI System" placeholder="اكتب اسم البوت هنا...">
         </div>
         <div class="form-group" style="margin-bottom: 0;">
-            <label>رابط صورة البوت:</label>
-            <input type="text" id="bot-img-input" value="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" placeholder="رابط صورة البوت (URL)">
+            <label>صورة البوت (الصورة الشخصية):</label>
+            <label class="file-upload">
+                <span>🖼️ اختر صورة من الاستديو</span>
+                <input type="file" accept="image/*" onchange="handleBotProfileImage(event)">
+            </label>
+            <img id="preview-bot-img" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png">
         </div>
     </div>
     
@@ -87,7 +92,7 @@
     </div>
 
     <div class="form-group">
-        <label>إرفاق صورة (اختياري):</label>
+        <label>إرفاق صورة للمنشور (اختياري):</label>
         <label class="file-upload">
             <span>📷 اختر صورة</span>
             <input type="file" id="bot-image" accept="image/*" onchange="handleImage(event)">
@@ -180,7 +185,35 @@
 
     const BOT_ID = "SYSTEM_BOT_001";
     let attachedImageBase64 = null;
+    let botProfileImageBase64 = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"; // الصورة الافتراضية
 
+    // دالة لضغط واستدعاء صورة البوت الشخصية (أصغر حجماً لتوفير المساحة)
+    function handleBotProfileImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 150; // حجم صغير للبروفايل لتوفير مساحة القاعدة
+                    let width = img.width, height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // ضغط بجودة 0.5 للصورة الشخصية
+                    botProfileImageBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+                    const preview = document.getElementById('preview-bot-img');
+                    preview.src = botProfileImageBase64;
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // دالة لضغط صورة المنشور المرفقة
     function handleImage(e) {
         const file = e.target.files[0];
         if (file) {
@@ -208,7 +241,6 @@
 
     function prepareBotMessage() {
         const botName = document.getElementById("bot-name-input").value.trim();
-        const botImage = document.getElementById("bot-img-input").value.trim();
         const text = document.getElementById("bot-text").value.trim();
         const pollTitle = document.getElementById("poll-title").value.trim();
         const pollOpt1 = document.getElementById("poll-opt1").value.trim();
@@ -221,16 +253,16 @@
             return;
         }
 
-        if (!botName || !botImage) {
-            alert("الرجاء التأكد من وجود اسم وصورة للبوت.");
+        if (!botName) {
+            alert("الرجاء التأكد من كتابة اسم البوت.");
             return;
         }
 
-        // تجهيز بيانات الرسالة باستخدام الاسم والصورة المدخلين
+        // تجهيز بيانات الرسالة باستخدام الاسم والصورة المضغوطة
         const msgData = {
             deviceId: BOT_ID,
             sender: botName,
-            senderImg: botImage,
+            senderImg: botProfileImageBase64,
             isBot: true,
             text: text || null,
             image: attachedImageBase64 || null,
@@ -263,10 +295,11 @@
             }, delayMs);
         }
         
-        // تفريغ الحقول بعد الإرسال (اختياري، يمكنك حذفه إذا أردت بقاء النص)
+        // تفريغ الحقول بعد الإرسال
         document.getElementById("bot-text").value = "";
         attachedImageBase64 = null;
         document.getElementById('preview-img').style.display = 'none';
+        document.getElementById('bot-image').value = '';
     }
 
     function executeBotTask(baseMsgData, repeatCount) {
