@@ -21,11 +21,22 @@
         .login-box button { width: 100%; background: #f39c12; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
         .login-box button:hover { background: #e67e22; }
 
+        /* نافذة اليوزر الإجبارية للإدارة */
+        #forced-username-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        .forced-box { background: #1a1525; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #e74c3c; box-shadow: 0 0 40px rgba(231, 76, 60, 0.3); width: 90%; max-width: 400px; }
+        .forced-box h3 { color: #e74c3c; margin-top: 0; font-size: 22px; }
+        .forced-box p { color: #ccc; font-size: 15px; margin-bottom: 20px; line-height: 1.6; }
+        .forced-box input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #444; background: #111; color: #00ffcc; outline: none; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: monospace; }
+        .forced-box input:focus { border-color: #e74c3c; }
+        .forced-box button { width: 100%; background: #e74c3c; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .forced-box button:hover { background: #c0392b; }
+
         /* اللوحة الرئيسية */
         #dashboard { display: none; height: 100vh; flex-direction: column; }
         header { background: #1a1525; padding: 15px 20px; border-bottom: 2px solid #f39c12; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         header h1 { margin: 0; color: #f39c12; font-size: 24px; display: flex; align-items: center; gap: 10px; }
         #admin-id-display { background: rgba(243, 156, 18, 0.2); color: #f39c12; font-size: 14px; padding: 4px 10px; border-radius: 8px; border: 1px solid #f39c12; }
+        #admin-username-display { background: rgba(0, 255, 204, 0.1); color: #00ffcc; font-size: 14px; padding: 4px 10px; border-radius: 8px; border: 1px solid #00ffcc; font-family: monospace; display: none; }
         
         .admin-settings { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .admin-settings input[type="text"] { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
@@ -74,7 +85,7 @@
 
         /* الرسائل */
         .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 8px; }
-        .msg-sender { color: #f39c12; font-weight: bold; }
+        .msg-sender { color: #f39c12; font-weight: bold; display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
         .msg-time { font-size: 11px; color: #888; }
         .msg-text { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
         .msg-image { max-width: 150px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
@@ -117,9 +128,23 @@
     </div>
 </div>
 
+<!-- نافذة إدخال اليوزر الإجبارية -->
+<div id="forced-username-modal">
+    <div class="forced-box">
+        <h3>⚠️ إعداد يوزر الإدارة</h3>
+        <p>مرحباً بك، يرجى إعداد "يوزر" خاص بك كأدمن. هذا اليوزر سيكون مخفياً عن المستخدمين العاديين ومرئياً فقط للإدارة لتسهيل التواصل والتعرف على حسابك.</p>
+        <input type="text" id="forced-admin-username" placeholder="مثال: admin_ali أو @boss" onkeypress="if(event.key === 'Enter') saveForcedAdminUsername()">
+        <button onclick="saveForcedAdminUsername()">حفظ اليوزر ومتابعة الدخول</button>
+        <p id="forced-error" style="color: #f39c12; display: none; margin-top: 10px; font-size: 13px;">يرجى إدخال يوزر صحيح لا يقل عن 3 أحرف.</p>
+    </div>
+</div>
+
 <div id="dashboard">
     <header>
-        <h1>🛠️ لوحة تحكم السوبر آدمن <span id="admin-id-display"></span></h1>
+        <h1>🛠️ لوحة تحكم السوبر آدمن 
+            <span id="admin-id-display"></span>
+            <span id="admin-username-display"></span>
+        </h1>
         <div class="admin-settings">
             <button class="file-upload-btn private-box-btn" onclick="openPrivateMessagesModal()">صندوق الخاص 📩</button>
             <input type="text" id="custom-admin-name" placeholder="اسمك كأدمن (مثال: المدير حمزة)" onchange="saveAdminName()">
@@ -193,6 +218,7 @@
     let globalUsers = {};
     let globalAdmins = {};
     let globalBans = {};
+    let globalAdminProfiles = {}; // لتخزين بيانات كل الأدمنية (بما فيها اليوزرات المخفية)
     let currentChatUserId = null;
     let currentChatUserName = null;
 
@@ -253,6 +279,47 @@
         document.getElementById("dashboard").style.display = "flex";
         loadAdminConfig();
         initDashboard();
+        checkAndPromptAdminUsername(); // فحص وتفعيل نافذة اليوزر الإجبارية
+    }
+
+    // --- نظام اليوزر الإجباري للأدمن ---
+    function checkAndPromptAdminUsername() {
+        const myAdminId = localStorage.getItem("super_admin_id");
+        if (!myAdminId) return;
+
+        db.ref('admins_profiles/' + myAdminId).once('value', snapshot => {
+            const data = snapshot.val();
+            if (data && data.adminUsername && data.adminUsername.trim() !== "") {
+                // الأدمن لديه يوزر مسجل مسبقاً، نظهره مباشرة
+                localStorage.setItem("admin_username", data.adminUsername);
+                document.getElementById("admin-username-display").style.display = "inline-block";
+                document.getElementById("admin-username-display").innerText = "@" + data.adminUsername;
+            } else {
+                // الأدمن ليس لديه يوزر (نجبره على إدخال واحد)
+                document.getElementById("forced-username-modal").style.display = "flex";
+            }
+        });
+    }
+
+    function saveForcedAdminUsername() {
+        const inputVal = document.getElementById("forced-admin-username").value.trim();
+        if (inputVal.length < 3) {
+            document.getElementById("forced-error").style.display = "block";
+            return;
+        }
+
+        const myAdminId = localStorage.getItem("super_admin_id");
+        db.ref('admins_profiles/' + myAdminId).update({
+            adminUsername: inputVal
+        }).then(() => {
+            localStorage.setItem("admin_username", inputVal);
+            document.getElementById("forced-username-modal").style.display = "none";
+            document.getElementById("admin-username-display").style.display = "inline-block";
+            document.getElementById("admin-username-display").innerText = "@" + inputVal;
+            syncAdminProfile(); // لتحديث البيانات الإضافية
+        }).catch(err => {
+            alert("حدث خطأ أثناء حفظ اليوزر، تأكد من اتصالك بالإنترنت.");
+        });
     }
 
     // --- مزامنة وربط ملفات السوبر أدمن بالتطبيق ---
@@ -275,14 +342,20 @@
 
         const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
         const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
+        const adminUser = localStorage.getItem("admin_username") || "";
 
         db.ref('admins_list/' + myDeviceId).set(myAdminId);
-        db.ref('admins_profiles/' + myAdminId).set({
+        
+        const profileData = {
             deviceId: myDeviceId,
             name: customName,
             image: customImg,
             id: myAdminId
-        });
+        };
+        // إضافة اليوزر إذا كان موجوداً
+        if (adminUser) profileData.adminUsername = adminUser;
+
+        db.ref('admins_profiles/' + myAdminId).set(profileData);
         db.ref('admins/' + myDeviceId).set({ role: 'admin' });
     }
 
@@ -311,6 +384,11 @@
     }
 
     function initDashboard() {
+        // تحميل بروفايلات الأدمنية (لجلب اليوزرات المخفية)
+        db.ref('admins_profiles').on('value', snap => {
+            globalAdminProfiles = snap.val() || {};
+        });
+
         db.ref('admins').on('value', snap => {
             globalAdmins = snap.val() || {};
             renderUsers();
@@ -414,7 +492,13 @@
         const msgList = document.getElementById("messages-list");
         const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
-        const senderName = data.adminId ? `<span style="color: #f1c40f;">👑 ${data.sender}</span>` : data.sender;
+        // استخراج وعرض يوزر الإدارة إذا كان المرسل أدمن
+        let adminHiddenUsername = "";
+        if (data.adminId && globalAdminProfiles[data.adminId] && globalAdminProfiles[data.adminId].adminUsername) {
+            adminHiddenUsername = `<span style="background: rgba(0,255,204,0.15); color: #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: monospace; border: 1px solid #00ffcc; margin-right: 5px;">@${globalAdminProfiles[data.adminId].adminUsername}</span>`;
+        }
+
+        const senderName = data.adminId ? `<span style="color: #f1c40f;">👑 ${data.sender}</span> ${adminHiddenUsername}` : data.sender;
         const privateBadge = isPrivate ? `<span style="background:#8e44ad; color:white; font-size:10px; padding:2px 5px; border-radius:4px; margin-right:5px;">🔒 خاص</span>` : '';
 
         let msgHtml = `
@@ -542,10 +626,15 @@
         const isReply = data.adminId && data.deviceId === localStorage.getItem("chat_device_id");
         const privateBadge = isPrivate ? `<span style="font-size:10px; color:#8e44ad; border:1px solid #8e44ad; padding:1px 4px; border-radius:3px; margin-right:5px;">خاص</span>` : '';
         
+        let adminHiddenUsername = "";
+        if (data.adminId && globalAdminProfiles[data.adminId] && globalAdminProfiles[data.adminId].adminUsername) {
+            adminHiddenUsername = `<span style="background: rgba(0,255,204,0.15); color: #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: monospace; border: 1px solid #00ffcc; margin-right: 5px;">@${globalAdminProfiles[data.adminId].adminUsername}</span>`;
+        }
+
         let html = `
             <div class="card" id="modal-msg-${key}" style="background: ${isReply ? '#27ae6033' : '#2a233c'}; border-color: ${isReply ? '#2ecc71' : '#444'};">
                 <div class="msg-header">
-                    <span class="msg-sender" style="color: ${isReply ? '#f1c40f' : '#f39c12'};">${data.sender} ${privateBadge}</span>
+                    <span class="msg-sender" style="color: ${isReply ? '#f1c40f' : '#f39c12'};">${data.sender} ${adminHiddenUsername} ${privateBadge}</span>
                     <span class="msg-time">${time}</span>
                 </div>
                 ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
@@ -631,10 +720,15 @@
                         const cardBorder = isReply ? '#2ecc71' : '#8e44ad';
                         const senderColor = isReply ? '#f1c40f' : '#f39c12';
 
+                        let adminHiddenUsername = "";
+                        if (data.adminId && globalAdminProfiles[data.adminId] && globalAdminProfiles[data.adminId].adminUsername) {
+                            adminHiddenUsername = `<span style="background: rgba(0,255,204,0.15); color: #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: monospace; border: 1px solid #00ffcc; margin-right: 5px;">@${globalAdminProfiles[data.adminId].adminUsername}</span>`;
+                        }
+
                         let html = `
                             <div class="card" style="background: ${cardBg}; border-color: ${cardBorder}; border-width: 1px; border-style: solid;">
                                 <div class="msg-header">
-                                    <span class="msg-sender" style="color: ${senderColor};">🔒 ${data.sender}</span>
+                                    <span class="msg-sender" style="color: ${senderColor};">🔒 ${data.sender} ${adminHiddenUsername}</span>
                                     <span class="msg-time">${time}</span>
                                 </div>
                                 <div class="device-id" style="margin-bottom:8px;">${data.deviceId}</div>
