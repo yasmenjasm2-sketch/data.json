@@ -12,16 +12,21 @@
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #0b0714; color: #fff; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* إخفاء شاشة تسجيل الدخول القديمة تماماً */
-        #login-screen { display: none; }
+        /* شاشة تسجيل الدخول */
+        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #0b0714; z-index: 100; position: absolute; width: 100%; top: 0; }
+        .login-box { background: #1a1525; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.2); width: 90%; max-width: 400px; }
+        .login-box h2 { color: #f39c12; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; text-align: center; font-size: 18px; outline: none; }
+        .login-box input:focus { border-color: #f39c12; }
+        .login-box button { width: 100%; background: #f39c12; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .login-box button:hover { background: #e67e22; }
 
-        /* نافذة اليوزر الإجبارية للإدارة القدامى */
+        /* نافذة اليوزر وكلمة المرور الإجبارية للإدارة القديمة */
         #forced-username-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
         .forced-box { background: #1a1525; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #e74c3c; box-shadow: 0 0 40px rgba(231, 76, 60, 0.3); width: 90%; max-width: 400px; }
         .forced-box h3 { color: #e74c3c; margin-top: 0; font-size: 22px; }
-        .forced-box p { color: #ccc; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
-        .forced-box input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #444; background: #111; color: #00ffcc; outline: none; text-align: center; font-size: 16px; margin-bottom: 15px; font-family: monospace; }
-        .forced-box input[type="password"] { color: #fff; font-family: 'Tajawal', sans-serif; }
+        .forced-box p { color: #ccc; font-size: 15px; margin-bottom: 20px; line-height: 1.6; }
+        .forced-box input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #444; background: #111; color: #00ffcc; outline: none; text-align: center; font-size: 18px; margin-bottom: 15px; font-family: monospace; }
         .forced-box input:focus { border-color: #e74c3c; }
         .forced-box button { width: 100%; background: #e74c3c; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
         .forced-box button:hover { background: #c0392b; }
@@ -37,6 +42,7 @@
         .admin-settings input[type="text"] { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; font-size: 13px; }
         .admin-settings input[type="text"]:focus { border-color: #f39c12; }
         
+        /* زر رفع الصورة وزر الخاص الجديد */
         .file-upload-btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; cursor: pointer; font-size: 13px; display: inline-block; transition: 0.3s; }
         .file-upload-btn:hover { border-color: #f39c12; background: #333; }
         
@@ -59,6 +65,7 @@
         /* العناصر */
         .card { background: #2a233c; padding: 15px; border-radius: 10px; border: 1px solid #444; position: relative; }
         
+        /* المستخدمين */
         .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .user-header img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #f39c12; }
         .user-info h4 { margin: 0 0 5px 0; color: #fff; font-size: 16px; }
@@ -75,6 +82,7 @@
         .btn-promote { background: #3498db; } .btn-promote:hover { background: #2980b9; }
         .btn-demote { background: #95a5a6; } .btn-demote:hover { background: #7f8c8d; }
         .btn-view { background: #9b59b6; } .btn-view:hover { background: #8e44ad; }
+        .btn-accept { background: #2ecc71; } .btn-accept:hover { background: #27ae60; }
 
         /* الرسائل */
         .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 8px; }
@@ -87,7 +95,7 @@
         .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
         .btn-reply { color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.3s; }
 
-        /* نوافذ الشات المنسدلة */
+        /* نوافذ الشات المنسدلة (Modals) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: #1a1525; width: 90%; max-width: 600px; height: 80vh; border-radius: 15px; border: 1px solid #f39c12; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .modal-header { padding: 15px; background: #221c30; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
@@ -112,17 +120,24 @@
 </head>
 <body>
 
-<div id="login-screen"></div>
+<div id="login-screen">
+    <div class="login-box">
+        <h2>لوحة الإدارة السرية</h2>
+        <input type="password" id="admin-pass" placeholder="أدخل كلمة المرور" onkeypress="if(event.key === 'Enter') checkLogin()">
+        <button onclick="checkLogin()">تسجيل الدخول</button>
+        <p id="login-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">كلمة المرور غير صحيحة أو حسابك غير مفعل بعد!</p>
+    </div>
+</div>
 
-<!-- نافذة إدخال اليوزر وكلمة المرور الإجبارية للأدمنية القدامى -->
+<!-- نافذة إدخال اليوزر والباسورد الإجبارية للأدمنية القدامى -->
 <div id="forced-username-modal">
     <div class="forced-box">
-        <h3>⚠️ إعداد وتثبيت حسابك</h3>
-        <p>أهلاً بك أيها الأدمن! لضمان حماية حسابك ورسائلك، يرجى كتابة "يوزر" و "كلمة مرور" خاصة بك.<br><br><span style="color:#f39c12;">(ملاحظة: إذا قمت بإنشاء حسابك مسبقاً ومسحت المتصفح، فقط اكتب يوزرك وباسوردك هنا وسيتعرف عليك النظام فوراً).</span></p>
-        <input type="text" id="forced-admin-username" placeholder="يوزر حسابك (مثال: admin_1)" onkeypress="if(event.key === 'Enter') document.getElementById('forced-admin-password').focus()">
-        <input type="password" id="forced-admin-password" placeholder="كلمة المرور" onkeypress="if(event.key === 'Enter') saveForcedAdminUsername()">
-        <button onclick="saveForcedAdminUsername()">دخول مباشر</button>
-        <p id="forced-error" style="color: #f39c12; display: none; margin-top: 10px; font-size: 13px;"></p>
+        <h3>⚠️ تأمين حساب الإدارة</h3>
+        <p>مرحباً بك، يرجى إعداد "يوزر" و "كلمة مرور" لحسابك الإداري لضمان حمايته وتمييزه في قاعدة البيانات. هذا اليوزر سيكون مخفياً عن المستخدمين.</p>
+        <input type="text" id="forced-admin-username" placeholder="اليوزر (مثال: @boss)">
+        <input type="password" id="forced-admin-password" placeholder="كلمة مرور جديدة لحسابك" onkeypress="if(event.key === 'Enter') saveForcedAdminUsername()">
+        <button onclick="saveForcedAdminUsername()">حفظ البيانات ومتابعة الدخول</button>
+        <p id="forced-error" style="color: #f39c12; display: none; margin-top: 10px; font-size: 13px;">يرجى إدخال يوزر وكلمة مرور صحيحة (لا يقل عن 3 أحرف).</p>
     </div>
 </div>
 
@@ -142,6 +157,14 @@
     </header>
 
     <div class="container">
+        <!-- عمود طلبات الإدارة الجديدة -->
+        <div class="panel">
+            <div class="panel-header">📝 طلبات انضمام الإدارة</div>
+            <div class="panel-content" id="admin-requests-list">
+                <div style="text-align:center; color:#888; font-size:14px; margin-top:20px;">لا توجد طلبات انضمام حالياً</div>
+            </div>
+        </div>
+
         <div class="panel">
             <div class="panel-header">👥 إدارة المستخدمين</div>
             <div class="panel-content" id="users-list"></div>
@@ -186,11 +209,11 @@
 </div>
 
 <script>
-    // استخدم بيانات مشروعك الجديدة هنا
+    const _p = atob("Z21haWwzNDU2Nw=="); 
     const firebaseConfig = {
-        apiKey: "ضع_هنا_API_KEY_الخاص_بمشروعك", 
-        databaseURL: "https://mehamzaalanat-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "mehamzaalanat"
+        apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
+        databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
+        projectId: atob("Y2hhdGFwaS0xY2E3MQ==")
     };
 
     if (!firebase.apps.length) {
@@ -205,129 +228,144 @@
     let globalAdmins = {};
     let globalBans = {};
     let globalAdminProfiles = {}; 
+    let globalAdminRequests = {};
     let currentChatUserId = null;
     let currentChatUserName = null;
 
-    function setPermanentLogin(user, pass) {
-        localStorage.setItem("admin_auth_user", user);
+    const ADMIN_PASSWORD = _p;
+
+    function setPermanentLogin(pass) {
         localStorage.setItem("admin_auth_pass", pass);
+        let d = new Date();
+        d.setTime(d.getTime() + (10*365*24*60*60*1000));
+        document.cookie = "admin_auth_pass=" + pass + ";expires=" + d.toUTCString() + ";path=/";
     }
 
     function getPermanentLogin() {
-        return {
-            user: localStorage.getItem("admin_auth_user"),
-            pass: localStorage.getItem("admin_auth_pass")
-        };
+        let pass = localStorage.getItem("admin_auth_pass");
+        if (pass) return pass;
+        
+        let name = "admin_auth_pass=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') { c = c.substring(1); }
+            if (c.indexOf(name) == 0) { 
+                let cookiePass = c.substring(name.length, c.length);
+                localStorage.setItem("admin_auth_pass", cookiePass);
+                return cookiePass;
+            }
+        }
+        return null;
     }
 
     window.onload = () => {
-        const saved = getPermanentLogin();
-        if (saved.user && saved.pass) {
-            // محاولة تسجيل الدخول التلقائي
-            verifyAccountLogin(saved.user, saved.pass);
-        } else {
-            // عرض نافذة التثبيت فوراً للأدمن القديم دون أي شاشات أخرى
-            document.getElementById("forced-username-modal").style.display = "flex";
+        const savedPass = getPermanentLogin();
+        if (savedPass) {
+            // التحقق إذا كان الباسورد هو الماستر الأساسي أو باسورد لأحد الإداريين المعتمدين
+            if (savedPass === ADMIN_PASSWORD) {
+                grantAccess();
+            } else {
+                db.ref('admins_profiles').once('value', snap => {
+                    let isValid = false;
+                    snap.forEach(child => {
+                        if (child.val().adminPassword === savedPass) isValid = true;
+                    });
+                    if(isValid) grantAccess();
+                });
+            }
         }
     };
 
-    function verifyAccountLogin(user, pass) {
-        db.ref('admin_accounts/' + user).once('value', snapshot => {
-            const acc = snapshot.val();
-            if (!acc || acc.password !== pass) {
-                // إذا فشل الدخول (مسح المتصفح مثلاً)، نُظهر له النافذة ليكتب بياناته
-                document.getElementById("forced-username-modal").style.display = "flex";
-                return;
-            }
-            if (acc.isApproved === false) {
-                alert("حسابك قيد المراجعة، يرجى انتظار موافقة الإدارة.");
-                return;
-            }
-
-            // تم التحقق بنجاح!
-            localStorage.setItem("super_admin_id", acc.adminId);
-            localStorage.setItem("admin_username", user);
-            setPermanentLogin(user, pass);
+    function checkLogin() {
+        const pass = document.getElementById("admin-pass").value;
+        if (pass === ADMIN_PASSWORD) {
+            setPermanentLogin(pass);
             grantAccess();
-        }).catch(err => {
-            console.error("Network error");
-        });
-    }
-
-    // إنشاء وحفظ أو استعادة الحساب للأدمنية القدامى
-    function saveForcedAdminUsername() {
-        const userVal = document.getElementById("forced-admin-username").value.trim();
-        const passVal = document.getElementById("forced-admin-password").value.trim();
-        const errEl = document.getElementById("forced-error");
-
-        if (userVal.length < 3 || passVal.length < 4) {
-            errEl.innerText = "اليوزر يجب أن يكون 3 أحرف فأكثر، والباسورد 4 فأكثر.";
-            errEl.style.display = "block";
-            return;
-        }
-
-        db.ref('admin_accounts/' + userVal).once('value', snapshot => {
-            if (snapshot.exists()) {
-                const acc = snapshot.val();
-                // التحقق الذكي: إذا كان هذا هو حساب الأدمن الذي أنشأه مسبقاً وعاد ليدخل به
-                if (acc.password === passVal) {
-                    localStorage.setItem("super_admin_id", acc.adminId);
-                    localStorage.setItem("admin_username", userVal);
-                    setPermanentLogin(userVal, passVal);
-                    document.getElementById("forced-username-modal").style.display = "none";
+        } else {
+            // التحقق من قاعدة البيانات للإداريين الجدد المقبولين
+            db.ref('admins_profiles').once('value', snap => {
+                let isValid = false;
+                snap.forEach(child => {
+                    if (child.val().adminPassword === pass) isValid = true;
+                });
+                
+                if(isValid) {
+                    setPermanentLogin(pass);
                     grantAccess();
                 } else {
-                    errEl.innerText = "هذا اليوزر مستخدم. إذا كان يوزرك الخاص، فتأكد من كلمة المرور.";
-                    errEl.style.display = "block";
+                    document.getElementById("login-error").style.display = "block";
                 }
-            } else {
-                // إنشاء الحساب لأول مرة وتثبيت الأدمن
-                let myAdminId = localStorage.getItem("super_admin_id");
-                if (!myAdminId) {
-                    myAdminId = "admin_" + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem("super_admin_id", myAdminId);
-                }
-
-                const newAccount = {
-                    adminId: myAdminId,
-                    password: passVal,
-                    isApproved: true, // الأدمن القديم يوافق عليه النظام تلقائياً
-                    createdAt: Date.now()
-                };
-
-                db.ref('admin_accounts/' + userVal).set(newAccount).then(() => {
-                    localStorage.setItem("admin_username", userVal);
-                    setPermanentLogin(userVal, passVal);
-                    document.getElementById("forced-username-modal").style.display = "none";
-                    grantAccess();
-                });
-            }
-        });
-    }
-
-    function grantAccess() {
-        document.getElementById("dashboard").style.display = "flex";
-        
-        const currentUsername = localStorage.getItem("admin_username");
-        if(currentUsername) {
-            document.getElementById("admin-username-display").style.display = "inline-block";
-            document.getElementById("admin-username-display").innerText = "@" + currentUsername;
+            });
         }
-
-        loadAdminConfig();
-        initDashboard();
     }
 
     function logout() {
-        localStorage.removeItem("admin_auth_user");
         localStorage.removeItem("admin_auth_pass");
+        document.cookie = "admin_auth_pass=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         location.reload();
     }
 
-    // --- باقي دوال لوحة التحكم كما هي تماماً ---
+    function grantAccess() {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("dashboard").style.display = "flex";
+        loadAdminConfig();
+        initDashboard();
+        checkAndPromptAdminUsername(); 
+    }
+
+    // --- نظام اليوزر والباسورد الإجباري للأدمن القديم ---
+    function checkAndPromptAdminUsername() {
+        const myAdminId = localStorage.getItem("super_admin_id");
+        if (!myAdminId) return;
+
+        db.ref('admins_profiles/' + myAdminId).once('value', snapshot => {
+            const data = snapshot.val();
+            // نتحقق إذا كان يمتلك يوزر وكلمة مرور
+            if (data && data.adminUsername && data.adminUsername.trim() !== "" && data.adminPassword) {
+                localStorage.setItem("admin_username", data.adminUsername);
+                document.getElementById("admin-username-display").style.display = "inline-block";
+                document.getElementById("admin-username-display").innerText = "@" + data.adminUsername;
+            } else {
+                document.getElementById("forced-username-modal").style.display = "flex";
+            }
+        });
+    }
+
+    function saveForcedAdminUsername() {
+        const userVal = document.getElementById("forced-admin-username").value.trim();
+        const passVal = document.getElementById("forced-admin-password").value.trim();
+        
+        if (userVal.length < 3 || passVal.length < 3) {
+            document.getElementById("forced-error").style.display = "block";
+            return;
+        }
+
+        const myAdminId = localStorage.getItem("super_admin_id");
+        db.ref('admins_profiles/' + myAdminId).update({
+            adminUsername: userVal,
+            adminPassword: passVal
+        }).then(() => {
+            localStorage.setItem("admin_username", userVal);
+            document.getElementById("forced-username-modal").style.display = "none";
+            document.getElementById("admin-username-display").style.display = "inline-block";
+            document.getElementById("admin-username-display").innerText = "@" + userVal;
+            syncAdminProfile(); 
+        }).catch(err => {
+            alert("حدث خطأ أثناء حفظ البيانات.");
+        });
+    }
+
     function syncAdminProfile() {
         let myAdminId = localStorage.getItem("super_admin_id");
         let myDeviceId = localStorage.getItem("chat_device_id");
+        
+        if (!myAdminId) {
+            const possibleIDs = ["1111", "2222", "3333", "4444", "5555", "7777", "8888", "9999"];
+            myAdminId = possibleIDs[Math.floor(Math.random() * possibleIDs.length)];
+            localStorage.setItem("super_admin_id", myAdminId);
+        }
         
         if (!myDeviceId) {
             myDeviceId = 'admin_panel_' + Math.random().toString(36).substr(2, 9);
@@ -346,11 +384,12 @@
             deviceId: myDeviceId,
             name: customName,
             image: customImg,
-            id: myAdminId,
-            adminUsername: adminUser
+            id: myAdminId
         };
+        if (adminUser) profileData.adminUsername = adminUser;
 
-        db.ref('admins_profiles/' + myAdminId).set(profileData);
+        // لا نقوم بمسح الباسورد إذا كان موجوداً
+        db.ref('admins_profiles/' + myAdminId).update(profileData);
         db.ref('admins/' + myDeviceId).set({ role: 'admin' });
     }
 
@@ -383,6 +422,12 @@
             globalAdminProfiles = snap.val() || {};
         });
 
+        // مراقبة طلبات الانضمام للإدارة الجديدة
+        db.ref('admin_requests').on('value', snap => {
+            globalAdminRequests = snap.val() || {};
+            renderAdminRequests();
+        });
+
         db.ref('admins').on('value', snap => {
             globalAdmins = snap.val() || {};
             renderUsers();
@@ -400,6 +445,67 @@
         });
 
         loadAllMessages();
+    }
+
+    // --- عرض ومعالجة طلبات الإدارة الجديدة ---
+    function renderAdminRequests() {
+        const list = document.getElementById("admin-requests-list");
+        list.innerHTML = "";
+        
+        const requestsKeys = Object.keys(globalAdminRequests);
+        if (requestsKeys.length === 0) {
+            list.innerHTML = `<div style="text-align:center; color:#888; font-size:14px; margin-top:20px;">لا توجد طلبات انضمام حالياً</div>`;
+            return;
+        }
+
+        requestsKeys.forEach(reqId => {
+            const req = globalAdminRequests[reqId];
+            list.innerHTML += `
+                <div class="card" style="border-color: #3498db;">
+                    <div class="user-info">
+                        <h4 style="color: #3498db;">${req.name}</h4>
+                        <div style="font-size: 13px; color: #ccc;">يوزر: <span style="color:#00ffcc;">@${req.adminUsername}</span></div>
+                        <div style="font-size: 13px; color: #ccc;">باسوورد: <span style="color:#e74c3c;">${req.adminPassword}</span></div>
+                        <div class="device-id" style="margin-top:5px;">${req.deviceId}</div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="action-btn btn-accept" onclick="acceptAdminReq('${reqId}')">قبول ✅</button>
+                        <button class="action-btn btn-ban" onclick="rejectAdminReq('${reqId}')">رفض ❌</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function acceptAdminReq(reqId) {
+        if(confirm("هل أنت متأكد من قبول هذا الطلب وتعيينه كأدمن؟")) {
+            const req = globalAdminRequests[reqId];
+            const newAdminId = "ADM" + Math.floor(Math.random() * 90000 + 10000);
+            
+            // إضافة كأدمن معتمد
+            db.ref('admins/' + req.deviceId).set({ role: 'admin' });
+            db.ref('admins_list/' + req.deviceId).set(newAdminId);
+            
+            // إضافة البروفايل الخاص به (بما فيها اليوزر والباسورد الذي اختاره)
+            db.ref('admins_profiles/' + newAdminId).set({
+                deviceId: req.deviceId,
+                id: newAdminId,
+                name: req.name,
+                adminUsername: req.adminUsername,
+                adminPassword: req.adminPassword,
+                image: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png"
+            }).then(() => {
+                // مسح الطلب بعد القبول
+                db.ref('admin_requests/' + reqId).remove();
+                alert("تم قبول الأدمن بنجاح! يمكنه الآن تسجيل الدخول.");
+            });
+        }
+    }
+
+    function rejectAdminReq(reqId) {
+        if(confirm("هل تريد رفض ومسح هذا الطلب؟")) {
+            db.ref('admin_requests/' + reqId).remove();
+        }
     }
 
     function renderUsers() {
@@ -454,7 +560,7 @@
         db.ref('messages_general').on('child_added', snapshot => {
             const data = snapshot.val();
             if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
-                msgNotificationSound.play().catch(err => console.log("الصوت يحتاج تفعيل المتصفح"));
+                msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
             }
             renderMessageToPanel(snapshot.key, data, false, 'messages_general/' + snapshot.key);
         });
@@ -470,7 +576,7 @@
                     db.ref('private_messages/' + roomSnapshot.key).on('child_added', msgSnapshot => {
                         const data = msgSnapshot.val();
                         if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
-                            msgNotificationSound.play().catch(err => console.log("الصوت يحتاج تفعيل المتصفح"));
+                            msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
                         }
                     });
                 }
