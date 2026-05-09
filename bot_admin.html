@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background-color: #0b0714; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        body { background-color: #0b0714; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
         .bot-panel {
             background: rgba(20, 15, 30, 0.9);
@@ -25,19 +25,25 @@
         
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; color: #a0a0b0; font-weight: bold; }
-        input[type="text"], textarea, select {
+        input[type="text"], input[type="password"], textarea, select {
             width: 100%; padding: 15px; border-radius: 10px; border: 1px solid rgba(0, 210, 255, 0.3);
             background: rgba(0, 0, 0, 0.5); color: white; font-size: 15px; outline: none; transition: 0.3s;
         }
-        input[type="text"]:focus, textarea:focus, select:focus { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+        input[type="text"]:focus, input[type="password"]:focus, textarea:focus, select:focus { border-color: #00d2ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
         
-        .poll-section { background: rgba(0, 210, 255, 0.05); padding: 15px; border-radius: 10px; border: 1px dashed #00d2ff; }
+        .poll-section { background: rgba(0, 210, 255, 0.05); padding: 15px; border-radius: 10px; border: 1px dashed #00d2ff; margin-bottom: 20px; }
+        .bot-identity { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #3a7bd5; }
         
-        .btn-send {
+        .btn-send, .btn-login {
             width: 100%; background: linear-gradient(90deg, #00d2ff, #3a7bd5); color: #fff; border: none;
             padding: 18px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s;
         }
-        .btn-send:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4); }
+        .btn-send:hover, .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4); }
+        .btn-logout {
+            width: 100%; background: transparent; color: #ff4c4c; border: 1px solid #ff4c4c;
+            padding: 10px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 20px; transition: 0.3s;
+        }
+        .btn-logout:hover { background: #ff4c4c; color: #fff; }
         
         .file-upload { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; cursor: pointer; }
         .file-upload input { display: none; }
@@ -45,12 +51,35 @@
         
         #preview-img { max-width: 100px; border-radius: 10px; display: none; margin-top: 10px; border: 1px solid #00d2ff; }
         #status-msg { text-align: center; margin-top: 15px; font-weight: bold; color: #4caf50; display: none; }
+        
+        /* إخفاء اللوحة الرئيسية افتراضياً */
+        #main-dashboard { display: none; }
     </style>
 </head>
 <body>
 
-<div class="bot-panel">
+<div class="bot-panel" id="login-screen">
+    <h1>🔒 تسجيل الدخول</h1>
+    <div class="form-group">
+        <label>كلمة المرور:</label>
+        <input type="password" id="admin-password" placeholder="أدخل كلمة المرور للوصول...">
+    </div>
+    <button class="btn-login" onclick="checkLogin()">دخول</button>
+</div>
+
+<div class="bot-panel" id="main-dashboard">
     <h1>🤖 نظام البوت لـ FawakihAI</h1>
+    
+    <div class="bot-identity">
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>اسم البوت:</label>
+            <input type="text" id="bot-name-input" value="🤖 FawakihAI System" placeholder="اكتب اسم البوت هنا...">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label>رابط صورة البوت:</label>
+            <input type="text" id="bot-img-input" value="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" placeholder="رابط صورة البوت (URL)">
+        </div>
+    </div>
     
     <div class="form-group">
         <label>نص الإعلان أو التحديث:</label>
@@ -94,10 +123,51 @@
 
     <button class="btn-send" onclick="prepareBotMessage()">إطلاق البوت 🚀</button>
     <div id="status-msg">تمت الجدولة بنجاح! سيقوم البوت بعمله.</div>
+    
+    <button class="btn-logout" onclick="logout()">تسجيل الخروج 🚪</button>
 </div>
 
 <script>
-    // نفس بيانات قاعدة البيانات الخاصة بك
+    // --- نظام تسجيل الدخول ---
+    const SECRET_PASSWORD = "hamzagmail34567";
+
+    // التحقق عند تحميل الصفحة
+    window.onload = function() {
+        if(localStorage.getItem("fawakih_admin_logged") === "true") {
+            showDashboard();
+        }
+    };
+
+    function checkLogin() {
+        const pass = document.getElementById("admin-password").value;
+        if(pass === SECRET_PASSWORD) {
+            localStorage.setItem("fawakih_admin_logged", "true"); // حفظ تسجيل الدخول
+            showDashboard();
+        } else {
+            alert("كلمة المرور غير صحيحة ❌");
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("main-dashboard").style.display = "block";
+    }
+
+    function logout() {
+        localStorage.removeItem("fawakih_admin_logged");
+        document.getElementById("admin-password").value = "";
+        document.getElementById("login-screen").style.display = "block";
+        document.getElementById("main-dashboard").style.display = "none";
+    }
+
+    // السماح بالدخول عند الضغط على زر Enter
+    document.getElementById("admin-password").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            checkLogin();
+        }
+    });
+
+    // --- إعدادات فايربيس والبوت ---
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
         databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -108,9 +178,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // إعدادات البوت الثابتة
-    const BOT_NAME = "🤖 FawakihAI System";
-    const BOT_IMAGE = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"; // أيقونة روبوت احترافية
     const BOT_ID = "SYSTEM_BOT_001";
     let attachedImageBase64 = null;
 
@@ -140,6 +207,8 @@
     }
 
     function prepareBotMessage() {
+        const botName = document.getElementById("bot-name-input").value.trim();
+        const botImage = document.getElementById("bot-img-input").value.trim();
         const text = document.getElementById("bot-text").value.trim();
         const pollTitle = document.getElementById("poll-title").value.trim();
         const pollOpt1 = document.getElementById("poll-opt1").value.trim();
@@ -152,12 +221,17 @@
             return;
         }
 
-        // تجهيز بيانات الرسالة
+        if (!botName || !botImage) {
+            alert("الرجاء التأكد من وجود اسم وصورة للبوت.");
+            return;
+        }
+
+        // تجهيز بيانات الرسالة باستخدام الاسم والصورة المدخلين
         const msgData = {
             deviceId: BOT_ID,
-            sender: BOT_NAME,
-            senderImg: BOT_IMAGE,
-            isBot: true, // مهم جداً لتمييز الرسالة في الشات
+            sender: botName,
+            senderImg: botImage,
+            isBot: true,
             text: text || null,
             image: attachedImageBase64 || null,
         };
@@ -178,15 +252,21 @@
         const delayMs = delayHours * 60 * 60 * 1000;
         
         document.getElementById('status-msg').style.display = 'block';
+        setTimeout(() => { document.getElementById('status-msg').style.display = 'none'; }, 5000);
 
         if (delayMs === 0) {
             executeBotTask(msgData, repeatCount);
         } else {
-            // الجدولة (تعمل طالما هذه الصفحة مفتوحة في متصفحك)
+            // الجدولة
             setTimeout(() => {
                 executeBotTask(msgData, repeatCount);
             }, delayMs);
         }
+        
+        // تفريغ الحقول بعد الإرسال (اختياري، يمكنك حذفه إذا أردت بقاء النص)
+        document.getElementById("bot-text").value = "";
+        attachedImageBase64 = null;
+        document.getElementById('preview-img').style.display = 'none';
     }
 
     function executeBotTask(baseMsgData, repeatCount) {
