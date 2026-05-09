@@ -17,6 +17,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         
+        /* منع النسخ نهائياً من الموقع */
         body { 
             background-color: #0b0714; 
             color: #ffffff; 
@@ -28,6 +29,18 @@
             height: 100dvh; 
             overflow: hidden;
             position: relative;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* السماح بالكتابة وتحديد النص داخل حقول الإدخال فقط */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
         .bg-orb {
@@ -97,7 +110,6 @@
         .header-btn { background: rgba(187, 134, 252, 0.2); border: 1px solid rgba(187, 134, 252, 0.5); color: #d6b4fc; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .header-btn:hover { background: #bb86fc; color: #000; }
 
-        /* ستايل إشعار الشات الخاص الاحترافي */
         #private-chat-banner {
             background: linear-gradient(90deg, rgba(74, 0, 224, 0.15), rgba(138, 43, 226, 0.15));
             border-bottom: 1px solid rgba(187, 134, 252, 0.2);
@@ -138,7 +150,6 @@
         .msg-time { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: left; }
         .msg-image { max-width: 100%; border-radius: 12px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* شارة الإدارة */
         .admin-badge { background: linear-gradient(90deg, #ffd700, #ffaa00); color: #000; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: bold; margin-right: 5px; box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); display: inline-flex; align-items: center; gap: 3px; }
         
         #input-area { background: rgba(20, 15, 30, 0.9); padding: 12px 15px; display: flex; gap: 12px; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
@@ -159,7 +170,6 @@
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(187, 134, 252, 0.3); border-top-color: #bb86fc; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* شاشة البحث عن أدمن */
         #admin-search-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: rgba(20, 15, 30, 0.95); backdrop-filter: blur(20px); position: absolute; top: 0; left: 0; z-index: 30; }
         .search-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; }
         .back-btn { background: transparent; border: none; color: #bb86fc; font-size: 24px; cursor: pointer; }
@@ -172,9 +182,70 @@
         .admin-card-name { font-weight: bold; color: #fff; font-size: 16px; margin-bottom: 5px; }
         .admin-card-id { color: #a0a0b0; font-size: 13px; }
 
-        /* تنبيه مخصص */
         .custom-alert { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(20, 15, 30, 0.95); border: 1px solid #bb86fc; color: #fff; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; text-align: center; font-weight: bold; display: none; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+
+        /* ستايل التصويت (ميزة جديدة) */
+        .poll-container {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(187, 134, 252, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 10px;
+            width: 100%;
+            min-width: 250px;
+        }
+        .poll-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+            line-height: 1.4;
+        }
+        .poll-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .poll-option:last-child {
+            margin-bottom: 0;
+        }
+        .poll-option:hover {
+            border-color: #bb86fc;
+            background: rgba(187, 134, 252, 0.1);
+        }
+        .poll-option.voted {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .poll-bar {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            background: rgba(187, 134, 252, 0.2);
+            z-index: 0;
+            transition: width 0.5s ease;
+        }
+        .poll-text, .poll-percent {
+            position: relative;
+            z-index: 1;
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -244,7 +315,7 @@
             <input type="text" id="search-input" class="search-input" placeholder="ابحث بالاسم أو الآيدي (مثال: 1111)..." onkeyup="filterAdmins()">
         </div>
         <div id="admins-list" class="admins-list">
-            </div>
+        </div>
     </div>
 
     <div id="custom-alert" class="custom-alert"></div>
@@ -252,6 +323,14 @@
 </div>
 
 <script>
+    // الجافاسكربت لمنع كليك يمين والنسخ
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('copy', event => {
+        if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+            event.preventDefault();
+        }
+    });
+
     // إعدادات Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
@@ -263,7 +342,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // إعداد المؤثر الصوتي للرسائل الجديدة
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
 
@@ -284,6 +362,7 @@
     let attachedImageBase64 = null;
     let currentChatPath = 'messages_general'; 
     let chatListener = null; 
+    let chatChangedListener = null; // للاستماع لتحديثات التصويت
 
     function showAlert(msg) {
         const alertBox = document.getElementById('custom-alert');
@@ -301,11 +380,9 @@
                 
                 db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
 
-                // التحقق من أن المستخدم أدمن وجلب الآيدي الخاص به
                 db.ref('admins_list/' + deviceId).once('value', adminSnap => {
                     if (adminSnap.exists()) {
                         currentUser.adminId = adminSnap.val();
-                        // تحديث بيانات الأدمن في ملف profiles ليظهر في البحث بأحدث صورة واسم
                         db.ref('admins_profiles/' + currentUser.adminId).set({
                             deviceId: deviceId,
                             name: currentUser.name,
@@ -448,18 +525,63 @@
         isScrolledToBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 20;
     });
 
+    // دالة إنشاء واجهة التصويت
+    function generatePollHtml(pollData, msgKey) {
+        const totalVotes = (pollData.votes1 || 0) + (pollData.votes2 || 0);
+        const percent1 = totalVotes === 0 ? 0 : Math.round(((pollData.votes1 || 0) / totalVotes) * 100);
+        const percent2 = totalVotes === 0 ? 0 : Math.round(((pollData.votes2 || 0) / totalVotes) * 100);
+        const userVoted = pollData.votedUsers && pollData.votedUsers[deviceId];
+        
+        const votedClass1 = userVoted === 1 ? 'voted' : '';
+        const votedClass2 = userVoted === 2 ? 'voted' : '';
+
+        return `
+        <div class="poll-container">
+            <div class="poll-title">${pollData.title}</div>
+            <div class="poll-option ${votedClass1}" onclick="submitVote('${msgKey}', 1)">
+                <div class="poll-bar" style="width: ${userVoted ? percent1 : 0}%"></div>
+                <span class="poll-text">${pollData.option1}</span>
+                <span class="poll-percent">${userVoted ? percent1 + '%' : 'صوّت'}</span>
+            </div>
+            <div class="poll-option ${votedClass2}" onclick="submitVote('${msgKey}', 2)">
+                <div class="poll-bar" style="width: ${userVoted ? percent2 : 0}%"></div>
+                <span class="poll-text">${pollData.option2}</span>
+                <span class="poll-percent">${userVoted ? percent2 + '%' : 'صوّت'}</span>
+            </div>
+        </div>`;
+    }
+
+    // دالة إرسال التصويت لقاعدة البيانات
+    function submitVote(msgKey, optionNumber) {
+        const pollRef = db.ref(`${currentChatPath}/${msgKey}/poll`);
+        pollRef.transaction(poll => {
+            if (poll) {
+                if (!poll.votedUsers) poll.votedUsers = {};
+                if (poll.votedUsers[deviceId]) {
+                    return; // المستخدم صوت مسبقاً
+                }
+                poll.votedUsers[deviceId] = optionNumber;
+                if (optionNumber === 1) poll.votes1 = (poll.votes1 || 0) + 1;
+                if (optionNumber === 2) poll.votes2 = (poll.votes2 || 0) + 1;
+            }
+            return poll;
+        });
+    }
+
     function loadMessages(path) {
         if(chatListener) { db.ref(currentChatPath).off('child_added', chatListener); }
+        if(chatChangedListener) { db.ref(currentChatPath).off('child_changed', chatChangedListener); }
         
         messagesDiv.innerHTML = "";
         currentChatPath = path;
         
         chatListener = db.ref(currentChatPath).on('child_added', snapshot => {
             const data = snapshot.val();
+            const msgKey = snapshot.key;
             const msgDiv = document.createElement("div");
             msgDiv.className = "message " + (data.deviceId === deviceId ? "mine" : "");
+            msgDiv.id = "msg-" + msgKey;
 
-            // تشغيل الصوت للرسائل الواردة الجديدة (التي تم إرسالها خلال آخر 3 ثوانٍ فقط)
             if (data.deviceId !== deviceId && (Date.now() - data.timestamp) < 3000) {
                 msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
             }
@@ -480,6 +602,12 @@
                 </div>`;
             if (data.text) html += `<div class="msg-text">${data.text}</div>`;
             if (data.image) html += `<img src="${data.image}" class="msg-image">`;
+            
+            // إضافة التصويت إذا كان موجوداً
+            if (data.poll) {
+                html += generatePollHtml(data.poll, msgKey);
+            }
+
             html += `<div class="msg-time">${time}</div>`;
             
             msgDiv.innerHTML = html;
@@ -487,6 +615,20 @@
             
             if (isScrolledToBottom || data.deviceId === deviceId) {
                 setTimeout(() => { messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' }); }, 100);
+            }
+        });
+
+        // مستمع تحديثات التصويت لحظياً
+        chatChangedListener = db.ref(currentChatPath).on('child_changed', snapshot => {
+            const data = snapshot.val();
+            const msgKey = snapshot.key;
+            const msgDiv = document.getElementById("msg-" + msgKey);
+            
+            if (msgDiv && data.poll) {
+                const pollContainer = msgDiv.querySelector('.poll-container');
+                if (pollContainer) {
+                    pollContainer.outerHTML = generatePollHtml(data.poll, msgKey);
+                }
             }
         });
     }
@@ -500,8 +642,6 @@
         document.getElementById("admin-search-screen").classList.add("hidden");
         document.getElementById("chat-title").innerText = "شات FawakihAI العام";
         document.getElementById("back-to-general").classList.add("hidden");
-        
-        // إخفاء إشعار الشات الخاص عند العودة للعام
         document.getElementById("private-chat-banner").classList.add("hidden");
         
         loadMessages('messages_general');
@@ -554,7 +694,6 @@
         document.getElementById("chat-title").innerText = "تواصل خاص مع: " + adminName;
         document.getElementById("back-to-general").classList.remove("hidden");
         
-        // إظهار إشعار الشات الخاص وتعديل النص ليكون موجهاً للإدمن المحدد
         const banner = document.getElementById("private-chat-banner");
         banner.classList.remove("hidden");
         document.getElementById("banner-text").innerHTML = `هذا تواصل خاص ومباشر وسري بينك وبين <b>${adminName}</b>. إذا كان لديك أي مشكلة اطرحها هنا.`;
