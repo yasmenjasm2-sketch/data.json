@@ -123,9 +123,10 @@
 <div id="login-screen">
     <div class="login-box">
         <h2>لوحة الإدارة السرية</h2>
+        <input type="text" id="admin-user" placeholder="أدخل اليوزر (مثال: @admin)">
         <input type="password" id="admin-pass" placeholder="أدخل كلمة المرور" onkeypress="if(event.key === 'Enter') checkLogin()">
         <button onclick="checkLogin()">تسجيل الدخول</button>
-        <p id="login-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">كلمة المرور غير صحيحة أو حسابك غير مفعل بعد!</p>
+        <p id="login-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">اليوزر أو كلمة المرور غير صحيحة!</p>
     </div>
 </div>
 
@@ -209,7 +210,6 @@
 </div>
 
 <script>
-    const _p = atob("Z21haWwzNDU2Nw=="); 
     const firebaseConfig = {
         apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
         databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
@@ -232,78 +232,103 @@
     let currentChatUserId = null;
     let currentChatUserName = null;
 
-    const ADMIN_PASSWORD = _p;
-
-    function setPermanentLogin(pass) {
+    function setPermanentLogin(user, pass) {
+        localStorage.setItem("admin_auth_user", user);
         localStorage.setItem("admin_auth_pass", pass);
         let d = new Date();
         d.setTime(d.getTime() + (10*365*24*60*60*1000));
+        document.cookie = "admin_auth_user=" + user + ";expires=" + d.toUTCString() + ";path=/";
         document.cookie = "admin_auth_pass=" + pass + ";expires=" + d.toUTCString() + ";path=/";
     }
 
     function getPermanentLogin() {
         let pass = localStorage.getItem("admin_auth_pass");
-        if (pass) return pass;
+        let user = localStorage.getItem("admin_auth_user");
         
-        let name = "admin_auth_pass=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) == ' ') { c = c.substring(1); }
-            if (c.indexOf(name) == 0) { 
-                let cookiePass = c.substring(name.length, c.length);
-                localStorage.setItem("admin_auth_pass", cookiePass);
-                return cookiePass;
+        if (!pass || !user) {
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i].trim();
+                if (c.indexOf("admin_auth_pass=") == 0) pass = c.substring("admin_auth_pass=".length, c.length);
+                if (c.indexOf("admin_auth_user=") == 0) user = c.substring("admin_auth_user=".length, c.length);
             }
         }
+        if(user && pass) return {user, pass};
         return null;
     }
 
     window.onload = () => {
-        const savedPass = getPermanentLogin();
-        if (savedPass) {
-            // التحقق إذا كان الباسورد هو الماستر الأساسي أو باسورد لأحد الإداريين المعتمدين
-            if (savedPass === ADMIN_PASSWORD) {
-                grantAccess();
-            } else {
-                db.ref('admins_profiles').once('value', snap => {
-                    let isValid = false;
-                    snap.forEach(child => {
-                        if (child.val().adminPassword === savedPass) isValid = true;
-                    });
-                    if(isValid) grantAccess();
+        const creds = getPermanentLogin();
+        if (creds) {
+            db.ref('admins_profiles').once('value', snap => {
+                let isValid = false;
+                let profile = null;
+                snap.forEach(child => {
+                    let data = child.val();
+                    let dbUser = data.adminUsername ? data.adminUsername.replace('@', '') : "";
+                    let inputUser = creds.user.replace('@', '');
+                    
+                    if (dbUser === inputUser && data.adminPassword === creds.pass) {
+                        isValid = true;
+                        profile = data;
+                    }
                 });
-            }
+                
+                if(isValid) {
+                    setCurrentAdminData(profile);
+                    grantAccess();
+                }
+            });
         }
     };
 
     function checkLogin() {
-        const pass = document.getElementById("admin-pass").value;
-        if (pass === ADMIN_PASSWORD) {
-            setPermanentLogin(pass);
-            grantAccess();
-        } else {
-            // التحقق من قاعدة البيانات للإداريين الجدد المقبولين
-            db.ref('admins_profiles').once('value', snap => {
-                let isValid = false;
-                snap.forEach(child => {
-                    if (child.val().adminPassword === pass) isValid = true;
-                });
+        const user = document.getElementById("admin-user").value.trim();
+        const pass = document.getElementById("admin-pass").value.trim();
+        
+        if(!user || !pass) {
+            document.getElementById("login-error").style.display = "block";
+            return;
+        }
+
+        db.ref('admins_profiles').once('value', snap => {
+            let isValid = false;
+            let profile = null;
+            snap.forEach(child => {
+                let data = child.val();
+                let dbUser = data.adminUsername ? data.adminUsername.replace('@', '') : "";
+                let inputUser = user.replace('@', '');
                 
-                if(isValid) {
-                    setPermanentLogin(pass);
-                    grantAccess();
-                } else {
-                    document.getElementById("login-error").style.display = "block";
+                if (dbUser === inputUser && data.adminPassword === pass) {
+                    isValid = true;
+                    profile = data;
                 }
             });
-        }
+            
+            if(isValid) {
+                setCurrentAdminData(profile);
+                setPermanentLogin(user, pass);
+                grantAccess();
+            } else {
+                document.getElementById("login-error").style.display = "block";
+            }
+        });
+    }
+
+    function setCurrentAdminData(data) {
+        if(data.id) localStorage.setItem("super_admin_id", data.id);
+        if(data.deviceId) localStorage.setItem("chat_device_id", data.deviceId);
+        if(data.name) localStorage.setItem("super_admin_name", data.name);
+        if(data.image) localStorage.setItem("super_admin_img", data.image);
+        if(data.adminUsername) localStorage.setItem("admin_username", data.adminUsername);
     }
 
     function logout() {
         localStorage.removeItem("admin_auth_pass");
+        localStorage.removeItem("admin_auth_user");
         document.cookie = "admin_auth_pass=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "admin_auth_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         location.reload();
     }
 
@@ -315,14 +340,12 @@
         checkAndPromptAdminUsername(); 
     }
 
-    // --- نظام اليوزر والباسورد الإجباري للأدمن القديم ---
     function checkAndPromptAdminUsername() {
         const myAdminId = localStorage.getItem("super_admin_id");
         if (!myAdminId) return;
 
         db.ref('admins_profiles/' + myAdminId).once('value', snapshot => {
             const data = snapshot.val();
-            // نتحقق إذا كان يمتلك يوزر وكلمة مرور
             if (data && data.adminUsername && data.adminUsername.trim() !== "" && data.adminPassword) {
                 localStorage.setItem("admin_username", data.adminUsername);
                 document.getElementById("admin-username-display").style.display = "inline-block";
@@ -388,7 +411,6 @@
         };
         if (adminUser) profileData.adminUsername = adminUser;
 
-        // لا نقوم بمسح الباسورد إذا كان موجوداً
         db.ref('admins_profiles/' + myAdminId).update(profileData);
         db.ref('admins/' + myDeviceId).set({ role: 'admin' });
     }
@@ -422,7 +444,6 @@
             globalAdminProfiles = snap.val() || {};
         });
 
-        // مراقبة طلبات الانضمام للإدارة الجديدة
         db.ref('admin_requests').on('value', snap => {
             globalAdminRequests = snap.val() || {};
             renderAdminRequests();
@@ -447,7 +468,6 @@
         loadAllMessages();
     }
 
-    // --- عرض ومعالجة طلبات الإدارة الجديدة ---
     function renderAdminRequests() {
         const list = document.getElementById("admin-requests-list");
         list.innerHTML = "";
@@ -482,11 +502,9 @@
             const req = globalAdminRequests[reqId];
             const newAdminId = "ADM" + Math.floor(Math.random() * 90000 + 10000);
             
-            // إضافة كأدمن معتمد
             db.ref('admins/' + req.deviceId).set({ role: 'admin' });
             db.ref('admins_list/' + req.deviceId).set(newAdminId);
             
-            // إضافة البروفايل الخاص به (بما فيها اليوزر والباسورد الذي اختاره)
             db.ref('admins_profiles/' + newAdminId).set({
                 deviceId: req.deviceId,
                 id: newAdminId,
@@ -495,7 +513,6 @@
                 adminPassword: req.adminPassword,
                 image: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png"
             }).then(() => {
-                // مسح الطلب بعد القبول
                 db.ref('admin_requests/' + reqId).remove();
                 alert("تم قبول الأدمن بنجاح! يمكنه الآن تسجيل الدخول.");
             });
