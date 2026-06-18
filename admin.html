@@ -12,6 +12,12 @@
         * { box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #0b0714; color: #fff; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
+        /* شاشة حظر دخول متصفحات الويب العادية */
+        #web-block-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0714; z-index: 9999999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px; backdrop-filter: blur(15px); }
+        .block-box { background: #1a1525; padding: 40px; border-radius: 15px; border: 2px solid #e74c3c; box-shadow: 0 0 30px rgba(231, 76, 60, 0.4); max-width: 450px; width: 90%; }
+        .block-box h1 { color: #e74c3c; font-size: 28px; margin-bottom: 15px; }
+        .block-box p { color: #ccc; font-size: 16px; line-height: 1.6; }
+
         /* شاشة تسجيل الدخول */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #0b0714; z-index: 100; position: absolute; width: 100%; top: 0; }
         .login-box { background: #1a1525; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.2); width: 90%; max-width: 400px; }
@@ -120,6 +126,14 @@
 </head>
 <body>
 
+<div id="web-block-screen">
+    <div class="block-box">
+        <h1>⚠️ نظام الحماية المشددة</h1>
+        <p>مرحباً بك في نظام FawakihAI الأمني. تم رصد محاولة دخول من متصفح ويب عالي المخاطر أو غير مصرح به.</p>
+        <p style="margin-top: 15px; color: #f39c12; font-weight: bold;">يُسمح بالوصول فقط وحصرياً من خلال التطبيق الرسمي لـ WebView المشفر الخاص بالإدارة التابع للسيرفر المركزي.</p>
+    </div>
+</div>
+
 <div id="login-screen">
     <div class="login-box">
         <h2>لوحة الإدارة السرية</h2>
@@ -130,15 +144,14 @@
     </div>
 </div>
 
-<!-- نافذة إدخال اليوزر والباسورد الإجبارية للأدمنية القدامى -->
 <div id="forced-username-modal">
     <div class="forced-box">
         <h3>⚠️ تأمين حساب الإدارة</h3>
-        <p>مرحباً بك، يرجى إعداد "يوزر" و "كلمة مرور" لحسابك الإداري لضمان حمايته وتمييزه في قاعدة البيانات. هذا اليوزر سيكون مخفياً عن المستخدمين.</p>
-        <input type="text" id="forced-admin-username" placeholder="اليوزر (مثال: @boss)">
-        <input type="password" id="forced-admin-password" placeholder="كلمة مرور جديدة لحسابك" onkeypress="if(event.key === 'Enter') saveForcedAdminUsername()">
-        <button onclick="saveForcedAdminUsername()">حفظ البيانات ومتابعة الدخول</button>
-        <p id="forced-error" style="color: #f39c12; display: none; margin-top: 10px; font-size: 13px;">يرجى إدخال يوزر وكلمة مرور صحيحة (لا يقل عن 3 أحرف).</p>
+        <p>يرجى إعداد كلمة مرور جديدة لحسابك الإداري لضمان حمايته التامة. اليوزر الخاص بك ثابت ولا يمكن تعديله لحماية بيانات حسابك.</p>
+        <input type="text" id="forced-admin-username" placeholder="اليوزر" readonly style="background: #222; color: #888; cursor: not-allowed;">
+        <input type="password" id="forced-admin-password" placeholder="أدخل كلمة المرور الجديدة هنا" onkeypress="if(event.key === 'Enter') saveForcedAdminUsername()">
+        <button onclick="saveForcedAdminUsername()">حفظ كلمة المرور ومتابعة الدخول</button>
+        <p id="forced-error" style="color: #f39c12; display: none; margin-top: 10px; font-size: 13px;">يرجى إدخال كلمة مرور صحيحة وقوية (لا تقل عن 3 أحرف).</p>
     </div>
 </div>
 
@@ -158,7 +171,6 @@
     </header>
 
     <div class="container">
-        <!-- عمود طلبات الإدارة الجديدة -->
         <div class="panel">
             <div class="panel-header">📝 طلبات انضمام الإدارة</div>
             <div class="panel-content" id="admin-requests-list">
@@ -259,6 +271,23 @@
     }
 
     window.onload = () => {
+        // فحص جدار حماية الدخول من WebView ومنع متصفحات الويب المباشرة
+        const urlParams = new URLSearchParams(window.location.search);
+        let webviewDeviceId = urlParams.get('device_id');
+        
+        if (webviewDeviceId) {
+            localStorage.setItem('verified_webview_id', webviewDeviceId);
+        } else {
+            webviewDeviceId = localStorage.getItem('verified_webview_id');
+        }
+
+        // الحظر الفوري الصارم إذا كانت البصمة تدل على دخول ويب عادي أو غير معروف
+        if (!webviewDeviceId || webviewDeviceId.toLowerCase() === 'web' || webviewDeviceId.toLowerCase() === 'unknown' || webviewDeviceId.toLowerCase() === 'unkin') {
+            document.getElementById('web-block-screen').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            return; // قطع الاتصال ووقف معالجة الكود نهائياً
+        }
+
         const creds = getPermanentLogin();
         if (creds) {
             db.ref('admins_profiles').once('value', snap => {
@@ -346,37 +375,45 @@
 
         db.ref('admins_profiles/' + myAdminId).once('value', snapshot => {
             const data = snapshot.val();
-            if (data && data.adminUsername && data.adminUsername.trim() !== "" && data.adminPassword) {
+            if (data && data.adminUsername && data.adminUsername.trim() !== "") {
                 localStorage.setItem("admin_username", data.adminUsername);
                 document.getElementById("admin-username-display").style.display = "inline-block";
                 document.getElementById("admin-username-display").innerText = "@" + data.adminUsername;
+                
+                // جلب القيم الحالية وعرضها في نافذة التحقق للتحديث الاختياري أو المراجعة
+                document.getElementById("forced-admin-username").value = data.adminUsername;
+                
+                // إذا لم يكن لديه كلمة مرور مسجلة، يتم فرض ملء الشاشة لتأمين الحساب
+                if (!data.adminPassword) {
+                    document.getElementById("forced-username-modal").style.display = "flex";
+                }
             } else {
+                // إذا لم يكن الحساب مضبوطاً إطلاقاً
+                document.getElementById("forced-admin-username").value = "admin_temp";
                 document.getElementById("forced-username-modal").style.display = "flex";
             }
         });
     }
 
     function saveForcedAdminUsername() {
-        const userVal = document.getElementById("forced-admin-username").value.trim();
         const passVal = document.getElementById("forced-admin-password").value.trim();
         
-        if (userVal.length < 3 || passVal.length < 3) {
+        if (passVal.length < 3) {
             document.getElementById("forced-error").style.display = "block";
             return;
         }
 
         const myAdminId = localStorage.getItem("super_admin_id");
+        
+        // استخدام أمر التحديث الجزئي لضمان الإبقاء التام على الصورة والـ ID والاسم المسبقين بدون مساس
         db.ref('admins_profiles/' + myAdminId).update({
-            adminUsername: userVal,
             adminPassword: passVal
         }).then(() => {
-            localStorage.setItem("admin_username", userVal);
             document.getElementById("forced-username-modal").style.display = "none";
-            document.getElementById("admin-username-display").style.display = "inline-block";
-            document.getElementById("admin-username-display").innerText = "@" + userVal;
             syncAdminProfile(); 
+            alert("تم تحديث وحفظ كلمة المرور للأدمن بنجاح!");
         }).catch(err => {
-            alert("حدث خطأ أثناء حفظ البيانات.");
+            alert("حدث خطأ أثناء حفظ البيانات السحابية.");
         });
     }
 
@@ -391,7 +428,7 @@
         }
         
         if (!myDeviceId) {
-            myDeviceId = 'admin_panel_' + Math.random().toString(36).substr(2, 9);
+            myDeviceId = localStorage.getItem('verified_webview_id') || ('admin_panel_' + Math.random().toString(36).substr(2, 9));
             localStorage.setItem("chat_device_id", myDeviceId);
         }
 
@@ -399,7 +436,7 @@
 
         const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
         const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
-        const adminUser = localStorage.getItem("admin_username") || "";
+        const adminUser = localStorage.getItem("admin_username") || "admin";
 
         db.ref('admins_list/' + myDeviceId).set(myAdminId);
         
