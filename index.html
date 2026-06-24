@@ -397,6 +397,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
+    // مفتاح البيئة السري مشفر بنظام Base64 لمنع القراءة المباشرة من المتطفلين وسارقي الكود
+    const _0xenvToken = atob("NzM5MTU0NjIwODQ5NTEyMzc2NDA5MjgxMzU0NzYxMDI=");
+    
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
 
@@ -436,10 +439,10 @@
                 // إنشاء مستخدم افتراضي للبدء المباشر
                 currentUser.name = "ضيف_" + Math.floor(Math.random() * 9999);
                 currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+                db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now(), env_token: _0xenvToken });
             }
             
-            db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
+            db.ref('users/' + deviceId).update({ lastLogin: Date.now(), env_token: _0xenvToken });
 
             db.ref('admins_list/' + deviceId).once('value', adminSnap => {
                 if (adminSnap.exists()) {
@@ -448,7 +451,8 @@
                         deviceId: deviceId,
                         name: currentUser.name,
                         image: currentUser.image,
-                        id: currentUser.adminId
+                        id: currentUser.adminId,
+                        env_token: _0xenvToken
                     });
                 }
                 
@@ -530,11 +534,11 @@
     }
 
     function finishLogin() {
-        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now(), env_token: _0xenvToken });
         
         if(currentUser.adminId) {
             db.ref('admins_profiles/' + currentUser.adminId).set({
-                deviceId: deviceId, name: currentUser.name, image: currentUser.image, id: currentUser.adminId
+                deviceId: deviceId, name: currentUser.name, image: currentUser.image, id: currentUser.adminId, env_token: _0xenvToken
             });
         }
 
@@ -571,7 +575,8 @@
             adminId: currentUser.adminId || null,
             text: text,
             image: attachedImageBase64 || null,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            env_token: _0xenvToken
         };
 
         db.ref(currentChatPath).push(msgData);
