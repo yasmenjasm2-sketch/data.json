@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
@@ -91,8 +92,8 @@
         p.subtitle { color: #a0a0b0; margin-bottom: 50px; font-size: 15px; }
         
         .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
-        input[type="text"] { width: 100%; padding: 18px 20px; border: 2px solid rgba(187, 134, 252, 0.2); border-radius: 16px; background: rgba(0, 0, 0, 0.5); color: white; outline: none; transition: all 0.3s ease; font-size: 16px; }
-        input[type="text"]:focus { border-color: #bb86fc; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); }
+        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 18px 20px; border: 2px solid rgba(187, 134, 252, 0.2); border-radius: 16px; background: rgba(0, 0, 0, 0.5); color: white; outline: none; transition: all 0.3s ease; font-size: 16px; }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus { border-color: #bb86fc; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); }
         
         .custom-file-upload { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 18px; width: 100%; cursor: pointer; border-radius: 16px; border: 2px dashed rgba(187, 134, 252, 0.4); background: rgba(187, 134, 252, 0.03); color: #d6b4fc; transition: all 0.3s ease; font-weight: bold; }
         .custom-file-upload:hover, .custom-file-upload:active { background: rgba(187, 134, 252, 0.1); border-color: #bb86fc; }
@@ -321,6 +322,8 @@
         <p class="subtitle">مجتمع المستخدمين المحترفين</p>
         <div class="input-group">
             <input type="text" id="username" placeholder="اكتب اسمك (أقصى حد 24 حرف)" maxlength="24">
+            <input type="email" id="email" placeholder="البريد الإلكتروني (مثال: user@fawakih.com)" dir="ltr">
+            <input type="password" id="password" placeholder="كلمة المرور (6 أحرف على الأقل)" dir="ltr">
             <label class="custom-file-upload">
                 <input type="file" id="user-image" accept="image/*" onchange="updateFileName(this)">
                 <span id="file-label-text">📷 اختر صورة لحسابك</span>
@@ -429,38 +432,51 @@
     }
 
     function checkAutoLogin() {
-        // تم التعديل لتخطي شاشة تسجيل الدخول وبدء الشات مباشرة
-        db.ref('users/' + deviceId).once('value', snapshot => {
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                currentUser.name = userData.name;
-                currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-            } else {
-                // إنشاء مستخدم افتراضي للبدء المباشر
-                currentUser.name = "ضيف_" + Math.floor(Math.random() * 9999);
-                currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now(), env_token: _0xenvToken });
-            }
-            
-            db.ref('users/' + deviceId).update({ lastLogin: Date.now(), env_token: _0xenvToken });
+        // الفحص التلقائي لعملية تسجيل الدخول عبر Firebase Auth لتخطي مشكلة التعليق
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // المستخدم مسجل الدخول، نقوم بجلب بياناته
+                db.ref('users/' + deviceId).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        currentUser.name = userData.name;
+                        currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    } else {
+                        // إنشاء مستخدم افتراضي للبدء المباشر إذا لم تكن له بيانات سابقة
+                        currentUser.name = "ضيف_" + Math.floor(Math.random() * 9999);
+                        currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now(), env_token: _0xenvToken });
+                    }
+                    
+                    db.ref('users/' + deviceId).update({ lastLogin: Date.now(), env_token: _0xenvToken });
 
-            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
-                if (adminSnap.exists()) {
-                    currentUser.adminId = adminSnap.val();
-                    db.ref('admins_profiles/' + currentUser.adminId).set({
-                        deviceId: deviceId,
-                        name: currentUser.name,
-                        image: currentUser.image,
-                        id: currentUser.adminId,
-                        env_token: _0xenvToken
+                    db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                        if (adminSnap.exists()) {
+                            currentUser.adminId = adminSnap.val();
+                            db.ref('admins_profiles/' + currentUser.adminId).set({
+                                deviceId: deviceId,
+                                name: currentUser.name,
+                                image: currentUser.image,
+                                id: currentUser.adminId,
+                                env_token: _0xenvToken
+                            });
+                        }
+                        
+                        // إخفاء شاشة التحميل والدخول للشات فوراً
+                        document.getElementById("loading-screen").classList.add("hidden");
+                        document.getElementById("login-screen").classList.add("hidden");
+                        openGeneralChat();
                     });
-                }
-                
-                // إخفاء التحميل والدخول للشات فوراً
+                }).catch(err => {
+                    console.error(err);
+                    document.getElementById("loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.remove("hidden");
+                });
+            } else {
+                // إذا لم يكن مسجلاً، نخفي شاشة التحميل ونعرض شاشة التسجيل
                 document.getElementById("loading-screen").classList.add("hidden");
-                document.getElementById("login-screen").classList.add("hidden");
-                openGeneralChat();
-            });
+                document.getElementById("login-screen").classList.remove("hidden");
+            }
         });
     }
 
@@ -499,18 +515,49 @@
 
     function login() {
         const name = document.getElementById("username").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
         const fileInput = document.getElementById("user-image").files[0];
         const btn = document.getElementById("login-btn");
         
         if (!name) return showAlert("يرجى إدخال اسمك أولاً.");
+        if (!email) return showAlert("يرجى إدخال البريد الإلكتروني.");
+        if (!password || password.length < 6) return showAlert("يرجى إدخال كلمة مرور صحيحة (6 أحرف على الأقل).");
         
         btn.innerHTML = "جاري الدخول...";
         btn.disabled = true;
 
+        // مصادقة الدخول بالإيميل والباسورد أولاً لتخطي الحماية
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                proceedWithDatabaseLogin(name, fileInput, btn);
+            })
+            .catch((error) => {
+                // إذا كان الحساب غير موجود نقوم بإنشائه تلقائياً
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                    firebase.auth().createUserWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            proceedWithDatabaseLogin(name, fileInput, btn);
+                        })
+                        .catch((err) => {
+                            btn.innerHTML = "دخول الدردشة الآن";
+                            btn.disabled = false;
+                            showAlert("حدث خطأ أثناء التسجيل: " + err.message);
+                        });
+                } else {
+                    btn.innerHTML = "دخول الدردشة الآن";
+                    btn.disabled = false;
+                    showAlert("حدث خطأ: " + error.message);
+                }
+            });
+    }
+
+    function proceedWithDatabaseLogin(name, fileInput, btn) {
         db.ref('bans/' + deviceId).once('value', snapshot => {
             if (snapshot.exists()) {
                 btn.innerHTML = "دخول الدردشة الآن";
                 btn.disabled = false;
+                firebase.auth().signOut();
                 return showAlert("عذراً، هذا الجهاز محظور.");
             }
             
