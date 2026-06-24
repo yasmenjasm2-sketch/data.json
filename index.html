@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
     <style>
@@ -217,7 +217,7 @@
         .search-input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(187,134,252,0.3); background: rgba(0,0,0,0.4); color: white; font-size: 15px; outline: none; }
         .admins-list { flex: 1; overflow-y: auto; padding: 20px; }
         .admin-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
-        .admin-card:hover { border-color: #bb86fc; background: rgba(187, 134, 252, 0.1); }
+        .admin-card:hover { border-color: #bb86fc; background: rgba(187,134,252,0.1); }
         .admin-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .admin-card-info { flex: 1; }
         .admin-card-name { font-weight: bold; color: #fff; font-size: 16px; margin-bottom: 5px; }
@@ -426,42 +426,37 @@
     }
 
     function checkAutoLogin() {
-        // تم دمج نظام تسجيل الدخول المجهول ليتوافق مع قواعد حماية خوادم Firebase لحل تعليق الشاشة
-        firebase.auth().signInAnonymously().then(() => {
-            db.ref('users/' + deviceId).once('value', snapshot => {
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    currentUser.name = userData.name;
-                    currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                } else {
-                    // إنشاء مستخدم افتراضي للبدء المباشر
-                    currentUser.name = "ضيف_" + Math.floor(Math.random() * 9999);
-                    currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                    db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+        // تم التعديل لتخطي شاشة تسجيل الدخول وبدء الشات مباشرة
+        db.ref('users/' + deviceId).once('value', snapshot => {
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                currentUser.name = userData.name;
+                currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            } else {
+                // إنشاء مستخدم افتراضي للبدء المباشر
+                currentUser.name = "ضيف_" + Math.floor(Math.random() * 9999);
+                currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+            }
+            
+            db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
+
+            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                if (adminSnap.exists()) {
+                    currentUser.adminId = adminSnap.val();
+                    db.ref('admins_profiles/' + currentUser.adminId).set({
+                        deviceId: deviceId,
+                        name: currentUser.name,
+                        image: currentUser.image,
+                        id: currentUser.adminId
+                    });
                 }
                 
-                db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
-
-                db.ref('admins_list/' + deviceId).once('value', adminSnap => {
-                    if (adminSnap.exists()) {
-                        currentUser.adminId = adminSnap.val();
-                        db.ref('admins_profiles/' + currentUser.adminId).set({
-                            deviceId: deviceId,
-                            name: currentUser.name,
-                            image: currentUser.image,
-                            id: currentUser.adminId
-                        });
-                    }
-                    
-                    // إخفاء التحميل والدخول للشات فوراً وبشكل طبيعي
-                    document.getElementById("loading-screen").classList.add("hidden");
-                    document.getElementById("login-screen").classList.add("hidden");
-                    openGeneralChat();
-                });
+                // إخفاء التحميل والدخول للشات فوراً
+                document.getElementById("loading-screen").classList.add("hidden");
+                document.getElementById("login-screen").classList.add("hidden");
+                openGeneralChat();
             });
-        }).catch(error => {
-            console.error("Firebase Auth Error:", error);
-            showAlert("فشل الدخول لـ Firebase المجهول: " + error.message);
         });
     }
 
