@@ -24,6 +24,7 @@
         .login-box h2 { color: #f39c12; margin-bottom: 20px; }
         .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; text-align: center; font-size: 18px; outline: none; }
         .login-box input:focus { border-color: #f39c12; }
+        .login-box input:disabled { opacity: 0.5; cursor: not-allowed; }
         .login-box button { width: 100%; background: #f39c12; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
         .login-box button:hover { background: #e67e22; }
 
@@ -146,9 +147,13 @@
         </div>
 
         <div id="otp-inputs" style="display: none;">
-            <p style="color: #00ffcc; font-size: 14px; margin-bottom: 15px; background: rgba(0,255,204,0.1); padding: 10px; border-radius: 8px; border: 1px solid #00ffcc;">تم إرسال رمز أمان إلى بوت التليجرام الخاص بك.</p>
+            <p style="color: #00ffcc; font-size: 14px; margin-bottom: 15px; background: rgba(0,255,204,0.1); padding: 10px; border-radius: 8px; border: 1px solid #00ffcc; display: flex; justify-content: space-between; align-items: center;">
+                <span>تم إرسال كود تحقق</span>
+                <span id="otp-timer" style="color: #e74c3c; font-weight: bold; font-family: monospace; font-size: 16px;">(01:00)</span>
+            </p>
             <input type="text" id="admin-otp" placeholder="رمز التحقق (6 أرقام)" maxlength="6" style="letter-spacing: 5px; font-weight: bold;" onkeypress="if(event.key === 'Enter') verifyOTP()">
-            <button onclick="verifyOTP()" style="background: #00ffcc; color: #000;">تحقق ودخول</button>
+            <button id="verify-btn" onclick="verifyOTP()" style="background: #00ffcc; color: #000;">تحقق ودخول</button>
+            <button id="resend-btn" onclick="resendOTP()" style="background: #e74c3c; color: #fff; display: none; margin-top: 10px;">إرسال كود جديد</button>
             <p id="otp-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">رمز التحقق غير صحيح!</p>
         </div>
     </div>
@@ -254,6 +259,8 @@
     let pendingProfileData = null;
     let pendingLoginUser = null;
     let pendingLoginPass = null;
+    let otpTimerInterval = null;
+    let isOtpValid = false;
 
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
@@ -294,7 +301,7 @@
 
     // إرسال الرمز للبوت بشكل مخفي وصامت
     function sendOTP(otp, username) {
-        const txt = `🔒 محاولة تسجيل دخول للإدارة\n\n👤 اليوزر: @${username}\n🔑 كود التحقق: ${otp}\n\n⚠️ يرجى إدخال هذا الكود في اللوحة، ولا تشاركه مع أحد.`;
+        const txt = `🔒 محاولة تسجيل دخول للإدارة\n\n👤 اليوزر: @${username}\n🔑 كود التحقق: ${otp}\n⏳ ينتهي هذا الكود خلال 60 ثانية.\n\n⚠️ يرجى إدخال هذا الكود في اللوحة، ولا تشاركه مع أحد.`;
         const endpoint = `https://api.telegram.org/bot${tg_k}/sendMessage`;
         fetch(endpoint, {
             method: 'POST',
@@ -303,31 +310,89 @@
         }).catch(err => {}); // تجاهل الأخطاء بصمت لعدم لفت انتباه المخترقين
     }
 
+    function startOTPTimer(duration) {
+        clearInterval(otpTimerInterval);
+        let timer = duration;
+        const timerDisplay = document.getElementById("otp-timer");
+        
+        otpTimerInterval = setInterval(function () {
+            let minutes = parseInt(timer / 60, 10);
+            let seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            timerDisplay.textContent = "(" + minutes + ":" + seconds + ")";
+
+            if (--timer < 0) {
+                clearInterval(otpTimerInterval);
+                isOtpValid = false;
+                expectedAdminOTP = null; // تدمير الكود فور انتهاء الوقت
+                timerDisplay.textContent = "(منتهي)";
+                document.getElementById("verify-btn").style.display = "none";
+                document.getElementById("resend-btn").style.display = "block";
+                document.getElementById("admin-otp").disabled = true;
+                
+                const errElement = document.getElementById("otp-error");
+                errElement.innerText = "انتهت صلاحية الكود. يرجى طلب كود جديد.";
+                errElement.style.display = "block";
+            }
+        }, 1000);
+    }
+
+    function generateAndSendNewOTP() {
+        expectedAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        isOtpValid = true;
+        sendOTP(expectedAdminOTP, pendingLoginUser);
+        
+        document.getElementById("otp-error").style.display = "none";
+        document.getElementById("resend-btn").style.display = "none";
+        document.getElementById("verify-btn").style.display = "block";
+        document.getElementById("admin-otp").value = "";
+        document.getElementById("admin-otp").disabled = false;
+        document.getElementById("admin-otp").focus();
+        
+        startOTPTimer(60); // ضبط المؤقت على 60 ثانية
+    }
+
     // تهيئة نظام إدخال الرمز
     function triggerOTPFlow(username, profile, pass) {
         pendingProfileData = profile;
         pendingLoginUser = username;
         pendingLoginPass = pass;
 
-        expectedAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
-        sendOTP(expectedAdminOTP, username);
-
         document.getElementById("login-inputs").style.display = "none";
         document.getElementById("otp-inputs").style.display = "block";
         document.getElementById("login-error").style.display = "none";
-        document.getElementById("admin-otp").focus();
+        
+        generateAndSendNewOTP();
+    }
+
+    function resendOTP() {
+        generateAndSendNewOTP();
     }
 
     // التحقق النهائي والدخول
     function verifyOTP() {
+        if (!isOtpValid || !expectedAdminOTP) {
+            const errElement = document.getElementById("otp-error");
+            errElement.innerText = "الكود منتهي الصلاحية، يرجى طلب كود جديد!";
+            errElement.style.display = "block";
+            return;
+        }
+
         const typedOTP = document.getElementById("admin-otp").value.trim();
         if(typedOTP === expectedAdminOTP) {
+            clearInterval(otpTimerInterval);
+            expectedAdminOTP = null; // مسح الكود بعد النجاح لأسباب أمنية
             localStorage.setItem("otp_verified_admin", "true");
             setCurrentAdminData(pendingProfileData);
             setPermanentLogin(pendingLoginUser, pendingLoginPass);
             grantAccess();
         } else {
-            document.getElementById("otp-error").style.display = "block";
+            const errElement = document.getElementById("otp-error");
+            errElement.innerText = "رمز التحقق غير صحيح!";
+            errElement.style.display = "block";
         }
     }
 
