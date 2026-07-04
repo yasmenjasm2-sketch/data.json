@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- حماية إضافية (CSP) لمنع تنفيذ أي سكربتات خارجية غير مصرح بها باستثناء Firebase وخطوط Google -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss://*.firebasedatabase.app https://*.firebasedatabase.app https://*.googleapis.com;">
     <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -414,11 +416,19 @@
         if (window.Android && window.Android.getDeviceID) { deviceId = window.Android.getDeviceID(); }
     } catch (e) { console.log("Not running inside Android App"); }
 
-    // حظر الدخول نهائياً من متصفحات لويب بشكل غير قابل للتجاوز وقتل تشغيل السكريبت فوراً
-    if (!deviceId) {
+    // دالة للتحقق من أن المعرف هو Android ID حقيقي بصيغة دقيقة
+    // المعرف الصحيح يجب أن يتكون من 16 حرف أو رقم بنظام سداسي عشري، ولا يحتوي على كلمات مثل android
+    function isValidAndroidId(id) {
+        if (!id) return false;
+        const regex = /^[a-fA-F0-9]{16}$/;
+        return regex.test(id) && !String(id).toLowerCase().includes("android");
+    }
+
+    // حظر الدخول نهائياً من متصفحات الويب أو السكربتات الخارجية التي تحقن معرفات وهمية وقتل تشغيل السكريبت فوراً
+    if (!isValidAndroidId(deviceId)) {
         window.stop();
-        document.documentElement.innerHTML = '<head><meta charset="UTF-8"><title>دخول محظور</title></head><body style="display:flex; justify-content:center; align-items:center; height:100dvh; background:#0b0714; color:#ff4757; font-size:22px; font-weight:bold; text-align:center; padding:20px; font-family:\'Tajawal\', sans-serif; direction:rtl;">⚠️ عذراً، الدخول من متصفحات الويب محظور بشكل نهائي. يرجى استخدام التطبيق الرسمي فقط.</body>';
-        throw new Error("Web browser access denied.");
+        document.documentElement.innerHTML = '<head><meta charset="UTF-8"><title>دخول محظور</title></head><body style="display:flex; justify-content:center; align-items:center; height:100dvh; background:#0b0714; color:#ff4757; font-size:22px; font-weight:bold; text-align:center; padding:20px; font-family:\'Tajawal\', sans-serif; direction:rtl;">⚠️ عذراً، تم اكتشاف محاولة دخول غير شرعية أو استخدام معرف جهاز وهمي. يرجى استخدام التطبيق الرسمي فقط.</body>';
+        throw new Error("Unauthorized access detected. Invalid Device ID format.");
     }
 
     let currentUser = { name: "", image: "", adminId: null };
