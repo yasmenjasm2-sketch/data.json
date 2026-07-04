@@ -2,767 +2,787 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1A0B2E">
-    <meta name="format-detection" content="telephone=no">
-    
-    <title>تفعيل الاشتراك | نظام محمي</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
     <style>
-        :root {
-            --bg-color: #1A0B2E;       
-            --card-bg: #2D1B4D;        
-            --primary: #BB86FC;        
-            --primary-dark: #9368E6;   
-            --text-main: #FFFFFF;      
-            --text-muted: #E0AAFF;     
-            --input-bg: #1E0B36;       
-            --border-color: #4A306D;   
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
 
-        /* إخفاء شريط التمرير بالكامل ليبدو كتطبيق */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-
-        body { 
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-main); 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            min-height: 100vh; 
-            min-height: -webkit-fill-available;
-            margin: 0; 
-            padding: 20px 0;
-            -webkit-user-select: none;
-            user-select: none; 
-            -webkit-touch-callout: none; 
-            -webkit-user-drag: none; 
-            touch-action: manipulation; 
-            -webkit-tap-highlight-color: transparent;
-            overflow: hidden; /* لمنع السحب والنزول كالمواقع */
-            overscroll-behavior-y: none;
-        }
-
-        html {
-            height: -webkit-fill-available;
-            overscroll-behavior-y: none;
-        }
-
-        .app-container { 
-            background: var(--card-bg); 
-            padding: 40px 24px; 
-            border-radius: 28px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
-            width: 85%; 
-            max-width: 340px; 
-            text-align: center; 
-            margin-top: auto;
-            margin-bottom: auto;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .app-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 18px;
-            margin: 0 auto 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 10px 20px rgba(187, 134, 252, 0.2);
-        }
-
-        h2 { margin: 0 0 8px 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-        p.subtitle { font-size: 14px; color: var(--text-muted); margin: 0 0 30px 0; }
-        
-        .input-wrapper { position: relative; margin-bottom: 24px; width: 100%; }
-        
-        input { 
-            width: 100%; 
-            padding: 16px 85px 16px 16px; 
-            border-radius: 16px; 
-            border: 1.5px solid var(--border-color); 
-            background: var(--input-bg); 
-            color: var(--primary); 
+        * { 
             box-sizing: border-box; 
-            text-align: center; 
-            font-family: monospace; 
-            font-size: 18px; 
-            font-weight: 700; 
-            letter-spacing: 2px; 
-            transition: all 0.3s ease; 
+            font-family: 'Tajawal', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
         }
         
-        input:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            background: #2A1744; 
-        }
-        input::placeholder { color: #64748b; font-weight: normal; letter-spacing: normal; }
-        
-        .paste-btn { 
-            position: absolute; 
-            right: 8px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            background: rgba(255, 255, 255, 0.1); 
-            color: var(--text-main); 
-            border: none; 
-            border-radius: 10px; 
-            padding: 8px 12px; 
-            font-size: 13px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .paste-btn:active { background: var(--primary); color: #000; transform: translateY(-50%) scale(0.95); }
-
-        button.main-btn { 
-            width: 100%; 
-            padding: 16px; 
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
-            border: none; 
-            border-radius: 16px; 
+        /* منع النسخ نهائياً من الموقع */
+        body { 
+            background-color: #0b0714; 
             color: #ffffff; 
-            font-weight: 700; 
-            font-size: 16px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            margin-bottom: 12px;
-            box-shadow: 0 8px 16px rgba(187, 134, 252, 0.2);
-        }
-        button.main-btn:active { transform: scale(0.96); box-shadow: 0 4px 8px rgba(187, 134, 252, 0.2); }
-        
-        .action-buttons-container {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-            margin-top: 5px;
-        }
-        
-        .action-btn { 
-            flex: 1;
+            margin: 0; 
+            padding: 0; 
             display: flex; 
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            padding: 14px 10px; 
-            border-radius: 16px; 
-            font-weight: 600; 
-            font-size: 13.5px; 
-            text-decoration: none; 
-            transition: all 0.2s; 
-            box-sizing: border-box;
-            white-space: nowrap;
+            justify-content: center; 
+            align-items: center; 
+            height: 100dvh; 
+            overflow: hidden;
+            position: relative;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
-        .whatsapp-btn { 
-            background: rgba(37, 211, 102, 0.1); 
-            color: #25D366; 
-        }
-        .whatsapp-btn:active { background: rgba(37, 211, 102, 0.2); transform: scale(0.96); }
-
-        .paypal-btn {
-            background: rgba(56, 189, 248, 0.1); 
-            color: #38bdf8;
-        }
-        .paypal-btn:active { background: rgba(56, 189, 248, 0.2); transform: scale(0.96); }
-        
-        .error { 
-            color: #ef4444; 
-            font-size: 13px; 
-            margin-top: 16px; 
-            display: none; 
-            padding: 12px; 
-            border-radius: 12px; 
-            background: rgba(239, 68, 68, 0.1); 
-            font-weight: 600; 
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
-        }
-        
-        .device-info { 
-            font-size: 11px; 
-            color: var(--text-muted); 
-            margin-top: 24px; 
-            font-family: monospace; 
-            opacity: 0.7;
-            transition: color 0.3s ease;
+        /* السماح بالكتابة وتحديد النص داخل حقول الإدخال فقط */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
-        .admin-panel {
-            display: none; 
-            width: 90%;
-            max-width: 600px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 40px;
-            text-align: right;
+        .bg-orb {
             position: absolute;
-            bottom: 20px;
+            border-radius: 50%;
+            filter: blur(90px);
+            z-index: 0;
+            animation: float 12s infinite ease-in-out alternate;
+        }
+        .orb-1 { width: 350px; height: 350px; background: rgba(138, 43, 226, 0.3); top: -50px; left: -100px; }
+        .orb-2 { width: 450px; height: 450px; background: rgba(74, 0, 224, 0.2); bottom: -150px; right: -100px; animation-duration: 15s; }
+        .orb-3 { width: 250px; height: 250px; background: rgba(255, 0, 128, 0.15); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-duration: 10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 40px) scale(1.1); }
         }
 
-        .admin-panel h3 {
-            color: #ef4444;
-            margin-top: 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
+        #app { 
+            width: 100%; 
+            max-width: 600px; 
+            height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            z-index: 1;
+            background: rgba(20, 15, 30, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.6);
         }
 
-        .refund-card {
-            background: var(--input-bg);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-size: 14px;
-            border-right: 4px solid #ef4444;
-        }
-
-        .refund-card strong {
-            color: var(--primary);
+        .hidden { display: none !important; }
+        
+        #login-screen { 
+            padding: 40px 25px; 
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            height: 100%; 
         }
         
-        @keyframes slideUp {
-            0% { transform: translateY(30px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
+        h1 { color: #d6b4fc; font-size: 36px; margin-bottom: 5px; text-shadow: 0 0 20px rgba(187, 134, 252, 0.6); }
+        p.subtitle { color: #a0a0b0; margin-bottom: 50px; font-size: 15px; }
+        
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+        input[type="text"] { width: 100%; padding: 18px 20px; border: 2px solid rgba(187, 134, 252, 0.2); border-radius: 16px; background: rgba(0, 0, 0, 0.5); color: white; outline: none; transition: all 0.3s ease; font-size: 16px; }
+        input[type="text"]:focus { border-color: #bb86fc; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); }
+        
+        .custom-file-upload { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 18px; width: 100%; cursor: pointer; border-radius: 16px; border: 2px dashed rgba(187, 134, 252, 0.4); background: rgba(187, 134, 252, 0.03); color: #d6b4fc; transition: all 0.3s ease; font-weight: bold; }
+        .custom-file-upload:hover, .custom-file-upload:active { background: rgba(187, 134, 252, 0.1); border-color: #bb86fc; }
+        input[type="file"] { display: none; }
+
+        button.btn-primary { width: 100%; background: linear-gradient(90deg, #8e2de2, #4a00e0); color: #fff; border: none; padding: 18px; border-radius: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 18px; box-shadow: 0 8px 20px rgba(74, 0, 224, 0.4); margin-top: 10px; }
+        button.btn-primary:hover, button.btn-primary:active { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(142, 45, 226, 0.6); }
+        button.btn-primary:disabled { background: #555; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        #chat-screen { display: flex; flex-direction: column; height: 100%; width: 100%; }
+        
+        #header { background: rgba(20, 15, 30, 0.85); padding: 15px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(15px); z-index: 10; }
+        #header h3 { margin: 0; color: #fff; font-weight: bold; letter-spacing: 1px; font-size: 16px; text-shadow: 0 0 10px rgba(187,134,252,0.4); }
+        
+        .header-btn { background: rgba(187, 134, 252, 0.2); border: 1px solid rgba(187, 134, 252, 0.5); color: #d6b4fc; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .header-btn:hover { background: #bb86fc; color: #000; }
+
+        #private-chat-banner {
+            background: linear-gradient(90deg, rgba(74, 0, 224, 0.15), rgba(138, 43, 226, 0.15));
+            border-bottom: 1px solid rgba(187, 134, 252, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #f0e6ff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 9;
+            animation: slideDownChat 0.4s ease;
+        }
+        #private-chat-banner .icon {
+            font-size: 16px;
+            animation: pulseIcon 2s infinite;
+        }
+        @keyframes slideDownChat { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulseIcon { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+
+        .messages-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .messages-container::-webkit-scrollbar { width: 5px; }
+        .messages-container::-webkit-scrollbar-thumb { background: rgba(187, 134, 252, 0.4); border-radius: 10px; }
+
+        .message { background: rgba(45, 40, 60, 0.9); padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 85%; align-self: flex-start; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); animation: fadeIn 0.3s ease; }
+        .message.mine { background: linear-gradient(135deg, #8e2de2, #4a00e0); color: #fff; align-self: flex-end; border-radius: 20px 20px 4px 20px; border: none; box-shadow: 0 4px 15px rgba(142, 45, 226, 0.3); }
+
+        /* ستايل إعلان البوت المتميز */
+        .message.bot-msg {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(187, 134, 252, 0.1));
+            border: 1px solid rgba(0, 210, 255, 0.5);
+            box-shadow: 0 10px 25px rgba(0, 210, 255, 0.2), inset 0 0 15px rgba(187, 134, 252, 0.1);
+            max-width: 95%;
+            align-self: center;
+            border-radius: 16px;
+            padding: 15px 20px;
+        }
+        .message.bot-msg .msg-header {
+            justify-content: center;
+            border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .message.bot-msg .msg-name {
+            color: #00d2ff;
+            font-size: 15px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
+        }
+        .message.bot-msg .msg-text {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        .bot-badge {
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 8px;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            display: inline-flex;
+            align-items: center;
         }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .spinner {
-            width: 40px; 
-            height: 40px; 
-            border: 4px solid rgba(187, 134, 252, 0.2); 
-            border-top: 4px solid var(--primary); 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-            margin: 20px auto;
+        .msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
+        .msg-avatar:hover { transform: scale(1.1); border-color: #bb86fc; }
+        .msg-name { font-weight: bold; font-size: 13px; color: #bb86fc; }
+        .mine .msg-name { color: #f0e6ff; }
+        .msg-text { font-size: 15px; line-height: 1.5; }
+        .msg-time { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: left; }
+        .msg-image { max-width: 100%; border-radius: 12px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .admin-badge { background: linear-gradient(90deg, #ffd700, #ffaa00); color: #000; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: bold; margin-right: 5px; box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); display: inline-flex; align-items: center; gap: 3px; }
+        
+        #input-area { background: rgba(20, 15, 30, 0.9); padding: 12px 15px; display: flex; gap: 12px; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        #input-container { flex: 1; position: relative; display: flex; align-items: center; }
+        #input-container input[type="text"] { width: 100%; margin: 0; padding: 14px 20px; padding-right: 45px; border: none; border-radius: 25px; background: rgba(255, 255, 255, 0.08); color: white; font-size: 15px; transition: 0.3s; }
+        #input-container input[type="text"]:focus { background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+        .file-btn { position: absolute; right: 8px; background: transparent; border-radius: 50%; cursor: pointer; color: #bb86fc; display: flex; justify-content: center; align-items: center; width: 35px; height: 35px; font-size: 22px; transition: 0.3s; }
+        .file-btn:hover { background: rgba(187, 134, 252, 0.2); }
+        .send-btn { background: linear-gradient(45deg, #8e2de2, #4a00e0); border: none; border-radius: 50%; width: 48px; height: 48px; min-width: 48px; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(142, 45, 226, 0.4); transition: all 0.3s ease; }
+        .send-btn:hover, .send-btn:active { transform: scale(1.08); box-shadow: 0 6px 20px rgba(142, 45, 226, 0.6); }
+        .send-btn svg { width: 22px; height: 22px; fill: currentColor; transform: rotate(180deg); margin-right: 3px; }
+
+        #attachment-preview { position: absolute; bottom: 80px; right: 20px; background: rgba(20, 15, 30, 0.95); padding: 8px; border-radius: 12px; display: none; border: 1px solid #bb86fc; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 20; }
+        #attachment-preview img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .close-preview { position: absolute; top: -10px; left: -10px; background: #ff4757; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; font-size: 12px; cursor: pointer; font-weight: bold; }
+
+        #loading-screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #0b0714; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: #bb86fc; font-size: 18px; font-weight: bold; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(187, 134, 252, 0.3); border-top-color: #bb86fc; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #admin-search-screen { display: flex; flex-direction: column; height: 100%; width: 100%; background: rgba(20, 15, 30, 0.95); backdrop-filter: blur(20px); position: absolute; top: 0; left: 0; z-index: 30; }
+        .search-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 15px; }
+        .back-btn { background: transparent; border: none; color: #bb86fc; font-size: 24px; cursor: pointer; }
+        .search-input { flex: 1; padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(187,134,252,0.3); background: rgba(0,0,0,0.4); color: white; font-size: 15px; outline: none; }
+        .admins-list { flex: 1; overflow-y: auto; padding: 20px; }
+        .admin-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .admin-card:hover { border-color: #bb86fc; background: rgba(187,134,252,0.1); }
+        .admin-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .admin-card-info { flex: 1; }
+        .admin-card-name { font-weight: bold; color: #fff; font-size: 16px; margin-bottom: 5px; }
+        .admin-card-id { color: #a0a0b0; font-size: 13px; }
+
+        .custom-alert { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(20, 15, 30, 0.95); border: 1px solid #bb86fc; color: #fff; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; text-align: center; font-weight: bold; display: none; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+
+        /* ستايل التصويت الاحترافي والجميل */
+        .poll-container {
+            background: rgba(10, 8, 20, 0.8);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 15px;
+            width: 100%;
+            min-width: 250px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.05);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .poll-title {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            text-align: center;
+            background: linear-gradient(90deg, #00d2ff, #bb86fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+            line-height: 1.4;
+        }
+        .poll-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .poll-option:last-child {
+            margin-bottom: 0;
+        }
+        .poll-option:hover {
+            border-color: #00d2ff;
+            background: rgba(0, 210, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.15);
+        }
+        .poll-option.voted {
+            border-color: #bb86fc;
+            background: rgba(187, 134, 252, 0.15);
+            box-shadow: 0 0 15px rgba(187, 134, 252, 0.2);
+        }
+        .poll-bar {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0, 210, 255, 0.25), rgba(187, 134, 252, 0.25));
+            z-index: 0;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+        .poll-text {
+            position: relative;
+            z-index: 1;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .poll-percent {
+            position: relative;
+            z-index: 1;
+            font-size: 14px;
+            font-weight: bold;
+            color: #00d2ff;
+            text-shadow: 0 0 5px rgba(0, 210, 255, 0.5);
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container" id="mainCard">
-    <div class="app-icon">🛡️</div>
-    <h2>تفعيل الاشتراك</h2>
-    <p class="subtitle">يرجى إدخال أو لصق كود التفعيل الخاص بك</p>
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+<div class="bg-orb orb-3"></div>
+
+<div id="app">
     
-    <div class="input-wrapper">
-        <input type="text" id="subCode" placeholder="أدخل الكود هنا..." autocomplete="off" autocorrect="off" spellcheck="false">
-        <button class="paste-btn" onclick="pasteCode()">
-            <span>لصق</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        </button>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p>جاري التحقق من الهوية...</p>
     </div>
 
-    <button class="main-btn" onclick="login()">دخول آمن</button>
-    
-    <div class="action-buttons-container">
-        <a href="#" onclick="window.location.href = 'payment.html?device_id=' + encodeURIComponent(appDeviceId); return false;" class="action-btn paypal-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/></svg>
-            شراء اشتراك
-        </a>
+    <div id="login-screen" class="hidden">
+        <h1>FawakihAI Chat</h1>
+        <p class="subtitle">مجتمع المستخدمين المحترفين</p>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="اكتب اسمك (أقصى حد 24 حرف)" maxlength="24">
+            <label class="custom-file-upload">
+                <input type="file" id="user-image" accept="image/*" onchange="updateFileName(this)">
+                <span id="file-label-text">📷 اختر صورة لحسابك</span>
+            </label>
+            <button class="btn-primary" onclick="login()" id="login-btn">دخول الدردشة الآن</button>
+        </div>
+    </div>
+
+    <div id="chat-screen" class="hidden">
+        <div id="header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="back-to-general" class="back-btn hidden" onclick="openGeneralChat()">❮</button>
+                <h3 id="chat-title">شات FawakihAI العام</h3>
+            </div>
+            <button class="header-btn" onclick="openAdminSearch()">تواصل مع الإدارة 👑</button>
+        </div>
+
+        <div id="private-chat-banner" class="hidden">
+            <span class="icon">🛡️</span>
+            <span id="banner-text">هذا تواصل خاص ومباشر بينك وبين الإدارة. نحن هنا لمساعدتك.</span>
+        </div>
         
-        <a href="https://wsend.co/905424678123" class="action-btn whatsapp-btn" target="_blank">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            الدعم الفني
-        </a>
-    </div>
-    
-    <div id="error" class="error">الكود غير صحيح، منتهي، أو محظور!</div>
-    
-    <div class="device-info" id="deviceDisplay">جاري جلب بصمة الهاتف...</div>
-</div>
+        <div id="messages" class="messages-container"></div>
+        
+        <div id="attachment-preview">
+            <div class="close-preview" onclick="removeAttachment()">✕</div>
+            <img id="preview-img" src="" alt="preview">
+        </div>
 
-<div class="admin-panel" id="adminPanel">
-    <h3>بيانات الاسترداد المستلمة (سري)</h3>
-    <div id="refundsList">
-        <div style="color: var(--text-muted); text-align: center;">في انتظار الطلبات...</div>
+        <div id="input-area">
+            <div id="input-container">
+                <input type="text" id="msg-input" placeholder="اكتب رسالتك هنا..." onkeypress="handleKeyPress(event)">
+                <label class="file-btn" title="إرفاق صورة">
+                    +
+                    <input type="file" id="msg-image" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
+                </label>
+            </div>
+            <button class="send-btn" onclick="sendMessage()" title="إرسال">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
     </div>
+
+    <div id="admin-search-screen" class="hidden">
+        <div class="search-header">
+            <button class="back-btn" onclick="closeAdminSearch()">❮</button>
+            <input type="text" id="search-input" class="search-input" placeholder="ابحث بالاسم أو الآيدي (مثال: 1111)..." onkeyup="filterAdmins()">
+        </div>
+        <div id="admins-list" class="admins-list">
+        </div>
+    </div>
+
+    <div id="custom-alert" class="custom-alert"></div>
+
 </div>
 
 <script>
-    // توزيع المفتاح السري بشكل مبعثر لمنع الاستخراج الاحترافي
-    const _k = {}; 
-    _k.p1 = 'YFVr';
-    
-    // ==========================================
-    // إعداد وتهيئة الـ Firebase بناءً على بياناتك المستلمة
-    // ==========================================
-    _k.p2 = '8qOG';
-    
+    // الجافاسكربت لمنع كليك يمين والنسخ
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('copy', event => {
+        if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+            event.preventDefault();
+        }
+    });
+
+    // إعدادات Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyBWJJZHzUhbrl-dh1wowh-u0n0T9i5n0uU",
-        databaseURL: "https://hamzazed34567-default-rtdb.firebaseio.com",
-        projectId: "hamzazed34567",
-        storageBucket: "hamzazed34567.firebasestorage.app"
+        apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
+        databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "chatapi-1ca71",
+        storageBucket: "chatapi-1ca71.firebasestorage.app",
+        appId: "1:1057989927219:android:b3e3b7304228b526b21e46"
     };
-    
-    _k.p3 = 'awY4';
-    _k.p4 = 'r3sv';
-    
-    // تهيئة المتغيرات الأمنية
-    _k.p5 = 'KQ6D';
-    _k.p6 = 'Ztjz';
-    
-    _k.p7 = '8ozC';
-    _k.p8 = 'c0kY';
-    
-    // بدء تهيئة الفايربيز للاتصال الآمن
-    if (!firebase.apps.length) {
-        _k.p9 = 'FoL4';
-        _k.p10 = 'BKXy';
-        
-        // تجميع المفتاح المشفر وإرساله كأداة مصادقة لتخطي الحماية المضافة
-        let secureKey = _k.p1 + _k.p2 + _k.p3 + _k.p4 + _k.p5 + _k.p6 + _k.p7 + _k.p8 + _k.p9 + _k.p10;
-        // [تم الإصلاح]: دمج المتغير بداخل رابط قاعدة البيانات يكسر الاتصال بـ WebSockets للـ JS SDK بالكامل
-        // تم تعطيل هذا السطر فقط ليعمل النظام بلا أخطاء
-        // firebaseConfig.databaseURL = firebaseConfig.databaseURL + "?auth=" + secureKey;
-        
-        firebase.initializeApp(firebaseConfig);
-    }
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    function sanitizeFirebaseKey(id) {
-        if (!id) return "UNKNOWN";
-        return id.replace(/[.#$\[\]]/g, '_');
-    }
-
-    // [تعديل هام لإصلاح الحظر]: تم إرجاع Promise مع انتظار بسيط لضمان وصول الأمر للفايربيز قبل إغلاق الواجهة
-    function syncUserToAndroid(id, expiryTimeMs, status) {
-        if (id && id !== "UNKNOWN") {
-            let isBanned = (status === 2);
-            // [تم الإصلاح]: تمرير ID عبر دالة sanitizeFirebaseKey لمنع الانهيار بسبب الرموز الممنوعة
-            let updateTask = db.ref("Users/" + sanitizeFirebaseKey(id)).set({
-                expiry_time: expiryTimeMs,
-                is_banned: isBanned,
-                status: status,
-                device_id: id,
-                last_updated: new Date().getTime()
-            }).catch(e => console.error(e));
-            
-            // ننتظر حتى تصل البيانات للسيرفر أو يمر 600ms لتفادي تعليق التطبيق إذا لم يتوفر اتصال
-            return Promise.race([updateTask, new Promise(resolve => setTimeout(resolve, 600))]);
-        }
-        return Promise.resolve();
-    }
-
-    // ==========================================
-    // جدار الحماية ونظام حماية الأكواد ومنع كشف الهوية والتلاعب
-    // ==========================================
-    (function() {
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        
-        window.addEventListener('keydown', function(e) {
-            if (
-                e.keyCode === 123 || 
-                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
-                (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) ||
-                (e.metaKey && e.altKey && e.keyCode === 73)
-            ) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
-
-        document.addEventListener('selectstart', e => {
-            if(e.target.tagName !== 'INPUT') e.preventDefault();
-        });
-        window.addEventListener('dragstart', e => e.preventDefault());
-        window.addEventListener('drop', e => e.preventDefault());
-
-        const silentNoop = function() {};
-        console.log = silentNoop;
-        console.dir = silentNoop;
-        console.clear = silentNoop;
-        console.warn = silentNoop;
-        console.error = silentNoop;
-
-        setInterval(function() {
-            const t0 = performance.now();
-            debugger; 
-            const t1 = performance.now();
-            if (t1 - t0 > 100) {
-                document.body.innerHTML = "";
-                window.location.href = "about:blank";
-            }
-        }, 400);
-    })();
-
-    const REQUIRED_APP_VERSION ="4.5.8"; 
-    const DEVELOPER_LINK = "https://yasmenjasm2-sketch.github.io/fawakihAI2/";
-    const urlParams = new URLSearchParams(window.location.search);
     
-    let rawDeviceId = urlParams.get('device_id');
-    const appDeviceId = (rawDeviceId && rawDeviceId.trim() !== "") ? rawDeviceId.trim() : "UNKNOWN";
-    const isBgCheck = urlParams.get('bg_check') === 'true'; 
+    const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+    msgNotificationSound.volume = 0.5;
 
-    const isAdmin = urlParams.get('admin') === 'remas';
-    if (isAdmin) {
-        document.getElementById('adminPanel').style.display = 'block';
-        
-        const r_id = urlParams.get('id');
-        const r_code = urlParams.get('code');
-        const r_name = urlParams.get('name');
-        const r_phone = urlParams.get('phone');
-        const r_reason = urlParams.get('reason');
+    let deviceId = null;
+    try {
+        if (window.Android && window.Android.getDeviceID) { deviceId = window.Android.getDeviceID(); }
+    } catch (e) { console.log("Not running inside Android App"); }
 
-        if (r_name && r_phone) {
-            document.getElementById('refundsList').innerHTML = `
-                <div class="refund-card">
-                    <strong>الاسم:</strong> ${decodeURIComponent(r_name)}<br>
-                    <strong>رقم الهاتف:</strong> <a href="https://wa.me/${r_phone}" style="color:#25D366">${decodeURIComponent(r_phone)}</a><br>
-                    <strong>الكود:</strong> ${decodeURIComponent(r_code)}<br>
-                    <strong>الـ ID:</strong> ${r_id}<br>
-                    <strong>السبب:</strong> ${decodeURIComponent(r_reason)}
-                </div>
-            `;
-        }
+    // حظر الدخول نهائياً من متصفحات لويب بشكل غير قابل للتجاوز وقتل تشغيل السكريبت فوراً
+    if (!deviceId) {
+        window.stop();
+        document.documentElement.innerHTML = '<head><meta charset="UTF-8"><title>دخول محظور</title></head><body style="display:flex; justify-content:center; align-items:center; height:100dvh; background:#0b0714; color:#ff4757; font-size:22px; font-weight:bold; text-align:center; padding:20px; font-family:\'Tajawal\', sans-serif; direction:rtl;">⚠️ عذراً، الدخول من متصفحات الويب محظور بشكل نهائي. يرجى استخدام التطبيق الرسمي فقط.</body>';
+        throw new Error("Web browser access denied.");
     }
 
-    if (!isBgCheck) {
-        const deviceDisplay = document.getElementById('deviceDisplay');
-        if (appDeviceId !== "UNKNOWN") {
-            deviceDisplay.innerHTML = `<div onclick="copyDeviceId('${appDeviceId}')" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.background='transparent'" title="انقر لنسخ المعرف"><span>DEVICE ID: ${appDeviceId}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></div>`;
-        } else {
-            deviceDisplay.innerText = "تعذر جلب البصمة - يرجى التأكد من صلاحيات التطبيق";
-            deviceDisplay.style.color = "#ef4444";
-        }
+    let currentUser = { name: "", image: "", adminId: null };
+    let attachedImageBase64 = null;
+    let currentChatPath = 'messages_general'; 
+    let chatListener = null; 
+    let chatChangedListener = null;
+
+    function showAlert(msg) {
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.innerText = msg;
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
     }
 
-    // المصفوفة اليدوية التي تقوم بتعديلها وتحديث الملف من خلالها
-    const vipDevices = {
-        "ae949adad83adb0d": { status: 1, expireAt: "2026-06-29T17:04:10" },
-        "6357ef9846e96b17": { status: 1, expireAt: "2026-08-20T16:54:35" },
-        "4b1b404208b8efdf": { status: 1, expireAt: "2026-06-20T23:13:40" },
-        "3a9b5294e99f3adb": { status: 1, expireAt: "2026-06-27T03:17:36" },
-        "194ef9596b123ec8": { status: 1, expireAt: "2026-07-23T18:31:06" },
-        "34fd9bf199d32e2b": { status: 1, expireAt: "2026-07-27T19:16:42" },
-        
-    };
-
-    const subscriptionCodes = {
-        "opssyria": { duration: "30days", status: 2 },
-        "MONTH-HACK": { duration: "30days", status: 2 }, 
-        "SUB-MONTH": { duration: "30days", status: 2 }, 
-        "hamzaxxx123": { duration: "2day", status: 2 }, 
-        "hamzahamza": { duration: "1day", status: 2 }, 
-        "SU7B-HOUR": { duration: "1hour", status: 2 }, 
-        "TEST-20SEC": { duration: "20seconds", status: 2 }, 
-        "VIP-FUTURE": { duration: "lifetime", status: 2 },
-    };
-
-    Object.freeze(subscriptionCodes);
-
-    function getDurationMs(durationStr) {
-        let ms = 0; let match = durationStr.match(/(\d+)/); let val = match ? parseInt(match[0]) : 0;
-        if (durationStr.includes("day")) ms = val * 24 * 60 * 60 * 1000;
-        else if (durationStr.includes("hour")) ms = val * 60 * 60 * 1000;
-        else if (durationStr.includes("sec")) ms = val * 1000;
-        else if (durationStr.includes("lifetime")) ms = 100 * 365 * 24 * 60 * 60 * 1000;
-        return ms;
-    }
-
-    window.onload = function() {
-        const currentTime = new Date().toISOString(); 
-
-        db.ref("active_sessions").once("value").then((snapshot) => {
-            snapshot.forEach((child) => {
-                let data = child.val();
-                if (data && data.type === "Manual_VIP") {
-                    if (!vipDevices[data.deviceId]) {
-                        child.ref.remove();
-                        db.ref("Users/" + sanitizeFirebaseKey(data.deviceId)).remove();
-                    }
-                }
-            });
-
-            for (let id in vipDevices) {
-                let safeKey = sanitizeFirebaseKey(id);
-                let expiryMs = new Date(vipDevices[id].expireAt).getTime(); 
+    function checkAutoLogin() {
+        // تم التعديل لمنع إنشاء حسابات وهمية وإجبار المستخدم الجديد على التسجيل
+        db.ref('users/' + deviceId).once('value', snapshot => {
+            if (snapshot.exists()) {
+                // المستخدم مسجل مسبقاً، الدخول مباشرة
+                const userData = snapshot.val();
+                currentUser.name = userData.name;
+                currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
                 
-                db.ref("active_sessions/" + safeKey).set({
-                    deviceId: id, 
-                    status: vipDevices[id].status,
-                    expireAt: vipDevices[id].expireAt,
-                    lastUpdated: currentTime, 
-                    type: "Manual_VIP"
-                });
+                db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
 
-                syncUserToAndroid(id, expiryMs, vipDevices[id].status);
-            }
-        }).catch(e => console.error(e));
-
-        setTimeout(() => {
-            if (appDeviceId !== "UNKNOWN") {
-                if (vipDevices[appDeviceId]) {
-                    let vData = vipDevices[appDeviceId];
-                    let finalExpiry = new Date(vData.expireAt).getTime();
-                    
-                    if (vData.status === 2) {
-                        syncUserToAndroid(appDeviceId, finalExpiry, 2).then(() => {
-                            window.location.href = "app://ban_user?link=" + encodeURIComponent(DEVELOPER_LINK);
+                db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                    if (adminSnap.exists()) {
+                        currentUser.adminId = adminSnap.val();
+                        db.ref('admins_profiles/' + currentUser.adminId).set({
+                            deviceId: deviceId,
+                            name: currentUser.name,
+                            image: currentUser.image,
+                            id: currentUser.adminId
                         });
-                        return;
                     }
                     
-                    if (finalExpiry > Date.now()) {
-                        syncUserToAndroid(appDeviceId, finalExpiry, vData.status).then(() => {
-                            window.location.href = `app://success_auth?code=AUTO&duration=auto&expiry_time=${finalExpiry}&silent=${isBgCheck}`;
-                        });
-                        
-                        if (!isBgCheck && !isAdmin) {
-                            document.getElementById('mainCard').innerHTML = `
-                                <div class="app-icon" style="background: transparent; box-shadow: none; font-size:40px;">🔄</div>
-                                <h2 style='color:var(--text-main);'>مرحباً بك مجدداً</h2>
-                                <p style='color:var(--text-muted);font-size:14px;'>تم التحقق الآمن عبر السيرفر</p>
-                                <div class="spinner"></div>
-                            `;
-                        }
-                        return;
-                    } else {
-                        if (isBgCheck) window.location.href = "app://logout_user";
-                        else {
-                            let errorDiv = document.getElementById('error');
-                            errorDiv.innerText = "انتهى اشتراكك! يرجى إدخال كود جديد.";
-                            errorDiv.style.display = 'block';
-                        }
-                        return;
-                    }
-                }
-
-                let currentSafeKey = sanitizeFirebaseKey(appDeviceId);
-                db.ref("active_sessions/" + currentSafeKey).once("value").then((snapshot) => {
-                    let deviceData = snapshot.val();
-                    
-                    if (deviceData) {
-                        if (deviceData.status === 2) {
-                            syncUserToAndroid(appDeviceId, new Date(deviceData.expireAt).getTime(), 2).then(() => {
-                                window.location.href = "app://ban_user?link=" + encodeURIComponent(DEVELOPER_LINK);
-                            });
-                            return;
-                        }
-
-                        let finalExpiry = new Date(deviceData.expireAt).getTime();
-                        
-                        if (finalExpiry > Date.now()) {
-                            syncUserToAndroid(appDeviceId, finalExpiry, deviceData.status).then(() => {
-                                window.location.href = `app://success_auth?code=AUTO&duration=auto&expiry_time=${finalExpiry}&silent=${isBgCheck}`;
-                            });
-                            
-                            if (!isBgCheck && !isAdmin) {
-                                document.getElementById('mainCard').innerHTML = `
-                                    <div class="app-icon" style="background: transparent; box-shadow: none; font-size:40px;">🔄</div>
-                                    <h2 style='color:var(--text-main);'>مرحباً بك مجدداً</h2>
-                                    <p style='color:var(--text-muted);font-size:14px;'>تم التحقق الآمن عبر السيرفر</p>
-                                    <div class="spinner"></div>
-                                `;
-                            }
-                            return;
-                        } else {
-                            db.ref("active_sessions/" + currentSafeKey).remove();
-                            localStorage.removeItem("DEVICE_DB_" + appDeviceId);
-                            
-                            if (isBgCheck) {
-                                window.location.href = "app://logout_user"; 
-                            } else {
-                                let errorDiv = document.getElementById('error');
-                                errorDiv.innerText = "انتهى اشتراكك! يرجى إدخال كود جديد.";
-                                errorDiv.style.display = 'block';
-                            }
-                        }
-                    } else {
-                        if (isBgCheck) {
-                            window.location.href = "app://logout_user";
-                        }
-                    }
-                }).catch((err) => {
-                    if (isBgCheck) window.location.href = "app://logout_user";
+                    // إخفاء التحميل والدخول للشات فوراً
+                    document.getElementById("loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.add("hidden");
+                    openGeneralChat();
                 });
             } else {
-                if (isBgCheck) window.location.href = "app://logout_user";
+                // المستخدم غير مسجل، إظهار شاشة تسجيل الدخول الإجبارية
+                document.getElementById("loading-screen").classList.add("hidden");
+                document.getElementById("login-screen").classList.remove("hidden");
             }
-        }, 750); 
-    };
+        });
+    }
+
+    window.onload = checkAutoLogin;
+
+    function updateFileName(input) {
+        const label = document.getElementById("file-label-text");
+        if(input.files && input.files[0]) {
+            label.innerText = "✔️ تم اختيار الصورة";
+            label.style.color = "#a5f3bc";
+        } else {
+            label.innerText = "📷 اختر صورة لحسابك";
+            label.style.color = "#d6b4fc";
+        }
+    }
+
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 500; 
+                let width = img.width;
+                let height = img.height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', 0.6));
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
 
     function login() {
-        const subCode = document.getElementById('subCode').value.trim();
-        const codeData = subscriptionCodes[subCode];
-        const errorDiv = document.getElementById('error');
+        const name = document.getElementById("username").value.trim();
+        const fileInput = document.getElementById("user-image").files[0];
+        const btn = document.getElementById("login-btn");
+        
+        if (!name) return showAlert("يرجى إدخال اسمك أولاً.");
+        
+        btn.innerHTML = "جاري الدخول...";
+        btn.disabled = true;
 
-        errorDiv.style.display = 'none';
-        errorDiv.style.animation = 'none';
-        errorDiv.offsetHeight; 
-        errorDiv.style.animation = null; 
-
-        if (codeData) {
-            if (codeData.status === 2) {
-                errorDiv.innerText = "تم حظر هذا الكود من قبل المطور! يرجى التواصل مع الدعم.";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            let codeMemoryKey = "CODE_USED_" + subCode;
-            let codeOwner = localStorage.getItem(codeMemoryKey);
-
-            if (codeOwner && codeOwner !== appDeviceId && codeOwner !== "UNKNOWN") {
-                errorDiv.innerText = "⛔ هذا الكود مخصص لهاتف آخر ولا يمكن استخدامه على هذا الجهاز!";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            let finalExpiryTime = Date.now() + getDurationMs(codeData.duration);
-            let expiryISO = new Date(finalExpiryTime).toISOString();
-            
-            localStorage.setItem(codeMemoryKey, appDeviceId);
-            localStorage.setItem("DEVICE_DB_" + appDeviceId, JSON.stringify({
-                status: codeData.status,
-                expiryTime: finalExpiryTime,
-                code: subCode
-            }));
-
-            if(appDeviceId !== "UNKNOWN") {
-                db.ref("active_sessions/" + sanitizeFirebaseKey(appDeviceId)).set({
-                    deviceId: appDeviceId,     
-                    status: codeData.status,
-                    expireAt: expiryISO,
-                    lastUpdated: new Date().toISOString(), 
-                    activatedCode: subCode,    
-                    type: "Code_Activation"
-                });
-
-                // تأخير التوجيه للتأكد من وصول بيانات الأندرويد
-                syncUserToAndroid(appDeviceId, finalExpiryTime, codeData.status).then(() => {
-                    errorDiv.style.display = 'none';
-                    window.location.href = `app://success_auth?code=${subCode}&duration=${codeData.duration}&expiry_time=${finalExpiryTime}&silent=false`;
-                });
-            } else {
-                errorDiv.style.display = 'none';
-                window.location.href = `app://success_auth?code=${subCode}&duration=${codeData.duration}&expiry_time=${finalExpiryTime}&silent=false`;
+        db.ref('bans/' + deviceId).once('value', snapshot => {
+            if (snapshot.exists()) {
+                btn.innerHTML = "دخول الدردشة الآن";
+                btn.disabled = false;
+                return showAlert("عذراً، هذا الجهاز محظور.");
             }
             
-            const btn = document.querySelector('.main-btn');
-            btn.innerText = "تم التفعيل بنجاح ✅";
-            btn.style.background = "var(--primary)";
-            btn.disabled = true;
+            currentUser.name = name;
+            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                if (adminSnap.exists()) {
+                    currentUser.adminId = adminSnap.val();
+                }
+                
+                if (fileInput) {
+                    compressImage(fileInput, (compressedImg) => {
+                        currentUser.image = compressedImg;
+                        finishLogin();
+                    });
+                } else {
+                    currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    finishLogin();
+                }
+            });
+        });
+    }
 
-        } else {
-            errorDiv.innerText = "الكود غير صحيح أو غير موجود!";
-            errorDiv.style.display = 'block';
+    function finishLogin() {
+        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
+        
+        if(currentUser.adminId) {
+            db.ref('admins_profiles/' + currentUser.adminId).set({
+                deviceId: deviceId, name: currentUser.name, image: currentUser.image, id: currentUser.adminId
+            });
         }
+
+        document.getElementById("login-screen").classList.add("hidden");
+        openGeneralChat();
     }
 
-    async function pasteCode() {
-        try {
-            if (navigator.clipboard && navigator.clipboard.readText) {
-                const text = await navigator.clipboard.readText();
-                if(text) applyPastedText(text);
-                else fallbackPaste();
-            } else fallbackPaste();
-        } catch (err) { fallbackPaste(); }
+    function handleImageSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            compressImage(file, (base64) => { 
+                attachedImageBase64 = base64; 
+                document.getElementById('preview-img').src = base64;
+                document.getElementById('attachment-preview').style.display = 'block';
+            });
+        }
+        e.target.value = ''; 
     }
 
-    function fallbackPaste() {
-        if (document.getElementById('customPromptBox')) return;
+    function removeAttachment() { attachedImageBase64 = null; document.getElementById('attachment-preview').style.display = 'none'; }
 
-        let overlay = document.createElement('div');
-        overlay.id = 'customPromptBox';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity 0.3s;';
+    function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+    function sendMessage() {
+        const inputField = document.getElementById("msg-input");
+        const text = inputField.value.trim();
         
-        let box = document.createElement('div');
-        box.style.cssText = 'background:var(--card-bg);padding:24px;border-radius:24px;width:80%;max-width:320px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid var(--border-color);text-align:center;transform:translateY(20px);transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);';
+        if (!text && !attachedImageBase64) return;
+
+        const msgData = {
+            deviceId: deviceId,
+            sender: currentUser.name,
+            senderImg: currentUser.image,
+            adminId: currentUser.adminId || null,
+            text: text,
+            image: attachedImageBase64 || null,
+            timestamp: Date.now()
+        };
+
+        db.ref(currentChatPath).push(msgData);
+        inputField.value = "";
+        removeAttachment();
+    }
+
+    let isScrolledToBottom = true;
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.addEventListener('scroll', () => {
+        isScrolledToBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 20;
+    });
+
+    // دالة إنشاء واجهة التصويت (محدثة بألوان وتصميم احترافي)
+    function generatePollHtml(pollData, msgKey) {
+        const totalVotes = (pollData.votes1 || 0) + (pollData.votes2 || 0);
+        const percent1 = totalVotes === 0 ? 0 : Math.round(((pollData.votes1 || 0) / totalVotes) * 100);
+        const percent2 = totalVotes === 0 ? 0 : Math.round(((pollData.votes2 || 0) / totalVotes) * 100);
+        const userVoted = pollData.votedUsers && pollData.votedUsers[deviceId];
         
-        box.innerHTML = `
-            <h3 style="margin:0 0 16px 0;color:var(--text-main);font-size:18px;">لصق الكود</h3>
-            <input type="text" id="customPromptInput" placeholder="الرجاء لصق الكود هنا..." style="width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--border-color);background:var(--input-bg);color:var(--primary);text-align:center;font-family:monospace;font-size:16px;margin-bottom:20px;box-sizing:border-box;outline:none;">
-            <div style="display:flex;gap:12px;">
-                <button id="cancelPasteBtn" style="flex:1;padding:12px;background:transparent;border:1px solid var(--border-color);border-radius:12px;color:var(--text-muted);font-weight:600;cursor:pointer;">إلغاء</button>
-                <button id="confirmPasteBtn" style="flex:1;padding:12px;background:linear-gradient(135deg, var(--primary), var(--primary-dark));border:none;border-radius:12px;color:white;font-weight:600;cursor:pointer;">حسناً</button>
+        const votedClass1 = userVoted === 1 ? 'voted' : '';
+        const votedClass2 = userVoted === 2 ? 'voted' : '';
+
+        return `
+        <div class="poll-container">
+            <div class="poll-title">${pollData.title}</div>
+            <div class="poll-option ${votedClass1}" onclick="submitVote('${msgKey}', 1)">
+                <div class="poll-bar" style="width: ${userVoted ? percent1 : 0}%"></div>
+                <span class="poll-text">${pollData.option1}</span>
+                <span class="poll-percent">${userVoted ? percent1 + '%' : 'صوّت'}</span>
             </div>
-        `;
-        
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
-
-        setTimeout(() => {
-            overlay.style.opacity = '1';
-            box.style.transform = 'translateY(0)';
-        }, 10);
-
-        let input = document.getElementById('customPromptInput');
-        input.focus();
-
-        const closePrompt = () => {
-            overlay.style.opacity = '0';
-            box.style.transform = 'translateY(20px)';
-            setTimeout(() => overlay.remove(), 300);
-        };
-
-        document.getElementById('cancelPasteBtn').onclick = closePrompt;
-        document.getElementById('confirmPasteBtn').onclick = () => {
-            let val = input.value.trim();
-            if (val) applyPastedText(val);
-            closePrompt();
-        };
+            <div class="poll-option ${votedClass2}" onclick="submitVote('${msgKey}', 2)">
+                <div class="poll-bar" style="width: ${userVoted ? percent2 : 0}%"></div>
+                <span class="poll-text">${pollData.option2}</span>
+                <span class="poll-percent">${userVoted ? percent2 + '%' : 'صوّت'}</span>
+            </div>
+        </div>`;
     }
 
-    function applyPastedText(text) {
-        let inputField = document.getElementById('subCode');
-        inputField.value = text.trim();
-        inputField.style.borderColor = "var(--primary)";
-        setTimeout(() => inputField.style.borderColor = "var(--border-color)", 500);
-    }
-    
-    window.copyDeviceId = function(id) {
-        function showSuccess() {
-            const display = document.getElementById('deviceDisplay');
-            const originalHTML = display.innerHTML;
-            display.innerHTML = '<span style="color:var(--primary); font-weight:bold; font-size: 13px;">تم نسخ المعرف بنجاح ✅</span>';
-            setTimeout(() => { display.innerHTML = originalHTML; }, 2000);
-        }
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(id).then(showSuccess).catch(fallback);
-        } else {
-            fallback();
-        }
-
-        function fallback() {
-            let tempInput = document.createElement("input");
-            tempInput.value = id;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            try {
-                document.execCommand("copy");
-                showSuccess();
-            } catch (err) {
-                alert("فشل النسخ تلقائياً، يرجى تحديده ونسخه يدوياً.");
+    function submitVote(msgKey, optionNumber) {
+        const pollRef = db.ref(`${currentChatPath}/${msgKey}/poll`);
+        pollRef.transaction(poll => {
+            if (poll) {
+                if (!poll.votedUsers) poll.votedUsers = {};
+                if (poll.votedUsers[deviceId]) {
+                    return; 
+                }
+                poll.votedUsers[deviceId] = optionNumber;
+                if (optionNumber === 1) poll.votes1 = (poll.votes1 || 0) + 1;
+                if (optionNumber === 2) poll.votes2 = (poll.votes2 || 0) + 1;
             }
-            document.body.removeChild(tempInput);
+            return poll;
+        });
+    }
+
+    function loadMessages(path) {
+        if(chatListener) { db.ref(currentChatPath).off('child_added', chatListener); }
+        if(chatChangedListener) { db.ref(currentChatPath).off('child_changed', chatChangedListener); }
+        
+        messagesDiv.innerHTML = "";
+        currentChatPath = path;
+        
+        chatListener = db.ref(currentChatPath).on('child_added', snapshot => {
+            const data = snapshot.val();
+            const msgKey = snapshot.key;
+            const msgDiv = document.createElement("div");
+            
+            // التحقق إذا كانت الرسالة من البوت
+            const isBotMsg = data.isBot || data.deviceId === "SYSTEM_BOT";
+            
+            let classes = "message ";
+            if (isBotMsg) {
+                classes += "bot-msg"; // ستايل الإعلان
+            } else if (data.deviceId === deviceId) {
+                classes += "mine";
+            }
+            msgDiv.className = classes;
+            msgDiv.id = "msg-" + msgKey;
+
+            if (data.deviceId !== deviceId && (Date.now() - data.timestamp) < 3000) {
+                msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
+            }
+            
+            const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            let adminBadge = "";
+            let botBadgeHtml = "";
+            let avatarAction = "";
+            
+            if(data.adminId) {
+                adminBadge = `<span class="admin-badge">👑 Super Admin</span>`;
+                avatarAction = `onclick="showAdminId('${data.adminId}')"`;
+            }
+            
+            if(isBotMsg) {
+                botBadgeHtml = `<span class="bot-badge">📢 إعلان نظام</span>`;
+            }
+
+            let html = `
+                <div class="msg-header">
+                    <img src="${data.senderImg || 'https://cdn-icons-png.flaticon.com/512/4712/4712035.png'}" class="msg-avatar" alt="Avatar" ${avatarAction}>
+                    <span class="msg-name">${botBadgeHtml} ${data.sender} ${adminBadge}</span>
+                </div>`;
+                
+            if (data.text) html += `<div class="msg-text">${data.text}</div>`;
+            if (data.image) html += `<img src="${data.image}" class="msg-image">`;
+            
+            if (data.poll) {
+                html += generatePollHtml(data.poll, msgKey);
+            }
+
+            html += `<div class="msg-time">${time}</div>`;
+            
+            msgDiv.innerHTML = html;
+            messagesDiv.appendChild(msgDiv);
+            
+            if (isScrolledToBottom || data.deviceId === deviceId) {
+                setTimeout(() => { messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' }); }, 100);
+            }
+        });
+
+        chatChangedListener = db.ref(currentChatPath).on('child_changed', snapshot => {
+            const data = snapshot.val();
+            const msgKey = snapshot.key;
+            const msgDiv = document.getElementById("msg-" + msgKey);
+            
+            if (msgDiv && data.poll) {
+                const pollContainer = msgDiv.querySelector('.poll-container');
+                if (pollContainer) {
+                    pollContainer.outerHTML = generatePollHtml(data.poll, msgKey);
+                }
+            }
+        });
+    }
+
+    function showAdminId(adminId) {
+        showAlert("الآيدي الخاص بهذا الإداري هو: " + adminId);
+    }
+
+    function openGeneralChat() {
+        document.getElementById("chat-screen").classList.remove("hidden");
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-title").innerText = "شات FawakihAI العام";
+        document.getElementById("back-to-general").classList.add("hidden");
+        document.getElementById("private-chat-banner").classList.add("hidden");
+        
+        loadMessages('messages_general');
+    }
+
+    function openAdminSearch() {
+        document.getElementById("admin-search-screen").classList.remove("hidden");
+        document.getElementById("chat-screen").classList.add("hidden");
+        fetchAdmins();
+    }
+
+    function closeAdminSearch() {
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-screen").classList.remove("hidden");
+    }
+
+    function fetchAdmins() {
+        db.ref('admins_profiles').once('value', snapshot => {
+            const listDiv = document.getElementById('admins-list');
+            listDiv.innerHTML = "";
+            if(!snapshot.exists()) {
+                listDiv.innerHTML = "<p style='text-align:center; color:#a0a0b0;'>لا يوجد إداريين حالياً</p>";
+                return;
+            }
+            
+            snapshot.forEach(child => {
+                const admin = child.val();
+                const card = document.createElement('div');
+                card.className = 'admin-card';
+                card.setAttribute('data-search', (admin.name + admin.id).toLowerCase());
+                card.onclick = () => openPrivateChat(admin.id, admin.name);
+                
+                card.innerHTML = `
+                    <img src="${admin.image}" alt="admin">
+                    <div class="admin-card-info">
+                        <div class="admin-card-name">${admin.name} <span class="admin-badge">👑</span></div>
+                        <div class="admin-card-id">ID: ${admin.id}</div>
+                    </div>
+                    <div style="color:#bb86fc;">💬</div>
+                `;
+                listDiv.appendChild(card);
+            });
+        });
+    }
+
+    function openPrivateChat(adminId, adminName) {
+        document.getElementById("admin-search-screen").classList.add("hidden");
+        document.getElementById("chat-screen").classList.remove("hidden");
+        
+        document.getElementById("chat-title").innerText = "تواصل خاص مع: " + adminName;
+        document.getElementById("back-to-general").classList.remove("hidden");
+        
+        const banner = document.getElementById("private-chat-banner");
+        banner.classList.remove("hidden");
+        document.getElementById("banner-text").innerHTML = `هذا تواصل خاص ومباشر وسري بينك وبين <b>${adminName}</b>. إذا كان لديك أي مشكلة اطرحها هنا.`;
+        
+        let roomPath = "";
+        if(currentUser.adminId) {
+            const ids = [currentUser.adminId, adminId].sort();
+            roomPath = `private_messages/admin_${ids[0]}_admin_${ids[1]}`;
+        } else {
+            roomPath = `private_messages/user_${deviceId}_admin_${adminId}`;
         }
-    };
+        
+        loadMessages(roomPath);
+    }
+
 </script>
 
 </body>
