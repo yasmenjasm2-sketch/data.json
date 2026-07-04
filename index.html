@@ -386,6 +386,15 @@
         }
     });
 
+    // الرمز السري وقائمة الكلمات المحظورة (إضافة جديدة للحماية)
+    const APP_SECRET_KEY = "lA3sjuy5Hly1XK35iaTp2KiM7kNwZsl2OFMSVMqE";
+    const BLOCKED_WORDS = ["دعس", "محاولة رقم", "هكر", "اختراق", "شرموط", "قحبة", "منيوك", "زبي", "كس"]; // يمكنك إضافة أي كلمات مسيئة هنا
+
+    function containsBadWords(text) {
+        if (!text) return false;
+        return BLOCKED_WORDS.some(word => text.includes(word));
+    }
+
     // إعدادات Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
@@ -499,6 +508,7 @@
         const btn = document.getElementById("login-btn");
         
         if (!name) return showAlert("يرجى إدخال اسمك أولاً.");
+        if (containsBadWords(name)) return showAlert("عذراً، هذا الاسم يحتوي على كلمات غير لائقة.");
         
         btn.innerHTML = "جاري الدخول...";
         btn.disabled = true;
@@ -563,6 +573,12 @@
         const text = inputField.value.trim();
         
         if (!text && !attachedImageBase64) return;
+        
+        // التحقق من الكلمات المسيئة قبل الإرسال
+        if (containsBadWords(text)) {
+            showAlert("تم حظر إرسال الرسالة لاحتوائها على كلمات غير لائقة.");
+            return;
+        }
 
         const msgData = {
             deviceId: deviceId,
@@ -571,7 +587,8 @@
             adminId: currentUser.adminId || null,
             text: text,
             image: attachedImageBase64 || null,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            authSecret: APP_SECRET_KEY // تضمين الرمز السري للتحقق منه في قواعد بيانات فايربيس
         };
 
         db.ref(currentChatPath).push(msgData);
@@ -637,6 +654,14 @@
         chatListener = db.ref(currentChatPath).on('child_added', snapshot => {
             const data = snapshot.val();
             const msgKey = snapshot.key;
+            
+            // فلترة الرسائل القادمة لحجب أي رسالة سبام سابقة أو غير مصرحة
+            if (data.text && containsBadWords(data.text)) {
+                // سيقوم هذا الكود بحذف الرسالة المسيئة القديمة تلقائياً إذا حاول شخص عرضها
+                db.ref(`${currentChatPath}/${msgKey}`).remove();
+                return; // عدم عرضها
+            }
+
             const msgDiv = document.createElement("div");
             
             // التحقق إذا كانت الرسالة من البوت
