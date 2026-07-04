@@ -681,15 +681,15 @@
         const msgList = document.getElementById("messages-list");
         msgList.innerHTML = "";
         
-        db.ref('messages_general').on('child_added', snapshot => {
+        db.ref('chat').on('child_added', snapshot => {
             const data = snapshot.val();
             if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
                 msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
             }
-            renderMessageToPanel(snapshot.key, data, false, 'messages_general/' + snapshot.key);
+            renderMessageToPanel(snapshot.key, data, false, 'chat/' + snapshot.key);
         });
 
-        db.ref('messages_general').on('child_removed', snapshot => {
+        db.ref('chat').on('child_removed', snapshot => {
             removeMessageUI(snapshot.key);
         });
 
@@ -753,7 +753,7 @@
 
     function deleteMessage(fullPath, key) {
         if(confirm("هل أنت متأكد من مسح هذه الرسالة؟")) {
-            if (!fullPath.includes('/')) fullPath = 'messages_general/' + fullPath;
+            if (!fullPath.includes('/')) fullPath = 'chat/' + fullPath;
             db.ref(fullPath).remove();
         }
     }
@@ -784,7 +784,7 @@
             authSecret: AUTH_SECRET // تم تمرير الرمز السري هنا كما طلبت
         };
 
-        db.ref('messages_general').push(msgData);
+        db.ref('chat').push(msgData);
         input.value = "";
     }
 
@@ -856,7 +856,7 @@
                 ${data.text ? `<div class="msg-text">${data.text}</div>` : ''}
                 ${data.image ? `<img src="${data.image}" class="msg-image">` : ''}
                 <div class="msg-actions">
-                    <button class="btn-delete" onclick="deleteMessage('${fullPath || 'messages_general/'+key}', '${key}')">مسح 🗑️</button>
+                    <button class="btn-delete" onclick="deleteMessage('${fullPath || 'chat/'+key}', '${key}')">مسح 🗑️</button>
                 </div>
             </div>
         `;
