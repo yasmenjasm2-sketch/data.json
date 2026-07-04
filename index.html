@@ -423,7 +423,7 @@
 
     let currentUser = { name: "", image: "", adminId: null };
     let attachedImageBase64 = null;
-    let currentChatPath = 'messages_general'; 
+    let currentChatPath = 'chat'; // تم تصحيح المسار ليتوافق مع لوحة الإدارة وقاعدة البيانات الخاصة بك
     let chatListener = null; 
     let chatChangedListener = null;
 
@@ -743,7 +743,7 @@
         document.getElementById("back-to-general").classList.add("hidden");
         document.getElementById("private-chat-banner").classList.add("hidden");
         
-        loadMessages('messages_general');
+        loadMessages('chat'); // تم التعديل هنا لتتزامن مع الإدارة
     }
 
     function openAdminSearch() {
