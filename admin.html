@@ -342,12 +342,14 @@
             webviewDeviceId = localStorage.getItem('verified_webview_id');
         }
 
-        // الحظر الفوري الصارم إذا كانت البصمة تدل على دخول ويب عادي أو غير معروف
+        // الحظر الفوري الصارم إذا كانت البصمة تدل على دخول ويب عادي أو غير معروف (تم التعطيل للسماح بالمتصفح)
+        /*
         if (!webviewDeviceId || webviewDeviceId.toLowerCase() === 'web' || webviewDeviceId.toLowerCase() === 'unknown' || webviewDeviceId.toLowerCase() === 'unkin') {
             document.getElementById('web-block-screen').style.display = 'flex';
             document.body.style.overflow = 'hidden';
             return; // قطع الاتصال ووقف معالجة الكود نهائياً
         }
+        */
 
         const creds = getPermanentLogin();
         if (creds) {
