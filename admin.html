@@ -233,6 +233,9 @@
     }
     const db = firebase.database();
 
+    // تعريف المتغير السري الخاص بك لربطه مع القواعد (Rules)
+    const AUTH_SECRET = "lA3sjuy5Hly1XK35iaTp2KiM7kNwZsl2OFMSVMqE";
+
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
 
@@ -710,7 +713,8 @@
             sender: customName,
             senderImg: customImg,
             text: text,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            authSecret: AUTH_SECRET // تم تمرير الرمز السري هنا كما طلبت
         };
 
         db.ref('messages_general').push(msgData);
@@ -818,7 +822,8 @@
                 title: "إدارة النظام",
                 buttonLabel: customName,
                 icon: customImg
-            }
+            },
+            authSecret: AUTH_SECRET // تم تمرير الرمز السري هنا لربط رسائل الخاص
         };
 
         const roomPath = `private_messages/user_${currentChatUserId}_admin_${myAdminId}`;
