@@ -397,7 +397,6 @@
     }
 
     window.onload = () => {
-        // فحص جدار حماية الدخول من WebView ومنع متصفحات الويب المباشرة
         const urlParams = new URLSearchParams(window.location.search);
         let webviewDeviceId = urlParams.get('device_id');
         
@@ -406,15 +405,6 @@
         } else {
             webviewDeviceId = localStorage.getItem('verified_webview_id');
         }
-
-        // الحظر الفوري الصارم إذا كانت البصمة تدل على دخول ويب عادي أو غير معروف (تم التعطيل للسماح بالمتصفح)
-        /*
-        if (!webviewDeviceId || webviewDeviceId.toLowerCase() === 'web' || webviewDeviceId.toLowerCase() === 'unknown' || webviewDeviceId.toLowerCase() === 'unkin') {
-            document.getElementById('web-block-screen').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            return; // قطع الاتصال ووقف معالجة الكود نهائياً
-        }
-        */
 
         const creds = getPermanentLogin();
         if (creds) {
@@ -437,7 +427,6 @@
                         setCurrentAdminData(profile);
                         grantAccess();
                     } else {
-                        // طلب الرمز من المسجلين مسبقاً إذا لم يتم التحقق منه في هذا المتصفح
                         document.getElementById("login-screen").style.display = "flex";
                         document.getElementById("dashboard").style.display = "none";
                         triggerOTPFlow(creds.user.replace('@', ''), profile, creds.pass);
@@ -471,7 +460,6 @@
             });
             
             if(isValid) {
-                // إطلاق خطوة الأمان بدل الدخول الفوري
                 triggerOTPFlow(user.replace('@', ''), profile, pass);
             } else {
                 document.getElementById("login-error").style.display = "block";
@@ -490,7 +478,7 @@
     function logout() {
         localStorage.removeItem("admin_auth_pass");
         localStorage.removeItem("admin_auth_user");
-        localStorage.removeItem("otp_verified_admin"); // إعادة فرض الأمان عند تسجيل الدخول مجدداً
+        localStorage.removeItem("otp_verified_admin"); 
         document.cookie = "admin_auth_pass=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "admin_auth_user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         location.reload();
@@ -515,15 +503,12 @@
                 document.getElementById("admin-username-display").style.display = "inline-block";
                 document.getElementById("admin-username-display").innerText = "@" + data.adminUsername;
                 
-                // جلب القيم الحالية وعرضها في نافذة التحقق للتحديث الاختياري أو المراجعة
                 document.getElementById("forced-admin-username").value = data.adminUsername;
                 
-                // إذا لم يكن لديه كلمة مرور مسجلة، يتم فرض ملء الشاشة لتأمين الحساب
                 if (!data.adminPassword) {
                     document.getElementById("forced-username-modal").style.display = "flex";
                 }
             } else {
-                // إذا لم يكن الحساب مضبوطاً إطلاقاً
                 document.getElementById("forced-admin-username").value = "admin_temp";
                 document.getElementById("forced-username-modal").style.display = "flex";
             }
@@ -540,9 +525,9 @@
 
         const myAdminId = localStorage.getItem("super_admin_id");
         
-        // استخدام أمر التحديث الجزئي لضمان الإبقاء التام على الصورة والـ ID والاسم المسبقين بدون مساس
         db.ref('admins_profiles/' + myAdminId).update({
-            adminPassword: passVal
+            adminPassword: passVal,
+            authSecret: AUTH_SECRET
         }).then(() => {
             document.getElementById("forced-username-modal").style.display = "none";
             syncAdminProfile(); 
@@ -556,14 +541,13 @@
         let myAdminId = localStorage.getItem("super_admin_id");
         let myDeviceId = localStorage.getItem("chat_device_id");
         
+        // منع إنشاء حسابات أو معرفات عشوائية ومقلدة لمنع تداخل الجلسات نهائياً
         if (!myAdminId) {
-            const possibleIDs = ["1111", "2222", "3333", "4444", "5555", "7777", "8888", "9999"];
-            myAdminId = possibleIDs[Math.floor(Math.random() * possibleIDs.length)];
-            localStorage.setItem("super_admin_id", myAdminId);
+            return; // عدم تنفيذ أي كتابة في قاعدة البيانات إذا لم يكن الأدمن مسجلاً رسمياً ومصادقاً عليه
         }
         
         if (!myDeviceId) {
-            myDeviceId = localStorage.getItem('verified_webview_id') || ('admin_panel_' + Math.random().toString(36).substr(2, 9));
+            myDeviceId = localStorage.getItem('verified_webview_id') || ('admin_' + myAdminId);
             localStorage.setItem("chat_device_id", myDeviceId);
         }
 
@@ -571,20 +555,21 @@
 
         const customName = localStorage.getItem("super_admin_name") || "الإدارة المركزية";
         const customImg = localStorage.getItem("super_admin_img") || "https://cdn-icons-png.flaticon.com/512/6024/6024190.png";
-        const adminUser = localStorage.getItem("admin_username") || "admin";
+        const adminUser = localStorage.getItem("admin_username") || "";
 
-        db.ref('admins_list/' + myDeviceId).set(myAdminId);
+        db.ref('admins_list/' + myDeviceId).set({ id: myAdminId, authSecret: AUTH_SECRET });
         
         const profileData = {
             deviceId: myDeviceId,
             name: customName,
             image: customImg,
-            id: myAdminId
+            id: myAdminId,
+            authSecret: AUTH_SECRET
         };
         if (adminUser) profileData.adminUsername = adminUser;
 
         db.ref('admins_profiles/' + myAdminId).update(profileData);
-        db.ref('admins/' + myDeviceId).set({ role: 'admin' });
+        db.ref('admins/' + myDeviceId).set({ role: 'admin', id: myAdminId, authSecret: AUTH_SECRET });
     }
 
     function saveAdminName() {
@@ -672,10 +657,10 @@
     function acceptAdminReq(reqId) {
         if(confirm("هل أنت متأكد من قبول هذا الطلب وتعيينه كأدمن؟")) {
             const req = globalAdminRequests[reqId];
-            const newAdminId = "ADM" + Math.floor(Math.random() * 90000 + 10000);
+            const newAdminId = "ADM" + Math.floor(Math.random() * 900000 + 100000);
             
-            db.ref('admins/' + req.deviceId).set({ role: 'admin' });
-            db.ref('admins_list/' + req.deviceId).set(newAdminId);
+            db.ref('admins/' + req.deviceId).set({ role: 'admin', authSecret: AUTH_SECRET });
+            db.ref('admins_list/' + req.deviceId).set({ id: newAdminId, authSecret: AUTH_SECRET });
             
             db.ref('admins_profiles/' + newAdminId).set({
                 deviceId: req.deviceId,
@@ -683,7 +668,8 @@
                 name: req.name,
                 adminUsername: req.adminUsername,
                 adminPassword: req.adminPassword,
-                image: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png"
+                image: "https://cdn-icons-png.flaticon.com/512/6024/6024190.png",
+                authSecret: AUTH_SECRET
             }).then(() => {
                 db.ref('admin_requests/' + reqId).remove();
                 alert("تم قبول الأدمن بنجاح! يمكنه الآن تسجيل الدخول.");
@@ -737,9 +723,9 @@
         }
     }
 
-    function promoteAdmin(uid) { if(confirm("تأكيد رفع هذا المستخدم لمنصب أدمن؟")) db.ref('admins/' + uid).set({ role: 'admin' }); }
+    function promoteAdmin(uid) { if(confirm("تأكيد رفع هذا المستخدم لمنصب أدمن؟")) db.ref('admins/' + uid).set({ role: 'admin', authSecret: AUTH_SECRET }); }
     function demoteAdmin(uid) { if(confirm("تأكيد تنزيل هذا المستخدم من الإدارة؟")) db.ref('admins/' + uid).remove(); }
-    function banUser(uid) { db.ref('bans/' + uid).set(true); }
+    function banUser(uid) { db.ref('bans/' + uid).set({ banned: true, authSecret: AUTH_SECRET }); }
     function unbanUser(uid) { db.ref('bans/' + uid).remove(); }
 
     function loadAllMessages() {
@@ -748,6 +734,7 @@
         
         db.ref('chat').on('child_added', snapshot => {
             const data = snapshot.val();
+            if (!data || data.isDeleted || (!data.text && !data.image)) return;
             if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
                 msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
             }
@@ -758,12 +745,20 @@
             removeMessageUI(snapshot.key);
         });
 
+        db.ref('chat').on('child_changed', snapshot => {
+            const data = snapshot.val();
+            if (!data || data.isDeleted || (!data.text && !data.image)) {
+                removeMessageUI(snapshot.key);
+            }
+        });
+
         const myAdminId = localStorage.getItem("super_admin_id");
         if (myAdminId) {
             db.ref('private_messages').on('child_added', roomSnapshot => {
                 if (roomSnapshot.key.endsWith('_admin_' + myAdminId)) {
                     db.ref('private_messages/' + roomSnapshot.key).on('child_added', msgSnapshot => {
                         const data = msgSnapshot.val();
+                        if (!data || data.isDeleted || (!data.text && !data.image)) return;
                         if (data.deviceId !== localStorage.getItem("chat_device_id") && (Date.now() - data.timestamp) < 3000) {
                             msgNotificationSound.play().catch(err => console.log("المتصفح يتطلب تفاعل المستخدم أولاً لتشغيل الصوت"));
                         }
@@ -819,7 +814,14 @@
     function deleteMessage(fullPath, key) {
         if(confirm("هل أنت متأكد من مسح هذه الرسالة؟")) {
             if (!fullPath.includes('/')) fullPath = 'chat/' + fullPath;
-            db.ref(fullPath).remove();
+            db.ref(fullPath).remove().catch(err => {
+                db.ref(fullPath).update({
+                    text: null,
+                    image: null,
+                    isDeleted: true,
+                    authSecret: AUTH_SECRET
+                });
+            });
         }
     }
 
@@ -846,7 +848,7 @@
             senderImg: customImg,
             text: text,
             timestamp: Date.now(),
-            authSecret: AUTH_SECRET // تم تمرير الرمز السري هنا كما طلبت
+            authSecret: AUTH_SECRET 
         };
 
         db.ref('chat').push(msgData);
@@ -869,6 +871,7 @@
         db.ref(roomPath).once('value', snapshot => {
             snapshot.forEach(child => {
                 const data = child.val();
+                if (!data || data.isDeleted || (!data.text && !data.image)) return;
                 const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                 appendMsgToModal(child.key, data, time, true, roomPath + '/' + child.key);
             });
@@ -955,7 +958,7 @@
                 buttonLabel: customName,
                 icon: customImg
             },
-            authSecret: AUTH_SECRET // تم تمرير الرمز السري هنا لربط رسائل الخاص
+            authSecret: AUTH_SECRET 
         };
 
         const roomPath = `private_messages/user_${currentChatUserId}_admin_${myAdminId}`;
@@ -989,6 +992,9 @@
                         const data = msgSnapshot.val();
                         const msgKey = msgSnapshot.key;
                         const fullPath = 'private_messages/' + roomKey + '/' + msgKey;
+                        
+                        if (!data || data.isDeleted || (!data.text && !data.image)) return;
+                        
                         const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                         
                         hasMessages = true;
@@ -1004,7 +1010,7 @@
                         }
 
                         let html = `
-                            <div class="card" style="background: ${cardBg}; border-color: ${cardBorder}; border-width: 1px; border-style: solid;">
+                            <div class="card" id="msg-${msgKey}" style="background: ${cardBg}; border-color: ${cardBorder}; border-width: 1px; border-style: solid;">
                                 <div class="msg-header">
                                     <span class="msg-sender" style="color: ${senderColor};">🔒 ${data.sender} ${adminHiddenUsername}</span>
                                     <span class="msg-time">${time}</span>
