@@ -13,8 +13,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
 
         html, body {
-            overscroll-behavior: none; /* منع تأثير المطاط في المتصفحات */
-            touch-action: none; /* منع السحب لكامل الصفحة */
+            overscroll-behavior: none;
+            touch-action: none;
         }
 
         * { 
@@ -23,7 +23,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* منع النسخ نهائياً من الموقع */
         body { 
             background-color: #0b0714; 
             color: #ffffff; 
@@ -41,7 +40,6 @@
             user-select: none;
         }
 
-        /* السماح بالكتابة وتحديد النص داخل حقول الإدخال فقط */
         input, textarea {
             -webkit-user-select: text;
             -moz-user-select: text;
@@ -146,7 +144,7 @@
             flex-direction: column; 
             gap: 15px; 
             scroll-behavior: smooth; 
-            touch-action: pan-y; /* السماح بالتمرير العمودي فقط لهذه الحاوية */
+            touch-action: pan-y;
         }
         .messages-container::-webkit-scrollbar { width: 5px; }
         .messages-container::-webkit-scrollbar-thumb { background: rgba(187, 134, 252, 0.4); border-radius: 10px; }
@@ -154,7 +152,6 @@
         .message { background: rgba(45, 40, 60, 0.9); padding: 12px 16px; border-radius: 20px 20px 20px 4px; max-width: 85%; align-self: flex-start; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); animation: fadeIn 0.3s ease; }
         .message.mine { background: linear-gradient(135deg, #8e2de2, #4a00e0); color: #fff; align-self: flex-end; border-radius: 20px 20px 4px 20px; border: none; box-shadow: 0 4px 15px rgba(142, 45, 226, 0.3); }
 
-        /* ستايل إعلان البوت المتميز */
         .message.bot-msg {
             background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(187, 134, 252, 0.1));
             border: 1px solid rgba(0, 210, 255, 0.5);
@@ -244,7 +241,6 @@
         .custom-alert { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(20, 15, 30, 0.95); border: 1px solid #bb86fc; color: #fff; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; text-align: center; font-weight: bold; display: none; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
 
-        /* ستايل التصويت الاحترافي والجميل */
         .poll-container {
             background: rgba(10, 8, 20, 0.8);
             border: 1px solid rgba(0, 210, 255, 0.3);
@@ -396,7 +392,7 @@
 </div>
 
 <script>
-    // الجافاسكربت لمنع كليك يمين والنسخ
+    // منع كليك يمين والنسخ
     document.addEventListener('contextmenu', event => event.preventDefault());
     document.addEventListener('copy', event => {
         if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
@@ -404,16 +400,62 @@
         }
     });
 
-    // الرمز السري وقائمة الكلمات المحظورة (إضافة جديدة للحماية)
-    const APP_SECRET_KEY = "lA3sjuy5Hly1XK35iaTp2KiM7kNwZsl2OFMSVMqE";
-    const BLOCKED_WORDS = ["دعس", "محاولة رقم", "هكر", "اختراق", "شرموط", "قحبة", "منيوك", "زبي", "كس"]; // يمكنك إضافة أي كلمات مسيئة هنا
+    // --- [2] فحص الأمان المتقدم لمكافحة فتح الموقع خارج التطبيق ---
+    function triggerSecurityLock(reason) {
+        window.stop();
+        document.documentElement.innerHTML = `
+            <head><meta charset="UTF-8"><title>دخول محظور</title></head>
+            <body style="display:flex; justify-content:center; align-items:center; height:100dvh; background:#0b0714; color:#ff4757; font-size:20px; font-weight:bold; text-align:center; padding:20px; font-family:'Tajawal', sans-serif; direction:rtl; flex-direction:column; gap:15px;">
+                <div style="font-size:50px;">⚠️</div>
+                <div>تم حظر الوصول إلى الخادم!</div>
+                <div style="font-size:14px; color:#a0a0b0;">${reason}</div>
+            </body>`;
+        throw new Error("Security Violation: " + reason);
+    }
+
+    // مصيدة الهندسة العكسية وفحص عناصر الويب (Anti-DevTools Loop)
+    setInterval(() => {
+        const startTime = performance.now();
+        debugger;
+        if (performance.now() - startTime > 100) {
+            triggerSecurityLock("تم اكتشاف أدوات فحص وتعديل الأكواد (DevTools).");
+        }
+    }, 1000);
+
+    let deviceId = null;
+    let APP_SECRET_KEY = null;
+
+    try {
+        if (window.Android) {
+            // التحقق من سلامة بيئة الأندرويد أولاً
+            if (!window.Android.verifyAppIntegrity()) {
+                triggerSecurityLock("بيئة التشغيل غير آمنة أو معدلة برمجياً.");
+            }
+            deviceId = window.Android.getDeviceID();
+            // سحب المفتاح السري برمجياً من الأندرويد دون كتابته في الويب
+            APP_SECRET_KEY = window.Android.getSecureAuthToken();
+        }
+    } catch (e) {
+        triggerSecurityLock("يجب فتح الموقع من داخل تطبيق الأندرويد الرسمي فقط.");
+    }
+
+    function isValidAndroidId(id) {
+        if (!id) return false;
+        const regex = /^[a-fA-F0-9]{16}$/;
+        return regex.test(id) && !String(id).toLowerCase().includes("android");
+    }
+
+    if (!isValidAndroidId(deviceId) || !APP_SECRET_KEY || APP_SECRET_KEY === "ACCESS_DENIED_SECURITY_VIOLATION") {
+        triggerSecurityLock("محاولة دخول غير شرعية أو استخدام معرف جهاز وهمي.");
+    }
+
+    const BLOCKED_WORDS = ["دعس", "محاولة رقم", "هكر", "اختراق", "شرموط", "قحبة", "منيوك", "زبي", "كس"];
 
     function containsBadWords(text) {
         if (!text) return false;
         return BLOCKED_WORDS.some(word => text.includes(word));
     }
 
-    // إعدادات Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD3eRFHDhOtKlli3KA8vUyE1--C5F47UYw",
         databaseURL: "https://chatapi-1ca71-default-rtdb.europe-west1.firebasedatabase.app",
@@ -427,32 +469,17 @@
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
 
-    let deviceId = null;
-    try {
-        if (window.Android && window.Android.getDeviceID) { deviceId = window.Android.getDeviceID(); }
-    } catch (e) { console.log("Not running inside Android App"); }
-
-    // دالة للتحقق من أن المعرف هو Android ID حقيقي بصيغة دقيقة
-    // المعرف الصحيح يجب أن يتكون من 16 حرف أو رقم بنظام سداسي عشري، ولا يحتوي على كلمات مثل android
-    function isValidAndroidId(id) {
-        if (!id) return false;
-        const regex = /^[a-fA-F0-9]{16}$/;
-        return regex.test(id) && !String(id).toLowerCase().includes("android");
-    }
-
-    // حظر الدخول نهائياً من متصفحات الويب أو السكربتات الخارجية التي تحقن معرفات وهمية وقتل تشغيل السكريبت فوراً
-    if (!isValidAndroidId(deviceId)) {
-        window.stop();
-        document.documentElement.innerHTML = '<head><meta charset="UTF-8"><title>دخول محظور</title></head><body style="display:flex; justify-content:center; align-items:center; height:100dvh; background:#0b0714; color:#ff4757; font-size:22px; font-weight:bold; text-align:center; padding:20px; font-family:\'Tajawal\', sans-serif; direction:rtl;">⚠️ عذراً، تم اكتشاف محاولة دخول غير شرعية أو استخدام معرف جهاز وهمي. يرجى استخدام التطبيق الرسمي فقط.</body>';
-        throw new Error("Unauthorized access detected. Invalid Device ID format.");
-    }
-
     let currentUser = { name: "", image: "", adminId: null };
     let attachedImageBase64 = null;
-    let currentChatPath = 'chat'; // تم تصحيح المسار ليتوافق مع لوحة الإدارة وقاعدة البيانات الخاصة بك
+    let currentChatPath = 'chat';
     let chatListener = null; 
     let chatChangedListener = null;
-    let chatRemovedListener = null; // إضافة مستمع جديد لحذف الرسائل للمزامنة الفورية
+    let chatRemovedListener = null;
+
+    // --- [3] نظام منع التكرار والإغراق (Anti-Spam & Duplicate Protection) ---
+    let lastSentMessageText = "";
+    let lastMessageSendTime = 0;
+    const MESSAGE_COOLDOWN_MS = 2500; // 2.5 ثانية بين كل رسالة وأخرى
 
     function showAlert(msg) {
         const alertBox = document.getElementById('custom-alert');
@@ -462,10 +489,8 @@
     }
 
     function checkAutoLogin() {
-        // تم التعديل لمنع إنشاء حسابات وهمية وإجبار المستخدم الجديد على التسجيل
         db.ref('users/' + deviceId).once('value', snapshot => {
             if (snapshot.exists()) {
-                // المستخدم مسجل مسبقاً، الدخول مباشرة
                 const userData = snapshot.val();
                 currentUser.name = userData.name;
                 currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -483,13 +508,11 @@
                         });
                     }
                     
-                    // إخفاء التحميل والدخول للشات فوراً
                     document.getElementById("loading-screen").classList.add("hidden");
                     document.getElementById("login-screen").classList.add("hidden");
                     openGeneralChat();
                 });
             } else {
-                // المستخدم غير مسجل، إظهار شاشة تسجيل الدخول الإجبارية
                 document.getElementById("loading-screen").classList.add("hidden");
                 document.getElementById("login-screen").classList.remove("hidden");
             }
@@ -601,9 +624,22 @@
         
         if (!text && !attachedImageBase64) return;
         
-        // التحقق من الكلمات المسيئة قبل الإرسال
         if (containsBadWords(text)) {
             showAlert("تم حظر إرسال الرسالة لاحتوائها على كلمات غير لائقة.");
+            return;
+        }
+
+        const now = Date.now();
+
+        // 1. فحص عدم تكرار الرسالة السابقة بنفس النص بالضبط أو مع تغيير مسافات
+        if (text && text.replace(/\s+/g, '') === lastSentMessageText.replace(/\s+/g, '')) {
+            showAlert("⚠️ يرجى عدم تكرار إرسال نفس الرسالة المتتالية!");
+            return;
+        }
+
+        // 2. فحص سرعة الإرسال (Anti-Spam Cooldown)
+        if (now - lastMessageSendTime < MESSAGE_COOLDOWN_MS && !currentUser.adminId) {
+            showAlert("⏱️ يرجى الانتظار قليلاً قبل إرسال رسالة أخرى.");
             return;
         }
 
@@ -614,16 +650,19 @@
             adminId: currentUser.adminId || null,
             text: text,
             image: attachedImageBase64 || null,
-            timestamp: Date.now(),
-            authSecret: APP_SECRET_KEY // تضمين الرمز السري للتحقق منه في قواعد بيانات فايربيس
+            timestamp: now,
+            authSecret: APP_SECRET_KEY
         };
 
-        db.ref(currentChatPath).push(msgData);
+        db.ref(currentChatPath).push(msgData).then(() => {
+            if (text) lastSentMessageText = text;
+            lastMessageSendTime = Date.now();
+        });
+
         inputField.value = "";
         removeAttachment();
     }
 
-    // دالة خاصة للإدمن لحذف رسائل المستخدمين العاديين
     function deleteUserMessage(msgKey) {
         if (confirm("هل أنت متأكد من حذف هذه الرسالة للمستخدم؟")) {
             db.ref(`${currentChatPath}/${msgKey}`).remove()
@@ -638,7 +677,6 @@
         isScrolledToBottom = messagesDiv.scrollHeight - messagesDiv.clientHeight <= messagesDiv.scrollTop + 20;
     });
 
-    // دالة إنشاء واجهة التصويت (محدثة بألوان وتصميم احترافي)
     function generatePollHtml(pollData, msgKey) {
         const totalVotes = (pollData.votes1 || 0) + (pollData.votes2 || 0);
         const percent1 = totalVotes === 0 ? 0 : Math.round(((pollData.votes1 || 0) / totalVotes) * 100);
@@ -688,7 +726,6 @@
         messagesDiv.innerHTML = "";
         currentChatPath = path;
         
-        // استماع لحذف الرسائل من الداتا بيز وإخفائها من الشاشة فوراً
         chatRemovedListener = db.ref(currentChatPath).on('child_removed', snapshot => {
             const msgKey = snapshot.key;
             const msgDiv = document.getElementById("msg-" + msgKey);
@@ -701,21 +738,17 @@
             const data = snapshot.val();
             const msgKey = snapshot.key;
             
-            // فلترة الرسائل القادمة لحجب أي رسالة سبام سابقة أو غير مصرحة
             if (data.text && containsBadWords(data.text)) {
-                // سيقوم هذا الكود بحذف الرسالة المسيئة القديمة تلقائياً إذا حاول شخص عرضها
                 db.ref(`${currentChatPath}/${msgKey}`).remove();
-                return; // عدم عرضها
+                return;
             }
 
             const msgDiv = document.createElement("div");
-            
-            // التحقق إذا كانت الرسالة من البوت
             const isBotMsg = data.isBot || data.deviceId === "SYSTEM_BOT";
             
             let classes = "message ";
             if (isBotMsg) {
-                classes += "bot-msg"; // ستايل الإعلان
+                classes += "bot-msg";
             } else if (data.deviceId === deviceId) {
                 classes += "mine";
             }
@@ -742,7 +775,6 @@
                 botBadgeHtml = `<span class="bot-badge">📢 إعلان نظام</span>`;
             }
 
-            // التحقق إذا كان المستخدم الحالي إدمن، والرسالة ليست لإدمن آخر ولا لبوت، نقوم بإظهار زر الحذف له
             if (currentUser.adminId && !data.adminId && !isBotMsg) {
                 deleteActionHtml = `<span class="delete-btn" onclick="deleteUserMessage('${msgKey}')" title="حذف رسالة المستخدم">🗑️ حذف</span>`;
             }
@@ -796,7 +828,7 @@
         document.getElementById("back-to-general").classList.add("hidden");
         document.getElementById("private-chat-banner").classList.add("hidden");
         
-        loadMessages('chat'); // تم التعديل هنا لتتزامن مع الإدارة
+        loadMessages('chat');
     }
 
     function openAdminSearch() {
@@ -808,6 +840,15 @@
     function closeAdminSearch() {
         document.getElementById("admin-search-screen").classList.add("hidden");
         document.getElementById("chat-screen").classList.remove("hidden");
+    }
+
+    function filterAdmins() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.admin-card');
+        cards.forEach(card => {
+            const searchData = card.getAttribute('data-search');
+            card.style.display = searchData.includes(query) ? 'flex' : 'none';
+        });
     }
 
     function fetchAdmins() {
