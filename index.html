@@ -423,7 +423,6 @@
     }, 1000);
 
     let deviceId = null;
-    let APP_SECRET_KEY = null;
 
     try {
         if (window.Android) {
@@ -432,11 +431,12 @@
                 triggerSecurityLock("بيئة التشغيل غير آمنة أو معدلة برمجياً.");
             }
             deviceId = window.Android.getDeviceID();
-            // سحب المفتاح السري برمجياً من الأندرويد دون كتابته في الويب
-            APP_SECRET_KEY = window.Android.getSecureAuthToken();
+        } else {
+            // إذا لم يتم العثور على بيئة التطبيق (تعني أن المستخدم يفتح من متصفح خارجي)
+            triggerSecurityLock("يجب فتح الموقع من داخل تطبيق الأندرويد الرسمي فقط.");
         }
     } catch (e) {
-        triggerSecurityLock("يجب فتح الموقع من داخل تطبيق الأندرويد الرسمي فقط.");
+        triggerSecurityLock("حدث خطأ في الاتصال بالتطبيق: " + e.message);
     }
 
     function isValidAndroidId(id) {
@@ -445,7 +445,7 @@
         return regex.test(id) && !String(id).toLowerCase().includes("android");
     }
 
-    if (!isValidAndroidId(deviceId) || !APP_SECRET_KEY || APP_SECRET_KEY === "ACCESS_DENIED_SECURITY_VIOLATION") {
+    if (!isValidAndroidId(deviceId)) {
         triggerSecurityLock("محاولة دخول غير شرعية أو استخدام معرف جهاز وهمي.");
     }
 
@@ -650,8 +650,7 @@
             adminId: currentUser.adminId || null,
             text: text,
             image: attachedImageBase64 || null,
-            timestamp: now,
-            authSecret: APP_SECRET_KEY
+            timestamp: now
         };
 
         db.ref(currentChatPath).push(msgData).then(() => {
