@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss://*.firebasedatabase.app https://*.firebasedatabase.app https://*.googleapis.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' wss://*.firebasedatabase.app https://*.firebasedatabase.app https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseapp.com;">
     <title>شات FawakihAI</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
@@ -92,19 +93,43 @@
         }
         
         h1 { color: #d6b4fc; font-size: 36px; margin-bottom: 5px; text-shadow: 0 0 20px rgba(187, 134, 252, 0.6); }
-        p.subtitle { color: #a0a0b0; margin-bottom: 50px; font-size: 15px; }
+        p.subtitle { color: #a0a0b0; margin-bottom: 40px; font-size: 15px; }
         
-        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
-        input[type="text"] { width: 100%; padding: 18px 20px; border: 2px solid rgba(187, 134, 252, 0.2); border-radius: 16px; background: rgba(0, 0, 0, 0.5); color: white; outline: none; transition: all 0.3s ease; font-size: 16px; }
-        input[type="text"]:focus { border-color: #bb86fc; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 15px rgba(187, 134, 252, 0.3); }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
-        .custom-file-upload { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 18px; width: 100%; cursor: pointer; border-radius: 16px; border: 2px dashed rgba(187, 134, 252, 0.4); background: rgba(187, 134, 252, 0.03); color: #d6b4fc; transition: all 0.3s ease; font-weight: bold; }
-        .custom-file-upload:hover, .custom-file-upload:active { background: rgba(187, 134, 252, 0.1); border-color: #bb86fc; }
-        input[type="file"] { display: none; }
-
-        button.btn-primary { width: 100%; background: linear-gradient(90deg, #8e2de2, #4a00e0); color: #fff; border: none; padding: 18px; border-radius: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 18px; box-shadow: 0 8px 20px rgba(74, 0, 224, 0.4); margin-top: 10px; }
-        button.btn-primary:hover, button.btn-primary:active { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(142, 45, 226, 0.6); }
-        button.btn-primary:disabled { background: #555; box-shadow: none; cursor: not-allowed; transform: none; }
+        /* زر تسجيل الدخول عبر Google مصمم رسمياً وبرمجياً */
+        .btn-google {
+            width: 100%;
+            background: #ffffff;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .btn-google:hover, .btn-google:active {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        }
+        .btn-google:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-google svg {
+            width: 24px;
+            height: 24px;
+        }
 
         #chat-screen { display: flex; flex-direction: column; height: 100%; width: 100%; }
         
@@ -327,19 +352,23 @@
     
     <div id="loading-screen">
         <div class="spinner"></div>
-        <p>جاري التحقق من الهوية...</p>
+        <p>جاري التحقق من الهوية والأمان...</p>
     </div>
 
+    <!-- شاشة تسجيل الدخول عبر Google ولا يمكن تخطيها -->
     <div id="login-screen" class="hidden">
         <h1>FawakihAI Chat</h1>
         <p class="subtitle">مجتمع المستخدمين المحترفين</p>
         <div class="input-group">
-            <input type="text" id="username" placeholder="اكتب اسمك (أقصى حد 24 حرف)" maxlength="24">
-            <label class="custom-file-upload">
-                <input type="file" id="user-image" accept="image/*" onchange="updateFileName(this)">
-                <span id="file-label-text">📷 اختر صورة لحسابك</span>
-            </label>
-            <button class="btn-primary" onclick="login()" id="login-btn">دخول الدردشة الآن</button>
+            <button class="btn-google" onclick="loginWithGoogle()" id="google-login-btn">
+                <svg width="24" height="24" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span>تسجيل الدخول باستخدام Google</span>
+            </button>
         </div>
     </div>
 
@@ -465,11 +494,12 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
     
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
 
-    let currentUser = { name: "", image: "", adminId: null };
+    let currentUser = { name: "", image: "", adminId: null, email: "" };
     let attachedImageBase64 = null;
     let currentChatPath = 'chat';
     let chatListener = null; 
@@ -488,14 +518,43 @@
         setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
     }
 
-    function checkAutoLogin() {
-        db.ref('users/' + deviceId).once('value', snapshot => {
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                currentUser.name = userData.name;
-                currentUser.image = userData.image || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                
-                db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
+    // --- [4] سحب اسم المستخدم تلقائياً وبتنسيق احترافي من البريد الإلكتروني ---
+    function extractUsernameFromEmail(email, displayName) {
+        if (displayName && displayName.trim().length > 0) {
+            return displayName.trim();
+        }
+        if (email && email.includes('@')) {
+            let extracted = email.split('@')[0];
+            // تنظيف اسم المستخدم وجعله منسقاً
+            extracted = extracted.replace(/[._-]/g, ' ');
+            return extracted.charAt(0).toUpperCase() + extracted.slice(1);
+        }
+        return "مستخدم كوكل";
+    }
+
+    // --- [5] حماية الدخول الشاملة وعدم إمكانية تخطي الشاشة إلا بتسجيل كوكل ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            db.ref('bans/' + deviceId).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    auth.signOut();
+                    document.getElementById("loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.remove("hidden");
+                    return showAlert("عذراً، هذا الجهاز محظور من الدخول.");
+                }
+
+                // سحب الاسم المنسق من الإيميل
+                const extractedName = extractUsernameFromEmail(user.email, user.displayName);
+                currentUser.name = extractedName;
+                currentUser.email = user.email || "";
+                currentUser.image = user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+                db.ref('users/' + deviceId).update({
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    image: currentUser.image,
+                    lastLogin: Date.now()
+                });
 
                 db.ref('admins_list/' + deviceId).once('value', adminSnap => {
                     if (adminSnap.exists()) {
@@ -507,29 +566,33 @@
                             id: currentUser.adminId
                         });
                     }
-                    
+
                     document.getElementById("loading-screen").classList.add("hidden");
                     document.getElementById("login-screen").classList.add("hidden");
                     openGeneralChat();
                 });
-            } else {
-                document.getElementById("loading-screen").classList.add("hidden");
-                document.getElementById("login-screen").classList.remove("hidden");
-            }
-        });
-    }
-
-    window.onload = checkAutoLogin;
-
-    function updateFileName(input) {
-        const label = document.getElementById("file-label-text");
-        if(input.files && input.files[0]) {
-            label.innerText = "✔️ تم اختيار الصورة";
-            label.style.color = "#a5f3bc";
+            });
         } else {
-            label.innerText = "📷 اختر صورة لحسابك";
-            label.style.color = "#d6b4fc";
+            // غير مسجل دخول -> إظهار شاشة الدخول عبر Google فوراً ولا يمكن تخطيها
+            document.getElementById("loading-screen").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("chat-screen").classList.add("hidden");
+            document.getElementById("admin-search-screen").classList.add("hidden");
         }
+    });
+
+    function loginWithGoogle() {
+        const btn = document.getElementById("google-login-btn");
+        btn.disabled = true;
+        btn.querySelector("span").innerText = "جاري الاتصال بـ Google...";
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider).catch(error => {
+            btn.disabled = false;
+            btn.querySelector("span").innerText = "تسجيل الدخول باستخدام Google";
+            showAlert("خطأ أثناء تسجيل الدخول: " + error.message);
+        });
     }
 
     function compressImage(file, callback) {
@@ -552,56 +615,6 @@
         reader.readAsDataURL(file);
     }
 
-    function login() {
-        const name = document.getElementById("username").value.trim();
-        const fileInput = document.getElementById("user-image").files[0];
-        const btn = document.getElementById("login-btn");
-        
-        if (!name) return showAlert("يرجى إدخال اسمك أولاً.");
-        if (containsBadWords(name)) return showAlert("عذراً، هذا الاسم يحتوي على كلمات غير لائقة.");
-        
-        btn.innerHTML = "جاري الدخول...";
-        btn.disabled = true;
-
-        db.ref('bans/' + deviceId).once('value', snapshot => {
-            if (snapshot.exists()) {
-                btn.innerHTML = "دخول الدردشة الآن";
-                btn.disabled = false;
-                return showAlert("عذراً، هذا الجهاز محظور.");
-            }
-            
-            currentUser.name = name;
-            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
-                if (adminSnap.exists()) {
-                    currentUser.adminId = adminSnap.val();
-                }
-                
-                if (fileInput) {
-                    compressImage(fileInput, (compressedImg) => {
-                        currentUser.image = compressedImg;
-                        finishLogin();
-                    });
-                } else {
-                    currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                    finishLogin();
-                }
-            });
-        });
-    }
-
-    function finishLogin() {
-        db.ref('users/' + deviceId).set({ name: currentUser.name, image: currentUser.image, lastLogin: Date.now() });
-        
-        if(currentUser.adminId) {
-            db.ref('admins_profiles/' + currentUser.adminId).set({
-                deviceId: deviceId, name: currentUser.name, image: currentUser.image, id: currentUser.adminId
-            });
-        }
-
-        document.getElementById("login-screen").classList.add("hidden");
-        openGeneralChat();
-    }
-
     function handleImageSelect(e) {
         const file = e.target.files[0];
         if (file) {
@@ -619,6 +632,8 @@
     function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
     function sendMessage() {
+        if (!auth.currentUser) return showAlert("يجب تسجيل الدخول باستخدام Google أولاً!");
+        
         const inputField = document.getElementById("msg-input");
         const text = inputField.value.trim();
         
@@ -718,6 +733,8 @@
     }
 
     function loadMessages(path) {
+        if (!auth.currentUser) return;
+
         if(chatListener) { db.ref(currentChatPath).off('child_added', chatListener); }
         if(chatChangedListener) { db.ref(currentChatPath).off('child_changed', chatChangedListener); }
         if(chatRemovedListener) { db.ref(currentChatPath).off('child_removed', chatRemovedListener); }
@@ -821,6 +838,7 @@
     }
 
     function openGeneralChat() {
+        if (!auth.currentUser) return;
         document.getElementById("chat-screen").classList.remove("hidden");
         document.getElementById("admin-search-screen").classList.add("hidden");
         document.getElementById("chat-title").innerText = "شات FawakihAI العام";
@@ -831,6 +849,7 @@
     }
 
     function openAdminSearch() {
+        if (!auth.currentUser) return;
         document.getElementById("admin-search-screen").classList.remove("hidden");
         document.getElementById("chat-screen").classList.add("hidden");
         fetchAdmins();
@@ -880,6 +899,7 @@
     }
 
     function openPrivateChat(adminId, adminName) {
+        if (!auth.currentUser) return;
         document.getElementById("admin-search-screen").classList.add("hidden");
         document.getElementById("chat-screen").classList.remove("hidden");
         
