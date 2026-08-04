@@ -20,13 +20,25 @@
 
         /* شاشة تسجيل الدخول */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #0b0714; z-index: 100; position: absolute; width: 100%; top: 0; }
-        .login-box { background: #1a1525; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.2); width: 90%; max-width: 400px; }
+        .login-box { background: #1a1525; padding: 40px; border-radius: 15px; text-align: center; border: 1px solid #f39c12; box-shadow: 0 0 20px rgba(243, 156, 18, 0.2); width: 90%; max-width: 400px; position: relative; }
         .login-box h2 { color: #f39c12; margin-bottom: 20px; }
-        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; text-align: center; font-size: 18px; outline: none; }
-        .login-box input:focus { border-color: #f39c12; }
+        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; text-align: center; font-size: 18px; outline: none; transition: 0.3s;}
+        .login-box input:focus { border-color: #f39c12; box-shadow: 0 0 10px rgba(243, 156, 18, 0.3); }
         .login-box input:disabled { opacity: 0.5; cursor: not-allowed; }
         .login-box button { width: 100%; background: #f39c12; color: #000; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
         .login-box button:hover { background: #e67e22; }
+
+        /* تحسينات واجهة التحقق الأمني (OTP) */
+        .security-shield { width: 70px; height: 70px; margin: 0 auto 20px auto; display: block; filter: drop-shadow(0 0 10px #00ffcc); animation: pulse-glow 2s infinite alternate; }
+        @keyframes pulse-glow { 0% { filter: drop-shadow(0 0 5px #00ffcc) scale(1); } 100% { filter: drop-shadow(0 0 20px #00ffcc) scale(1.08); } }
+        .otp-header-card { background: linear-gradient(145deg, #111, #1a1a1a); border-right: 4px solid #00ffcc; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: right; }
+        .otp-header-card .title { color: #00ffcc; font-size: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold;}
+        .login-box #admin-otp { letter-spacing: 12px; font-size: 24px; font-weight: 900; color: #00ffcc; background: rgba(0, 255, 204, 0.05); border: 2px dashed #00ffcc; font-family: monospace; }
+        .login-box #admin-otp:focus { border-style: solid; box-shadow: 0 0 20px rgba(0, 255, 204, 0.4); background: rgba(0, 255, 204, 0.1); }
+        .otp-verify-btn { background: linear-gradient(90deg, #00ffcc, #00b38f) !important; box-shadow: 0 0 15px rgba(0,255,204,0.3); font-size: 18px !important; }
+        .otp-verify-btn:hover { box-shadow: 0 0 25px rgba(0,255,204,0.6); }
+        .otp-resend-btn { background: transparent !important; border: 1px solid #e74c3c !important; color: #e74c3c !important; }
+        .otp-resend-btn:hover { background: rgba(231,76,60,0.1) !important; }
 
         /* نافذة اليوزر وكلمة المرور الإجبارية للإدارة القديمة */
         #forced-username-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
@@ -137,7 +149,7 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <h2>لوحة الإدارة السرية</h2>
+        <h2 id="login-title">لوحة الإدارة السرية</h2>
         
         <div id="login-inputs">
             <input type="text" id="admin-user" placeholder="أدخل اليوزر (مثال: @admin)">
@@ -147,14 +159,27 @@
         </div>
 
         <div id="otp-inputs" style="display: none;">
-            <p style="color: #00ffcc; font-size: 14px; margin-bottom: 15px; background: rgba(0,255,204,0.1); padding: 10px; border-radius: 8px; border: 1px solid #00ffcc; display: flex; justify-content: space-between; align-items: center;">
-                <span>تم إرسال كود تحقق</span>
-                <span id="otp-timer" style="color: #e74c3c; font-weight: bold; font-family: monospace; font-size: 16px;">(01:00)</span>
-            </p>
-            <input type="text" id="admin-otp" placeholder="رمز التحقق (6 أرقام)" maxlength="6" style="letter-spacing: 5px; font-weight: bold;" onkeypress="if(event.key === 'Enter') verifyOTP()">
-            <button id="verify-btn" onclick="verifyOTP()" style="background: #00ffcc; color: #000;">تحقق ودخول</button>
-            <button id="resend-btn" onclick="resendOTP()" style="background: #e74c3c; color: #fff; display: none; margin-top: 10px;">إرسال كود جديد</button>
-            <p id="otp-error" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 14px;">رمز التحقق غير صحيح!</p>
+            <!-- رسمة أمنية احترافية للدرع -->
+            <svg class="security-shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#00ffcc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 8v4" stroke="#00ffcc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="16" r="1.5" fill="#00ffcc"/>
+            </svg>
+
+            <div class="otp-header-card">
+                <div class="title">
+                    <span>🛡️ جدار الحماية - كود التحقق</span>
+                    <span id="otp-timer">(01:00)</span>
+                </div>
+                <div style="font-size: 12px; color: #888;">يرجى مراجعة البوت الأمني الخاص بك للحصول على الرمز السري. يمنع مشاركة هذا الرمز.</div>
+            </div>
+
+            <input type="text" id="admin-otp" placeholder="••••••" maxlength="6" onkeypress="if(event.key === 'Enter') verifyOTP()">
+            
+            <button id="verify-btn" class="otp-verify-btn" onclick="verifyOTP()">مصادقة الدخول الأمني</button>
+            <button id="resend-btn" class="otp-resend-btn" onclick="resendOTP()" style="display: none; margin-top: 10px;">إصدار رمز أمني جديد</button>
+            
+            <p id="otp-error" style="color: #e74c3c; display: none; margin-top: 15px; font-size: 14px; background: rgba(231,76,60,0.1); padding: 10px; border-radius: 5px; border: 1px solid #e74c3c;">رمز التحقق غير صحيح!</p>
         </div>
     </div>
 </div>
@@ -252,7 +277,8 @@
     const AUTH_SECRET = "lA3sjuy5Hly1XK35iaTp2KiM7kNwZsl2OFMSVMqE";
 
     // تشفير التوكن والآيدي الخاص ببوت التليجرام لضمان الحماية ضد الفحص المباشر (Base64 Encoded)
-    const tg_k = atob("NzU2NjI0OTE3NzpBQUc4REZyOUl1bFpLa1R0ZVZGSGM5VEZwNXFuTUo0c09WQQ==");
+    // التوكن الجديد المشفر: 7894436976:AAFdg77dpzCgpeLnkwAQqP9POkwZMwWoikg
+    const tg_k = atob("Nzg5NDQzNjk3NjpBQUZkZzc3ZHB6Q2dwZUxua3dBUXFwOVBPa3daTXdXb2lrZw==");
     const ch_k = atob("NTk5ODI1MDM2Nw==");
 
     let expectedAdminOTP = null;
@@ -301,7 +327,7 @@
 
     // إرسال الرمز للبوت بشكل مخفي وصامت
     function sendOTP(otp, username) {
-        const txt = `🔒 محاولة تسجيل دخول للإدارة\n\n👤 اليوزر: @${username}\n🔑 كود التحقق: ${otp}\n⏳ ينتهي هذا الكود خلال 60 ثانية.\n\n⚠️ يرجى إدخال هذا الكود في اللوحة، ولا تشاركه مع أحد.`;
+        const txt = `🛡️ نظام FawakihAI الأمني\n\n🔒 محاولة تسجيل دخول للإدارة\n👤 اليوزر: @${username}\n🔑 كود التحقق الأمني: ${otp}\n⏳ ينتهي هذا الكود خلال 60 ثانية.\n\n⚠️ يرجى إدخال هذا الكود في اللوحة للتحقق من هويتك.`;
         const endpoint = `https://api.telegram.org/bot${tg_k}/sendMessage`;
         fetch(endpoint, {
             method: 'POST',
@@ -334,7 +360,7 @@
                 document.getElementById("admin-otp").disabled = true;
                 
                 const errElement = document.getElementById("otp-error");
-                errElement.innerText = "انتهت صلاحية الكود. يرجى طلب كود جديد.";
+                errElement.innerText = "انتهت صلاحية الكود الأمني. يرجى طلب كود جديد.";
                 errElement.style.display = "block";
             }
         }, 1000);
@@ -362,6 +388,7 @@
         pendingLoginPass = pass;
 
         document.getElementById("login-inputs").style.display = "none";
+        document.getElementById("login-title").style.display = "none";
         document.getElementById("otp-inputs").style.display = "block";
         document.getElementById("login-error").style.display = "none";
         
@@ -391,7 +418,7 @@
             grantAccess();
         } else {
             const errElement = document.getElementById("otp-error");
-            errElement.innerText = "رمز التحقق غير صحيح!";
+            errElement.innerText = "رمز التحقق غير صحيح، تأكد من الرمز المرسل!";
             errElement.style.display = "block";
         }
     }
@@ -541,9 +568,8 @@
         let myAdminId = localStorage.getItem("super_admin_id");
         let myDeviceId = localStorage.getItem("chat_device_id");
         
-        // منع إنشاء حسابات أو معرفات عشوائية ومقلدة لمنع تداخل الجلسات نهائياً
         if (!myAdminId) {
-            return; // عدم تنفيذ أي كتابة في قاعدة البيانات إذا لم يكن الأدمن مسجلاً رسمياً ومصادقاً عليه
+            return; 
         }
         
         if (!myDeviceId) {
