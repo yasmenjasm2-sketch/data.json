@@ -533,6 +533,16 @@
         return "مستخدم كوكل";
     }
 
+    // --- التقاط الأخطاء الناتجة عن توجيه تسجيل الدخول ---
+    auth.getRedirectResult().catch(error => {
+        document.getElementById("loading-screen").classList.add("hidden");
+        document.getElementById("login-screen").classList.remove("hidden");
+        const btn = document.getElementById("google-login-btn");
+        btn.disabled = false;
+        btn.querySelector("span").innerText = "تسجيل الدخول باستخدام Google";
+        showAlert("خطأ في تسجيل الدخول: " + error.message);
+    });
+
     // --- [5] حماية الدخول الشاملة وعدم إمكانية تخطي الشاشة إلا بتسجيل كوكل ---
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -589,7 +599,8 @@
 
         const provider = new firebase.auth.GoogleAuthProvider();
         
-        auth.signInWithPopup(provider).catch(error => {
+        // استخدام signInWithRedirect كأفضل خيار وحيد لبيئة الـ WebView لتفادي مشاكل النوافذ المنبثقة
+        auth.signInWithRedirect(provider).catch(error => {
             btn.disabled = false;
             btn.querySelector("span").innerText = "تسجيل الدخول باستخدام Google";
             showAlert("خطأ أثناء تسجيل الدخول: " + error.message);
