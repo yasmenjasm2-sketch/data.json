@@ -526,14 +526,13 @@
         }
         if (email && email.includes('@')) {
             let extracted = email.split('@')[0];
-            // تنظيف اسم المستخدم وجعله منسقاً
             extracted = extracted.replace(/[._-]/g, ' ');
             return extracted.charAt(0).toUpperCase() + extracted.slice(1);
         }
         return "مستخدم كوكل";
     }
 
-    // --- التقاط الأخطاء الناتجة عن توجيه تسجيل الدخول ---
+    // --- التقاط نتائج توجيه تسجيل الدخول من Google ---
     auth.getRedirectResult().catch(error => {
         document.getElementById("loading-screen").classList.add("hidden");
         document.getElementById("login-screen").classList.remove("hidden");
@@ -543,7 +542,7 @@
         showAlert("خطأ في تسجيل الدخول: " + error.message);
     });
 
-    // --- [5] حماية الدخول الشاملة وعدم إمكانية تخطي الشاشة إلا بتسجيل كوكل ---
+    // --- [5] حماية الدخول الشاملة ومعالجة الجلسات ---
     auth.onAuthStateChanged(user => {
         if (user) {
             db.ref('bans/' + deviceId).once('value', snapshot => {
@@ -599,7 +598,7 @@
 
         const provider = new firebase.auth.GoogleAuthProvider();
         
-        // استخدام signInWithRedirect كأفضل خيار وحيد لبيئة الـ WebView لتفادي مشاكل النوافذ المنبثقة
+        // استخدام التوجيه المباشر لتسهيل قراءة الكوكيز والحسابات من قبل متصفح WebView الأندرويد
         auth.signInWithRedirect(provider).catch(error => {
             btn.disabled = false;
             btn.querySelector("span").innerText = "تسجيل الدخول باستخدام Google";
@@ -658,7 +657,7 @@
 
         const now = Date.now();
 
-        // 1. فحص عدم تكرار الرسالة السابقة بنفس النص بالضبط أو مع تغيير مسافات
+        // 1. فحص عدم تكرار الرسالة السابقة
         if (text && text.replace(/\s+/g, '') === lastSentMessageText.replace(/\s+/g, '')) {
             showAlert("⚠️ يرجى عدم تكرار إرسال نفس الرسالة المتتالية!");
             return;
