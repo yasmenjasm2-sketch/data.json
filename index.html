@@ -395,7 +395,6 @@
 </div>
 
 <script>
-    // منع كليك يمين والنسخ
     document.addEventListener('contextmenu', event => event.preventDefault());
     document.addEventListener('copy', event => {
         if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
@@ -403,7 +402,6 @@
         }
     });
 
-    // --- [2] فحص الأمان المتقدم لمكافحة فتح الموقع خارج التطبيق ---
     function triggerSecurityLock(reason) {
         window.stop();
         document.documentElement.innerHTML = `
@@ -416,7 +414,6 @@
         throw new Error("Security Violation: " + reason);
     }
 
-    // مصيدة الهندسة العكسية وفحص عناصر الويب (Anti-DevTools Loop)
     setInterval(() => {
         const startTime = performance.now();
         debugger;
@@ -429,13 +426,11 @@
 
     try {
         if (window.Android) {
-            // التحقق من سلامة بيئة الأندرويد أولاً
             if (!window.Android.verifyAppIntegrity()) {
                 triggerSecurityLock("بيئة التشغيل غير آمنة أو معدلة برمجياً.");
             }
             deviceId = window.Android.getDeviceID();
         } else {
-            // إذا لم يتم العثور على بيئة التطبيق (تعني أن المستخدم يفتح من متصفح خارجي)
             triggerSecurityLock("يجب فتح الموقع من داخل تطبيق الأندرويد الرسمي فقط.");
         }
     } catch (e) {
@@ -458,8 +453,6 @@
         if (!text) return false;
         return BLOCKED_WORDS.some(word => text.includes(word));
     }
-
-    // تمت إزالة إعدادات Firebase من هنا واستدعاؤها عبر الملف الخارجي
     
     const msgNotificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
     msgNotificationSound.volume = 0.5;
@@ -471,10 +464,9 @@
     let chatChangedListener = null;
     let chatRemovedListener = null;
 
-    // --- [3] نظام منع التكرار والإغراق (Anti-Spam & Duplicate Protection) ---
     let lastSentMessageText = "";
     let lastMessageSendTime = 0;
-    const MESSAGE_COOLDOWN_MS = 2500; // 2.5 ثانية بين كل رسالة وأخرى
+    const MESSAGE_COOLDOWN_MS = 2500; 
 
     function showAlert(msg) {
         const alertBox = document.getElementById('custom-alert');
@@ -483,8 +475,42 @@
         setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
     }
 
+    let isCheckingLogin = false;
+    function initApp() {
+        if (isCheckingLogin) return;
+        isCheckingLogin = true;
+        checkAutoLogin();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => setTimeout(initApp, 100));
+        window.addEventListener("load", () => setTimeout(initApp, 100));
+    } else {
+        setTimeout(initApp, 100);
+    }
+
     function checkAutoLogin() {
-        db.ref('users/' + deviceId).once('value', snapshot => {
+        try {
+            if (typeof db === 'undefined') window.db = firebase.database();
+        } catch (e) {
+            console.error("Firebase init:", e);
+        }
+
+        if (typeof db === 'undefined' || !db) {
+            document.getElementById("loading-screen").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            return showAlert("تعذر تحميل قاعدة البيانات.");
+        }
+
+        let connectionTimeout = setTimeout(() => {
+            document.getElementById("loading-screen").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            showAlert("تأخر الاتصال، يرجى التحقق من الشبكة وإعادة المحاولة.");
+        }, 7000);
+
+        db.ref('users/' + deviceId).once('value')
+        .then(snapshot => {
+            clearTimeout(connectionTimeout);
             if (snapshot.exists()) {
                 const userData = snapshot.val();
                 currentUser.name = userData.name;
@@ -492,7 +518,7 @@
                 
                 db.ref('users/' + deviceId).update({ lastLogin: Date.now() });
 
-                db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+                db.ref('admins_list/' + deviceId).once('value').then(adminSnap => {
                     if (adminSnap.exists()) {
                         currentUser.adminId = adminSnap.val();
                         db.ref('admins_profiles/' + currentUser.adminId).set({
@@ -502,7 +528,10 @@
                             id: currentUser.adminId
                         });
                     }
-                    
+                    document.getElementById("loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.add("hidden");
+                    openGeneralChat();
+                }).catch(() => {
                     document.getElementById("loading-screen").classList.add("hidden");
                     document.getElementById("login-screen").classList.add("hidden");
                     openGeneralChat();
@@ -511,10 +540,14 @@
                 document.getElementById("loading-screen").classList.add("hidden");
                 document.getElementById("login-screen").classList.remove("hidden");
             }
+        })
+        .catch(error => {
+            clearTimeout(connectionTimeout);
+            document.getElementById("loading-screen").classList.add("hidden");
+            document.getElementById("login-screen").classList.remove("hidden");
+            console.error(error);
         });
     }
-
-    window.onload = checkAutoLogin;
 
     function updateFileName(input) {
         const label = document.getElementById("file-label-text");
@@ -558,7 +591,15 @@
         btn.innerHTML = "جاري الدخول...";
         btn.disabled = true;
 
-        db.ref('bans/' + deviceId).once('value', snapshot => {
+        let loginTimeout = setTimeout(() => {
+            btn.innerHTML = "دخول الدردشة الآن";
+            btn.disabled = false;
+            showAlert("انتهى وقت الاتصال بالخادم. حاول مجدداً.");
+        }, 8000);
+
+        db.ref('bans/' + deviceId).once('value')
+        .then(snapshot => {
+            clearTimeout(loginTimeout);
             if (snapshot.exists()) {
                 btn.innerHTML = "دخول الدردشة الآن";
                 btn.disabled = false;
@@ -566,7 +607,7 @@
             }
             
             currentUser.name = name;
-            db.ref('admins_list/' + deviceId).once('value', adminSnap => {
+            db.ref('admins_list/' + deviceId).once('value').then(adminSnap => {
                 if (adminSnap.exists()) {
                     currentUser.adminId = adminSnap.val();
                 }
@@ -580,7 +621,13 @@
                     currentUser.image = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
                     finishLogin();
                 }
-            });
+            }).catch(() => finishLogin());
+        })
+        .catch(error => {
+            clearTimeout(loginTimeout);
+            btn.innerHTML = "دخول الدردشة الآن";
+            btn.disabled = false;
+            showAlert("تعذر الاتصال للتحقق من بياناتك. تأكد من الإنترنت.");
         });
     }
 
@@ -626,13 +673,11 @@
 
         const now = Date.now();
 
-        // 1. فحص عدم تكرار الرسالة السابقة بنفس النص بالضبط أو مع تغيير مسافات
         if (text && text.replace(/\s+/g, '') === lastSentMessageText.replace(/\s+/g, '')) {
             showAlert("⚠️ يرجى عدم تكرار إرسال نفس الرسالة المتتالية!");
             return;
         }
 
-        // 2. فحص سرعة الإرسال (Anti-Spam Cooldown)
         if (now - lastMessageSendTime < MESSAGE_COOLDOWN_MS && !currentUser.adminId) {
             showAlert("⏱️ يرجى الانتظار قليلاً قبل إرسال رسالة أخرى.");
             return;
@@ -895,7 +940,6 @@
         
         loadMessages(roomPath);
     }
-
 </script>
 
 </body>
