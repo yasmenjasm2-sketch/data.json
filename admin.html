@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الإدارة المتقدمة - FawakihAI</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- استدعاء ملف إعدادات وحفظ قاعدة البيانات الموحد app-core.js -->
+    <script src="app-core.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
 
@@ -131,7 +131,7 @@
     <div class="block-box">
         <h1>⚠️ نظام الحماية المشددة</h1>
         <p>مرحباً بك في نظام FawakihAI الأمني. تم رصد محاولة دخول من متصفح ويب عالي المخاطر أو غير مصرح به.</p>
-        <p style="margin-top: 15px; color: #f39c12; font-weight: bold;">لمشفر الخاص بالإدارة التابع للسيرفر المركزي.</p>
+        <p style="margin-top: 15px; color: #f39c12; font-weight: bold;">لمشفر الخاص والإدارة التابع للسيرفر المركزي.</p>
     </div>
 </div>
 
@@ -237,17 +237,8 @@
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: atob("QUl6YVN5RDNlUkZIRGhPdEtsbGkzS0E4dlV5RTEtLUM1RjQ3VVl3"),
-        databaseURL: atob("aHR0cHM6Ly9jaGF0YXBpLTFjYTcxLWRlZmF1bHQtcnRkYi5ldXJvcGUtd2VzdDEuZmlyZWJhc2VkYXRhYmFzZS5hcHA="),
-        projectId: atob("Y2hhdGFwaS0xY2E3MQ==")
-    };
-
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    // تم جلب إعدادات الاتصال بقاعدة البيانات ديناميكياً من ملف app-core.js الاحترافي
     const db = firebase.database();
-
 
     const AUTH_SECRET = "lA3sjuy5Hly1XK35iaTp2KiM7kNwZsl2OFMSVMqE";
 
